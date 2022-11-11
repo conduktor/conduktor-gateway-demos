@@ -1,0 +1,104 @@
+version: '3.7'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka1:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_REPLICATION_FACTOR: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+
+  kafka2:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka2
+    container_name: kafka2
+    ports:
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_REPLICATION_FACTOR: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+
+  conduktor-proxy:
+    image: conduktor/conduktor-proxy:0.1.0-amd64
+    hostname: conduktor-proxy
+    container_name: conduktor-proxy
+    depends_on:
+      - kafka1
+      - kafka2
+    ports:
+      - "6969:6969"
+      - "6970:6970"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
+      authenticationConfig_authenticatorType: SASL_PLAIN
+      userPoolConfig_type: JWT
+      userPoolConfig_className: io.conduktor.proxy.service.userPool.JwtUserPoolService
+      userPoolConfig_secretKey: secret
+      hostPortConfiguration_proxyHost: conduktor-proxy
+
+  conduktor-platform:
+    image: conduktor/conduktor-platform:latest
+    hostname: platform
+    container_name: platform
+    ports:
+      - "8080:8080"
+    volumes:
+      - type: bind
+        source: "./platform-config.yaml"
+        target: /opt/conduktor/platform-config.yaml
+        read_only: true
+    depends_on:
+      - kafka1
+    environment:
+      CDK_IN_CONF_FILE: /opt/conduktor/platform-config.yaml
+      KAFKA_BOOTSTRAP_SERVER: kafka1:9092
+      ORGANISATION_NAME: "conduktor"
+      ADMIN_EMAIL: "test@conduktor.io"
+      ADMIN_PSW: "password1"
+      LONDON_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoxLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.Eb94MxCyesPeVdQmm0EDBGvhwcx8j-ST-mvmdAId_j0
+      PARIS_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoyLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.aAJfAwb-oCpnoS6b5DmmD2QJuHUJB4PEDv1w4eew8HU
+
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+      - type: bind
+        source: "./clientConfig"
+        target: /clientConfig
+        read_only: true
