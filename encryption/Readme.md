@@ -2,7 +2,9 @@
 
 ## What is Conduktor Proxy Encryption?
 
-Conduktor Proxy's encryption feature encrypts sensitive fields within messages as they are produced through the proxy. These fields are stored on disk encrypted but can easily be read by clients reading through the proxy.
+Conduktor Proxy's encryption feature encrypts sensitive fields within messages as they are produced through the proxy. 
+
+These fields are stored on disk encrypted but can easily be read by clients reading through the proxy.
 
 ## Running the demo
 
@@ -23,7 +25,8 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Proxy - a connection through Conduktor Proxy to the underlying Kafka
 
-Note: Proxy and backing Kafka can use different security schemes. In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
+Note: Proxy and backing Kafka can use different security schemes. 
+In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 
 ### Step 3: start the environment
 
@@ -38,94 +41,107 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client schema
 We create topics using the Kafka console tools, the below creates a topic named `encrypted_topic`
 
 ```bash
-docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/proxy.properties --create --topic encrypted_topic
+docker-compose exec kafka-client \
+  kafka-topics \
+    --bootstrap-server conduktor-proxy:6969 \
+    --command-config /clientConfig/proxy.properties \
+    --create --if-not-exists \
+    --topic encrypted_topic
 ```
 
 List the created topic
 
 ```bash
-docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/proxy.properties --list
+docker-compose exec kafka-client \
+  kafka-topics \
+    --bootstrap-server conduktor-proxy:6969 \
+    --command-config /clientConfig/proxy.properties \
+    --list
 ```
 
-For field encryption to work we must tell the proxy the format it can expect messages for the newly created topic. Conduktor-Proxy presents a REST API for managing Proxy features and the following configures Conduktor Proxy to expect `JSON` format data for topic `encrypted_topic`
+For field encryption to work we must tell the proxy the format it can expect messages for the newly created topic. 
+
+Conduktor-Proxy presents a REST API for managing Proxy features and the following configures Conduktor Proxy to expect `JSON` format data for topic `encrypted_topic`
 
 ```bash
 docker-compose exec kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant" \
     --header 'Content-Type: application/json' \
-    --data-raw "{
-        \"tenant\": \"1-1\",
-        \"topic\": \"encrypted_topic\",
-        \"messageFormat\": \"JSON\"
-    }"
+    --data-raw '{
+        "tenant": "1-1",
+        "topic": "encrypted_topic",
+        "messageFormat": "JSON"
+    }'
 ```
 
 ### Step 5: Configure encryption
 
-The same REST API can be used to configure the encryption feature. The command below will instruct Conduktor Proxy to encrypt the `password` and `visa` fields in records on topic encrypted_topic. 
+The same REST API can be used to configure the encryption feature. 
+
+The command below will instruct Conduktor Proxy to encrypt the `password` and `visa` fields in records on topic `encrypted_topic`. 
 
 ```bash
-docker-compose exec kafka-client  curl \
+docker-compose exec kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/encryption" \
     --header 'Content-Type: application/json' \
-    --data-raw "{
-        \"config\": { 
-            \"topic\": \"encrypted_topic\", 
-            \"fields\": [ { 
-                \"fieldName\": \"password\", 
-                \"keySecretId\": \"secret-key-password\", 
-                \"algorithm\": { 
-                    \"type\": \"TINK/AES_GCM\", 
-                    \"kms\": \"TINK/KMS_INMEM\" 
+    --data-raw '{
+        "config": { 
+            "topic": "encrypted_topic",
+            "fields": [ { 
+                "fieldName": "password",
+                "keySecretId": "secret-key-password",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
                 }
-            }, 
+            },
             { 
-                \"fieldName\": \"visa\", 
-                \"keySecretId\": \"secret-key-visaNumber\", 
-                \"algorithm\": { 
-                    \"type\": \"TINK/AES_GCM\", 
-                    \"kms\": \"TINK/KMS_INMEM\" 
+                "fieldName": "visa",
+                "keySecretId": "secret-key-visaNumber",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
                 } 
             }] 
         },
-        \"direction\": \"REQUEST\",
-        \"apiKeys\": \"PRODUCE\"
-    }"
+        "direction": "REQUEST",
+        "apiKeys": "PRODUCE"
+    }'
 ```
 ### Step 6 Configure Decryption
 
 Next we configure Conduktor Proxy to decrypt the fields when fetching data
 
 ```bash
-docker-compose exec kafka-client  curl \
+docker-compose exec kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/decryption" \
     --header 'Content-Type: application/json' \
-    --data-raw "{
-        \"config\": { 
-            \"topic\": \"encrypted_topic\", 
-            \"fields\": [ { 
-                \"fieldName\": \"password\", 
-                \"keySecretId\": \"secret-key-password\", 
-                \"algorithm\": { 
-                    \"type\": \"TINK/AES_GCM\", 
-                    \"kms\": \"TINK/KMS_INMEM\" 
+    --data-raw '{
+        "config": { 
+            "topic": "encrypted_topic",
+            "fields": [ { 
+                "fieldName": "password",
+                "keySecretId": "secret-key-password",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
                 }
-            }, 
+            },
             { 
-                \"fieldName\": \"visa\", 
-                \"keySecretId\": \"secret-key-visaNumber\", 
-                \"algorithm\": { 
-                    \"type\": \"TINK/AES_GCM\", 
-                    \"kms\": \"TINK/KMS_INMEM\" 
+                "fieldName": "visa",
+                "keySecretId": "secret-key-visaNumber",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
                 } 
             }] 
         },
-        \"direction\": \"RESPONSE\",
-        \"apiKeys\": \"FETCH\"
-    }"
+        "direction": "RESPONSE",
+        "apiKeys": "FETCH"
+    }'
 ```
 
 
@@ -134,42 +150,54 @@ docker-compose exec kafka-client  curl \
 Let's produce a simple record to the encrypted topic.
 
 ```bash
-echo "{ \
-    \"name\": \"conduktor\", \
-    \"username\": \"test@conduktor.io\", \
-    \"password\": \"password1\", \
-    \"visa\": \"visa123456\", \
-    \"address\": \"Conduktor Towers, London\" \
-}" | docker-compose exec -T schema-registry kafka-json-schema-console-producer  \
-    --bootstrap-server conduktor-proxy:6969 \
-    --producer.config /clientConfig/proxy.properties \
-    --topic encrypted_topic \
-    --property value.schema="{ 
-        \"title\": \"User\", 
-        \"type\": \"object\", 
-        \"properties\": { 
-            \"name\": { \"type\": \"string\" }, 
-            \"username\": { \"type\": \"string\" }, 
-            \"password\": { \"type\": \"string\" }, 
-            \"visa\": { \"type\": \"string\" }, 
-            \"address\": { \"type\": \"string\" } 
-        } 
-    }"
+echo '{ 
+    "name": "conduktor",
+    "username": "test@conduktor.io",
+    "password": "password1",
+    "visa": "visa123456",
+    "address": "Conduktor Towers, London" 
+}' | jq -c | docker-compose exec -T schema-registry \
+    kafka-json-schema-console-producer  \
+        --bootstrap-server conduktor-proxy:6969 \
+        --producer.config /clientConfig/proxy.properties \
+        --topic encrypted_topic \
+        --property value.schema='{ 
+            "title": "User",
+            "type": "object",
+            "properties": { 
+                "name": { "type": "string" },
+                "username": { "type": "string" },
+                "password": { "type": "string" },
+                "visa": { "type": "string" },
+                "address": { "type": "string" } 
+            } 
+        }'
 ```
 
 ### Step 7: Consume from the topic
 
-Let's consume from our encrypted_topic.
+Let's consume from our `encrypted_topic`.
 
 ```bash
-docker-compose exec schema-registry kafka-json-schema-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/proxy.properties --topic encrypted_topic --from-beginning
-
+docker-compose exec schema-registry \
+  kafka-json-schema-console-consumer \
+    --bootstrap-server conduktor-proxy:6969 \
+    --consumer.config /clientConfig/proxy.properties \
+    --topic encrypted_topic \
+    --from-beginning \
+    --max-messages 1 | jq .
 ```
 
 You should see the encrypted fields have been decrypted on read as below:
 
 ```json
-{"name":"conduktor","username":"test@conduktor.io","password":"password1","visa":"visa123456","address":"Conduktor Towers, London"}
+{
+  "name": "conduktor",
+  "username": "test@conduktor.io",
+  "password": "password1",
+  "visa": "visa123456",
+  "address": "Conduktor Towers, London"
+}
 ```
 
 ### Step 8: Confirm encryption at rest
@@ -177,13 +205,24 @@ You should see the encrypted fields have been decrypted on read as below:
 To confirm the fields are encrypted in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec schema-registry kafka-json-schema-console-consumer --bootstrap-server kafka1:9092 --topic 1-1encrypted_topic --from-beginning
+docker-compose exec schema-registry \
+  kafka-json-schema-console-consumer \
+    --bootstrap-server kafka1:9092 \
+    --topic 1-1encrypted_topic \
+    --from-beginning \
+    --max-messages 1 | jq .
 ```
 
 You should see an output similar to the below:
 
 ```json
-{"name":"conduktor","username":"test@conduktor.io","password":"ATjwyTAtk5uVE3yuEQ0a/IlcVE0f/PWAM0D8G4JXlnn4C7a5I+9AggawfXYXzOaDhw==","visa":"ARFoqUx5qx222X7Y7YrSYQOhyPspfvg3oD8rGGRYMdPpszo18T8H1o9aTc/oX9Ahkw0=","address":"Conduktor Towers, London"}
+{
+  "name": "conduktor",
+  "username": "test@conduktor.io",
+  "password": "AUXGXFa8bcMPws2DXsnBTVxzwpWyQusuUsEPWtKItFnGoQoQLd4zSfZjqofomWHdqA==",
+  "visa": "ARA3jO6WyWNuhg2wwag0ouLbAGE7fjs+lCAJeXx9J6BZzM/FEiJt5afv4dPf1qNDWS8=",
+  "address": "Conduktor Towers, London"
+}
 ```
 
 ### Step 9: Log into the platform
