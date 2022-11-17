@@ -96,7 +96,7 @@ docker-compose exec kafka-client curl \
         "apiKeys": "PRODUCE"
     }'
 ```
-### Step 5 Generate some chaos!
+### Step 5 Inject some chaos
 
 Let's produce some records to our created topic and observe some errors being injected by Conduktor Proxy.
 
@@ -123,7 +123,7 @@ org.apache.kafka.common.errors.InvalidRequiredAcksException: Produce request spe
 
 Note the `NOT_ENOUGH_REPLICAS` errors.
 
-### Step 6: Remove the chaos
+### Step 6: Reset
 
 To stop chaos injection run the below:
 
@@ -183,7 +183,7 @@ docker-compose exec kafka-client curl \
         "apiKeys": "PRODUCE"
     }'
 ```
-### Step 9: Generate some chaos!
+### Step 9: Inject some chaos
 
 Let's produce some records to our created topic.
 
@@ -220,7 +220,7 @@ ONJVXZXZOZITKXJBOZWDJMCBOSYQQKCPRRDCZWMRLFXBLGQPRPGRNTAQOOSVXPKJPJLAVSQCCRXFRROL
 
 Note the duplicated messages.
 
-### Step 10: Remove the chaos
+### Step 10: Reset
 
 To stop chaos injection run the below:
 
@@ -253,7 +253,7 @@ docker-compose exec kafka-client curl \
         "apiKeys": "PRODUCE"
     }'
 ```
-### Step 12: Generate some chaos!
+### Step 12: Inject some chaos
 
 Let's produce some records to our created topic.
 
@@ -278,7 +278,7 @@ This should produce output similar to this:
 
 Note the exceptions indicating that the current leader has changed.
 
-### Step 13: Remove the chaos
+### Step 13: Reset
 
 To stop chaos injection run the below:
 
@@ -320,7 +320,7 @@ docker-compose exec kafka-client curl \
         "apiKeys": "PRODUCE"
     }'
 ```
-### Step 14: Generate some chaos!
+### Step 15: Inject some chaos
 
 Let's produce some records to our created topic.
 
@@ -358,7 +358,7 @@ LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXB
 
 Note the longer messages with extra bytes
 
-### Step 16: Remove the chaos
+### Step 16: Reset
 
 To stop chaos injection run the below:
 
@@ -392,7 +392,7 @@ docker-compose exec kafka-client curl \
         "apiKeys": "PRODUCE"
     }'
 ```
-### Step 18: Generate some chaos!
+### Step 18: Inject some chaos
 
 Let's produce some records to our created topic.
 
@@ -418,7 +418,7 @@ This should produce output similar to this:
 
 Note the very high latency numbers indicating slow responses.
 
-### Step 19: Remove the chaos
+### Step 19: Reset
 
 To stop chaos injection run the below:
 
@@ -458,7 +458,7 @@ docker-compose exec kafka-client curl \
         "apiKeys": "PRODUCE"
     }'
 ```
-### Step 21: Generate some chaos!
+### Step 21: Inject some chaos
 
 Let's produce some records to our created topic.
 
@@ -484,7 +484,7 @@ This should produce output similar to this:
 
 Note the very high latency numbers indicating slow responses.
 
-### Step 22: Remove the chaos
+### Step 22: Reset
 
 To stop chaos injection run the below:
 
@@ -535,7 +535,7 @@ docker-compose exec kafka-client curl \
         "apiKeys": "PRODUCE"
     }'
 ```
-### Step 21: Generate some chaos!
+### Step 24: Inject some chaos
 
 Let's produce a record to our created topic.
 
@@ -593,7 +593,7 @@ Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientEx
 
 ```
 
-### Step 22: Remove the chaos
+### Step 25: Reset
 
 To stop chaos injection run the below:
 
