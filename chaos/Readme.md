@@ -166,7 +166,9 @@ docker-compose exec kafka-client \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
     --topic conduktor_topic_duplicate
+```
 
+```bash
 docker-compose exec kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/duplicate-resource" \
@@ -440,6 +442,9 @@ docker-compose exec kafka-client \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
     --topic conduktor_topic_slow
+```
+
+```bash
 docker-compose exec kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/slow-topic" \
@@ -509,7 +514,7 @@ docker-compose exec kafka-client \
     --topic conduktor_topic_schema
 ```
 
-```bash   
+```bash
 docker-compose exec kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant" \
