@@ -264,7 +264,7 @@ Navigate to `Console` and select the `Proxy` cluster from the top right. You sho
 
 ![create a topic](images/through_proxy.png "View Unencrypted Messages")
 
-### Step 12: View the unencrypted messages in Conduktor Platform
+### Step 12: View the encrypted messages in Conduktor Platform
 
 Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `1-1encrypted_topic` topic (ignore the 1-1 prefix for now) and clicking on it will show you an encrypted version of the produced message.
 
