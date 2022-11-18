@@ -20,7 +20,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 
 ### Step 2: review the platform configuration
 
-`platform-config.yaml` defines 3 clusters:
+`platform-config.yaml` defines 2 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Proxy - a connection through Conduktor Proxy to the underlying Kafka
