@@ -76,7 +76,7 @@ docker-compose exec kafka-client curl \
     --data-raw '{
         "config": { 
             "topic": "sr_topic",
-            "checkDeserialization": false
+            "checkDeserialization": true
         },
         "direction": "REQUEST",
         "apiKeys": "PRODUCE"
@@ -158,3 +158,87 @@ produces:
 ```
 
 Because the subject is not available in this Schema Registry it is rejected by the proxy.
+
+### Step 8: Differing schemas
+
+Now let's add a schema with the correct Id but incorrect content to the proxy cluster
+
+```bash
+docker-compose exec kafka-client curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  --data '{"compatibility": "NONE"}' \
+  http://schema-registry:8081/config
+```
+
+```bash
+docker-compose exec kafka-client curl \
+  -X POST \
+  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  -d '{
+	"schemaType": "JSON",
+	"schema": "{\"type\":\"object\",\"properties\": {\"name\":{\"type\":\"integer\"}},\"additionalProperties\": false}"
+  }' \
+  http://schema-registry:8081/subjects/sr_topic-value/versions     
+```
+
+We have now created the situation where client and proxy see different schemas for id 1
+
+```bash
+docker-compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  http://schema-registry:8081/schemas/ids/1 | jq
+```
+
+produces:
+
+```bash
+{
+  "schemaType": "JSON",
+  "schema": "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"}}}"
+}
+```
+
+and
+
+```bash
+docker-compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  http://client-schema-registry:8082/schemas/ids/1 | jq
+```
+
+produces:
+
+```bash
+{
+  "schemaType": "JSON",
+  "schema": "{\"title\":\"User\",\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"username\":{\"type\":\"string\"},\"password\":{\"type\":\"string\"},\"visa\":{\"type\":\"string\"},\"address\":{\"type\":\"string\"}}}"
+}
+```
+
+### Step 9: Produce data to the topic again
+
+We produce with the client schema, this time schema id: 1 is present on both Schema Registries but the proxy should not be able to deserialize the message using it's schema.
+
+```bash
+echo '{ 
+    "name": "conduktor",
+    "username": "test@conduktor.io",
+    "password": "password1",
+    "visa": "visa123456",
+    "address": "Conduktor Towers, London" 
+}' | jq -c | docker-compose exec -T schema-registry \
+    kafka-json-schema-console-producer  \
+        --bootstrap-server conduktor-proxy:6969 \
+        --producer.config /clientConfig/proxy.properties \
+        --topic sr_topic \
+        --property schema.registry.url=http://client-schema-registry:8082 \
+        --property value.schema='{ 
+            "title": "User",
+            "type": "object",
+            "properties": { 
+                "name": { "type": "string" },
+                "username": { "type": "string" },
+                "password": { "type": "string" },
+                "visa": { "type": "string" },
+                "address": { "type": "string" } 
+            } 
+        }'
+```
+

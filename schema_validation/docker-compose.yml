@@ -70,6 +70,8 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
       SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: schema-registry
 
   client-schema-registry:
     image: confluentinc/cp-schema-registry:latest
@@ -91,6 +93,7 @@ services:
       SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8082"
       SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _client_schemas
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: client-schema-registry
 
   conduktor-proxy:
     image: ghcr.io/conduktor/conduktor-proxy:1.2.14_sr_validation
