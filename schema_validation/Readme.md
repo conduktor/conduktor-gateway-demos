@@ -242,3 +242,9 @@ echo '{
         }'
 ```
 
+You should once agains see an error like this:
+
+```bash
+[2022-11-29 18:35:51,440] ERROR Error when sending message to topic sr_topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+org.apache.kafka.common.InvalidRecordException: This record has failed the validation on broker and hence will be rejected.
+```
