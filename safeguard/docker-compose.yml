@@ -53,7 +53,7 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
 
   conduktor-proxy:
-    image: conduktor/conduktor-proxy:0.1.0-amd64
+    image: conduktor/conduktor-proxy:0.2.0-amd64
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:
@@ -63,12 +63,12 @@ services:
       - "6970:6970"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
-      authenticationConfig_authenticatorType: SASL_PLAIN
-      userPoolConfig_type: JWT
-      userPoolConfig_className: io.conduktor.proxy.service.userPool.JwtUserPoolService
-      userPoolConfig_secretKey: secret
-      hostPortConfiguration_proxyHost: conduktor-proxy
-      schemaRegistry_host: http://schema-registry:8081
+      AUTHENTICATION_AUTHENTICATOR_TYPE: SASL_PLAIN
+      USER_POOL_TYPE: JWT
+      USER_POOL_CLASSNAME: io.conduktor.proxy.service.userPool.JwtUserPoolService
+      USER_POOL_SECRET_KEY: secret
+      PROXY_HOST: conduktor-proxy
+      SCHEMA_REGISTRY_HOST: http://schema-registry:8081
 
   conduktor-platform:
     image: conduktor/conduktor-platform:latest

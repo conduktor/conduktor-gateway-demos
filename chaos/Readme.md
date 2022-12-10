@@ -369,6 +369,7 @@ docker-compose exec kafka-client curl \
     --silent \
     --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/random-bytes/apiKeys/PRODUCE/direction/REQUEST"
 ```
+
 ### <a name="slowBroker"></a> Step 17: Slow Broker
 
 Conduktor Proxy exposes a REST API to configure the chaos features.
@@ -429,6 +430,7 @@ docker-compose exec kafka-client curl \
     --silent \
     --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/slow-broker/apiKeys/PRODUCE/direction/REQUEST"
 ```
+
 ### <a name="slowTopic"></a> Step 20: Slow Topic
 
 Conduktor Proxy exposes a REST API to configure the chaos features.
