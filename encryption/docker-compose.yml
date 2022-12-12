@@ -72,7 +72,7 @@ services:
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
 
   conduktor-proxy:
-    image: conduktor/conduktor-proxy:0.2.0-amd64
+    image: conduktor/conduktor-proxy:0.3.0-amd64
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:

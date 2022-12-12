@@ -71,12 +71,14 @@ The command below will instruct Conduktor Proxy to validate that the records on 
 ```bash
 docker-compose exec kafka-client curl \
     --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/feature/schema-validation" \
+    --request POST "conduktor-proxy:8888/tenant/1-1/feature/guard-produce" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
-            "topic": "sr_topic",
-            "checkDeserialization": true
+        "config": {
+            "schemaId" : {
+                "type": "REQUIRED",
+                "checkDeserialization": true
+            }
         },
         "direction": "REQUEST",
         "apiKeys": "PRODUCE"
@@ -116,8 +118,8 @@ echo '{
 You should see something similar to the following produced:
 
 ```bash
-[2022-11-25 21:57:31,863] ERROR Error when sending message to topic sr_topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
-org.apache.kafka.common.InvalidRecordException: This record has failed the validation on broker and hence will be rejected.
+[2022-12-12 21:49:51,205] ERROR Error when sending message to topic sr_topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
 ```
 
 ### Step 7: Confirm the schemas
@@ -242,9 +244,9 @@ echo '{
         }'
 ```
 
-You should once agains see an error like this:
+You should once again see an error like this:
 
 ```bash
-[2022-11-29 18:35:51,440] ERROR Error when sending message to topic sr_topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
-org.apache.kafka.common.InvalidRecordException: This record has failed the validation on broker and hence will be rejected.
+[2022-12-12 21:51:59,888] ERROR Error when sending message to topic sr_topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
 ```
