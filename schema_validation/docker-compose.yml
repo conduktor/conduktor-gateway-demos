@@ -70,6 +70,30 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
       SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: schema-registry
+
+  client-schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    hostname: client-schema-registry
+    container_name: client-schema-registry
+
+    depends_on:
+      - kafka1
+    ports:
+      - "8082:8082"
+    volumes:
+      - type: bind
+        source: "./clientConfig"
+        target: /clientConfig
+        read_only: true
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: client-schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8082"
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _client_schemas
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: client-schema-registry
 
   conduktor-proxy:
     image: conduktor/conduktor-proxy:0.3.0-amd64
@@ -88,27 +112,6 @@ services:
       USER_POOL_SECRET_KEY: secret
       PROXY_HOST: conduktor-proxy
       SCHEMA_REGISTRY_HOST: http://schema-registry:8081
-
-  conduktor-platform:
-    image: conduktor/conduktor-platform:latest
-    hostname: platform
-    container_name: platform
-    ports:
-      - "8080:8080"
-    volumes:
-      - type: bind
-        source: "./platform-config.yaml"
-        target: /opt/conduktor/platform-config.yaml
-        read_only: true
-    depends_on:
-      - kafka1
-    environment:
-      CDK_IN_CONF_FILE: /opt/conduktor/platform-config.yaml
-      KAFKA_BOOTSTRAP_SERVER: kafka1:9092
-      ORGANISATION_NAME: "conduktor"
-      ADMIN_EMAIL: "test@conduktor.io"
-      ADMIN_PSW: "password1"
-      PROXY_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoxLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.Eb94MxCyesPeVdQmm0EDBGvhwcx8j-ST-mvmdAId_j0
 
   kafka-client:
     image: confluentinc/cp-kafka:latest
