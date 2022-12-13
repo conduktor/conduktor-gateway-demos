@@ -6,9 +6,13 @@ Kafka is an extremely configurable system. This flexibility is great but can lea
 
 In this demo we will impose limits on topic creation to ensure that any topics created in the cluster adhere to a minimum specification for Replication Factor and Partition count.
 
+### Video
+
+[![asciicast](https://asciinema.org/a/c1jFkzWTrCh9VSF8RO5ezb63R.svg)](https://asciinema.org/a/c1jFkzWTrCh9VSF8RO5ezb63R)
+
 ## Running the demo
 
-### Step 1: review the environment
+### Step 1: Review the environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following:
 
@@ -18,7 +22,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A Conduktor Platform container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-### Step 2: review the platform configuration
+### Step 2: Review the platform configuration
 
 `platform-config.yaml` defines 3 clusters:
 
@@ -28,7 +32,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Note: Proxy and backing Kafka can use different security schemes. 
 In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 
-### Step 3: start the environment
+### Step 3: Start the environment
 
 Start the environment with
 
