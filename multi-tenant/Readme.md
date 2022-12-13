@@ -4,9 +4,13 @@
 
 Conduktor Proxy's multi tenancy feature allows 1 Kafka cluster to appear as a number of isolated clusters to clients. Each cluster/tenant can be operated upon separately with no concern of side effects for other clusters.
 
+### Video
+
+[![asciicast](https://asciinema.org/a/PncSYV3jST1cdlhla9JGGAVHy.svg)](https://asciinema.org/a/PncSYV3jST1cdlhla9JGGAVHy)
+
 ## Running the demo
 
-### Step 1: review the environment
+### Step 1: Review the environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following:
 
@@ -16,7 +20,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A Conduktor Platform container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-### Step 2: review the platform configuration
+### Step 2: Review the platform configuration
 
 `platform-config.yaml` defines 3 clusters:
 
@@ -26,7 +30,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 
 Note: Tenancy is determined by the SASL credentials configured for each cluster. These credentials provide a token that encodes tenancy information.
 
-### Step 3: start the environment
+### Step 3: Start the environment
 
 Start the environment with
 
@@ -95,13 +99,13 @@ From a browser, navigate to `http://localhost:8080` and use the following to log
 Username: test@conduktor.io
 Password: password1
 
-### Step 5: View the clusters
+### Step 8: View the clusters
 
 From Conduktor Platform navigate to Admin -> Clusters, you should see 3 clusters as below:
 
 ![clusters](images/clusters.png "Clusters")
 
-### Step 8: Create Topics with Conduktor Platform
+### Step 9: Create Topics with Conduktor Platform
 
 To create topics through Conduktor Platform, navigate to `Console`, select the correct cluster from the top right, and click `Create Topic`
 
@@ -111,7 +115,7 @@ Create a topic in cluster `London` named `london_topic` and one in `Paris` named
 
 Switch back and forth between the `London` and `Paris` clusters and you will see that they only show the topics relevant to their clusters. 
 
-### Step 9: Produce with Conduktor Platform
+### Step 10: Produce with Conduktor Platform
 
 Let's produce some messages to the newly created topics. Go to `Console`, click on the topic you want to produce to, and select the produce tab.
 
@@ -121,7 +125,7 @@ Now we select a Value format of `String` and click `Generate Once` to create a a
 
 ![produce to a topic](images/produce2.png "Produce")
 
-### Step 10: Consumer with Conduktor Platform
+### Step 11: Consumer with Conduktor Platform
 
 To view produced messages, select the `Consume` tab in Conduktor Platform
 
