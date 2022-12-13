@@ -16,9 +16,13 @@ In this demo we will inject the following disruptions with Conduktor Proxy and o
 * Slow Topic - Introduce latency for specific topics
 * Invalid Schema Id - Simulate broker responses as if the schema provided in a message was invalid.
 
+### Video
+
+[![asciicast](https://asciinema.org/a/YdyxC0HDIR6b7MhNTUhgTj6DE.svg)](https://asciinema.org/a/YdyxC0HDIR6b7MhNTUhgTj6DE)
+
 ## Running the demo: Setup
 
-### Step 1: review the environment
+### Step 1: Review the environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following:
 
@@ -27,7 +31,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Conduktor Proxy container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-### Step 2: start the environment
+### Step 2: Start the environment
 
 Start the environment with
 
@@ -96,7 +100,7 @@ docker-compose exec kafka-client curl \
         "apiKeys": "PRODUCE"
     }'
 ```
-### Step 5 Inject some chaos
+### Step 5: Inject some chaos
 
 Let's produce some records to our created topic and observe some errors being injected by Conduktor Proxy.
 
