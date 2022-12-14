@@ -4,9 +4,13 @@
 
 Conduktor Proxy's Schema Validation feature detects messages that have invalid schema information and rejects them. 
 
+### Video
+
+[![asciicast](https://asciinema.org/a/sxVe031UekMiV533iSkDgFBG8.svg)](https://asciinema.org/a/sxVe031UekMiV533iSkDgFBG8)
+
 ## Running the demo
 
-### Step 1: review the environment
+### Step 1: Review the environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following:
 
@@ -21,7 +25,7 @@ Note that there are 2 Schema registries. client-schema-registry will be used to 
 
 This means that schemas created by Kafka clients will not be valid in proxy, enabling the test scenario.
 
-### Step 2: review the platform configuration
+### Step 2: Review the platform configuration
 
 `platform-config.yaml` defines 2 clusters:
 
@@ -31,7 +35,7 @@ This means that schemas created by Kafka clients will not be valid in proxy, ena
 Note: Proxy and backing Kafka can use different security schemes. 
 In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 
-### Step 3: start the environment
+### Step 3: Start the environment
 
 Start the environment with
 
