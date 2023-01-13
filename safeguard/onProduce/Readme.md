@@ -1,6 +1,6 @@
 # Produce Safeguard
 
-In this demo, we will impose rules to ensure that every message coming to kafka is exactly what I want it to be. `acks=0,1` and `headers` are required
+In this demo, we will impose rules to ensure that every message coming to kafka is exactly what we want it to be. My environment requires that all producers are configured with acks=0 or 1 and that all messages have headers.
 
 ### Video
 
