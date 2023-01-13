@@ -2,7 +2,7 @@
 
 ## What is Conduktor Proxy Data Masking?
 
-Conduktor Proxy's data masking feature masks sensitive fields within messages as they are consume through the proxy. 
+Conduktor Proxy's data masking feature masks sensitive fields within messages as they are consumed through the proxy.
 
 ### Video
 
