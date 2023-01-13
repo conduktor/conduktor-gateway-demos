@@ -20,7 +20,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 
 ### Step 2: Review the platform configuration
 
-`platform-config.yaml` defines 3 clusters:
+`platform-config.yaml` defines 2 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Proxy - a connection through Conduktor Proxy to the underlying Kafka
@@ -117,7 +117,7 @@ java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.PolicyVi
 ```
 ### Step 6: Alter valid config
 
-If we modify our command to meet the criteria the topic is created.
+If we modify our command to meet the criteria the configuration is altered.
 
 ```bash
 # alter topic with valid configs
