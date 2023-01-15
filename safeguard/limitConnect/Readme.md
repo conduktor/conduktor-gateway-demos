@@ -94,6 +94,6 @@ echo 'testMessage' | docker-compose exec kafka-client \
 You should see an output similar to the following in the second terminal:
 
 ```bash
-ERROR Error when sending message to topic conduktor_topic with key: null, value: 2 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+ERROR ERROR Error when sending message to topic conduktor_topic with key: null, value: 1 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)                                                                  
 org.apache.kafka.common.errors.PolicyViolationException: Client connections exceed the limitation
 ```
