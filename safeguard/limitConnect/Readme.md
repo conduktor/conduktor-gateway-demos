@@ -4,7 +4,7 @@ In this demo we will impose limit connection attempts because creating a new con
 
 ### Video
 
-[![asciicast](https://asciinema.org/a/c1jFkzWTrCh9VSF8RO5ezb63R.svg)](https://asciinema.org/a/c1jFkzWTrCh9VSF8RO5ezb63R)
+[![asciicast](https://asciinema.org/a/mzZ1z9EjoLhilyGZwsx3GLCbC.svg)](https://asciinema.org/a/mzZ1z9EjoLhilyGZwsx3GLCbC)
 
 ## Running the demo
 
@@ -61,7 +61,7 @@ docker-compose exec kafka-client \
 
 ### Step 5: Configure safeguard
 
-Conduktor Proxy provides a REST API used to configure the safeguard feature. 
+Conduktor Proxy provides a REST API used to configure the safeguard feature to limit 1 connection only in 20 seconds
 
 ```bash
 docker-compose exec kafka-client curl \
@@ -71,7 +71,7 @@ docker-compose exec kafka-client curl \
     --data-raw '{
         "config": { 
             "connectionsLimit": 1,
-            "duration": 10,
+            "duration": 20,
             "durationUnit": "SECONDS"
         },
         "direction": "REQUEST",
@@ -81,7 +81,7 @@ docker-compose exec kafka-client curl \
 
 ### Step 6: Attempt to create new connection
 
-Let's open 2 terminals and produce to the `conduktor_topic` topic in each terminal
+Let's produce to the `conduktor_topic` topic 
 
 ```bash
 echo 'testMessage' | docker-compose exec kafka-client \
