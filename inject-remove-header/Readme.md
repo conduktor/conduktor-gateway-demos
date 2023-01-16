@@ -50,7 +50,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
 We create topics using the Kafka console tools, the below creates a topic named `inject_header_topic`
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -60,7 +60,7 @@ docker-compose exec kafka-client \
 We create topics using the Kafka console tools, the below creates a topic named `remove_header_key_pattern_topic`
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -70,7 +70,7 @@ docker-compose exec kafka-client \
 We create topics using the Kafka console tools, the below creates a topic named `remove_header_value_pattern_topic`
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -80,7 +80,7 @@ docker-compose exec kafka-client \
 We create topics using the Kafka console tools, the below creates a topic named `remove_header_key_value_pattern_topic`
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -90,7 +90,7 @@ docker-compose exec kafka-client \
 List the created topics
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -104,7 +104,7 @@ The same REST API can be used to configure the inject header feature.
 The command below will instruct Conduktor Proxy to inject headers with value user ip, tenant and proxy ip in records on topic `inject_header_topic`. 
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec -T kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/inject-header" \
     --header 'Content-Type: application/json' \
@@ -129,7 +129,7 @@ docker-compose exec kafka-client curl \
 Let's produce a simple record to the `inject_header_topic` topic.
 
 ```bash
-echo 'inject_header' | docker-compose exec kafka-client \
+echo 'inject_header' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
@@ -141,7 +141,7 @@ echo 'inject_header' | docker-compose exec kafka-client \
 Let's consume from our `inject_header_topic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
     --consumer.config /clientConfig/proxy.properties \
@@ -162,7 +162,7 @@ X-RAW_KEY:a value,X-USER_IP:172.19.0.3,X-TENANT:1-1,X-USER_IP_PROXY_IP_TENANT:17
 To confirm the message headers are injected in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic 1-1inject_header_topic \
@@ -184,7 +184,7 @@ The same REST API can be used to configure the remove header with key pattern on
 The command below will instruct Conduktor Proxy to remove headers which key matches the pattern `k0.*'` in records on topic `remove_header_key_pattern_topic`.
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec -T kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/remove-header" \
     --header 'Content-Type: application/json' \
@@ -204,7 +204,7 @@ docker-compose exec kafka-client curl \
 Let's produce a simple record to the `remove_header_key_pattern_topic` topic.
 
 ```bash
-echo 'k0:v0,k1:v1\tkey_pattern' | docker-compose exec kafka-client \
+echo 'k0:v0,k1:v1\tkey_pattern' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
@@ -218,7 +218,7 @@ echo 'k0:v0,k1:v1\tkey_pattern' | docker-compose exec kafka-client \
 Let's consume from our `remove_header_key_pattern_topic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
     --consumer.config /clientConfig/proxy.properties \
@@ -239,7 +239,7 @@ k1:v1   key_pattern
 To confirm the message headers are removed in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic 1-1remove_header_key_pattern_topic \
@@ -261,7 +261,7 @@ The same REST API can be used to configure the remove header with value pattern 
 The command below will instruct Conduktor Proxy to remove headers which value matches the pattern `value.*'` in records on topic `remove_header_value_pattern_topic`.
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec -T kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/remove-header" \
     --header 'Content-Type: application/json' \
@@ -281,7 +281,7 @@ docker-compose exec kafka-client curl \
 Let's produce a simple record to the `remove_header_value_pattern_topic` topic.
 
 ```bash
-echo 'k0:value0,k1:someValue\tvalue_pattern' | docker-compose exec kafka-client \
+echo 'k0:value0,k1:someValue\tvalue_pattern' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
@@ -295,7 +295,7 @@ echo 'k0:value0,k1:someValue\tvalue_pattern' | docker-compose exec kafka-client 
 Let's consume from our `remove_header_value_pattern_topic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
     --consumer.config /clientConfig/proxy.properties \
@@ -316,7 +316,7 @@ k1:someValue   value_pattern
 To confirm the message headers are removed in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic 1-1remove_header_value_pattern_topic \
@@ -338,7 +338,7 @@ The same REST API can be used to configure the remove header with both key and v
 The command below will instruct Conduktor Proxy to remove headers which key matches the pattern `k0.*'` and value matches the pattern `v0.*`  in records on topic `remove_header_key_value_pattern_topic`.
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec -T kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/remove-header" \
     --header 'Content-Type: application/json' \
@@ -359,7 +359,7 @@ docker-compose exec kafka-client curl \
 Let's produce a simple record to the `remove_header_key_value_pattern_topic` topic.
 
 ```bash
-echo 'k0:v0,k1:v1\tkey_value_pattern' | docker-compose exec kafka-client \
+echo 'k0:v0,k1:v1\tkey_value_pattern' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
@@ -373,7 +373,7 @@ echo 'k0:v0,k1:v1\tkey_value_pattern' | docker-compose exec kafka-client \
 Let's consume from our `remove_header_key_value_pattern_topic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
     --consumer.config /clientConfig/proxy.properties \
@@ -394,7 +394,7 @@ k1:v1   key_value_pattern
 To confirm the message headers are removed in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic 1-1remove_header_key_value_pattern_topic \
