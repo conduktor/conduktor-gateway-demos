@@ -41,7 +41,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
 We create topics using the Kafka console tools, the below creates a topic named `conduktor_topic`
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -52,7 +52,7 @@ docker-compose exec kafka-client \
 List the created topic
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec -T kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -64,7 +64,7 @@ docker-compose exec kafka-client \
 Conduktor Proxy provides a REST API used to configure the safeguard feature to limit 1 connection only in 20 seconds
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec -T kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/guard-limit-connection" \
     --header 'Content-Type: application/json' \
@@ -84,7 +84,7 @@ docker-compose exec kafka-client curl \
 Let's produce to the `conduktor_topic` topic 
 
 ```bash
-echo 'testMessage' | docker-compose exec kafka-client \
+echo 'testMessage' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
