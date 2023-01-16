@@ -41,7 +41,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
 We create topics using the Kafka console tools, the below creates a topic named `conduktor_topic`
 
 ```bash
-docker-compose exec -T kafka-client \
+docker-compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -52,7 +52,7 @@ docker-compose exec -T kafka-client \
 List the created topic
 
 ```bash
-docker-compose exec -T kafka-client \
+docker-compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -64,7 +64,7 @@ docker-compose exec -T kafka-client \
 Conduktor Proxy provides a REST API used to configure the safeguard feature to limit 1 client call only to produce data in 10 seconds
 
 ```bash
-docker-compose exec -T kafka-client curl \
+docker-compose exec kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/guard-limit-client" \
     --header 'Content-Type: application/json' \
@@ -98,7 +98,7 @@ echo 'testMessage' | docker-compose exec -T kafka-client \
 Let's produce to the `conduktor_topic` topic again
 
 ```bash
-docker-compose exec -T kafka-client \
+docker-compose exec kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
@@ -115,7 +115,7 @@ org.apache.kafka.common.errors.PolicyViolationException: Client calls produce ex
 Conduktor Proxy provides a REST API used to configure the safeguard feature to limit 1 client call only to consume data in 20 seconds
 
 ```bash
-docker-compose exec -T kafka-client curl \
+docker-compose exec kafka-client curl \
     --silent \
     --request POST "conduktor-proxy:8888/tenant/1-1/feature/guard-limit-client" \
     --header 'Content-Type: application/json' \
@@ -139,7 +139,7 @@ docker-compose exec -T kafka-client curl \
 Let's consume data from the `conduktor_topic` topic
 
 ```bash
-docker-compose exec -T kafka-client kafka-console-consumer \
+docker-compose exec kafka-client kafka-console-consumer \
   --bootstrap-server conduktor-proxy:6969 \
   --consumer.config /clientConfig/proxy.properties \
   --from-beginning \
@@ -151,7 +151,7 @@ You should see an output similar to the following in the terminal right after yo
 Let's consume data from the `conduktor_topic` topic again
 
 ```bash
-docker-compose exec -T kafka-client kafka-console-consumer \
+docker-compose exec kafka-client kafka-console-consumer \
   --bootstrap-server conduktor-proxy:6969 \
   --consumer.config /clientConfig/proxy.properties \
   --from-beginning \
