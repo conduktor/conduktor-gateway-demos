@@ -72,6 +72,44 @@ docker-compose exec kafka-client kafka-console-consumer --bootstrap-server condu
 docker-compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/paris.properties --topic paris_topic --from-beginning
 ```
 
+### Step 7: Applying Multi Tenancy to existing topics
+
+During migration to Conduktor Proxy you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Proxy allows this via administration APIs. In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Proxy
+
+Let's start by creating some pre-exiting topics and adding data
+
+```bash
+docker-compose exec kafka-client kafka-topics --bootstrap-server kafka1:9092 --create --topic existingLondonTopic
+docker-compose exec kafka-client kafka-topics --bootstrap-server kafka1:9092 --create --topic existingSharedTopic
+echo existingLondonMessage | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server kafka1:9092 --topic existingLondonTopic
+echo existingSharedMessage | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server kafka1:9092 --topic existingSharedTopic
+
+```
+
+### Step 8: Configuring tenants for existing topics
+
+We'll create the following mappings:
+* tenant: `London` can see `existingLondonTopic` and `existingSharedTopic`
+* tenant: `Paris` can see only `existingSharedTopic`
+
+```bash
+docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingLondonTopic -d '{ "name":"existingLondonTopic" }'
+docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingSharedTopic -d '{ "name":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topicMappings/1-2/existingSharedTopic -d '{ "name":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingLondonTopic" }'
+docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topics/1-2 -d '{ "name":"existingSharedTopic" }' 
+```
+
+### Step 9: List topics as the different tenants
+
+```bash
+docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/london.properties --list
+docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/paris.properties --list
+```
+
+
+
 ### Step 7: Log into the platform
 
 > The remaining steps in this demo require a Conduktor Platform license. For more information on this [Arrange a technical demo](https://www.conduktor.io/contact/demo)
