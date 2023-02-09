@@ -40,11 +40,11 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic name `london_topic` in cluster `London` and `paris_topic` in cluster `Paris`
+We create topics using the Kafka console tools, the below creates a topic name `londonTopic` in cluster `London` and `parisTopic` in cluster `Paris`
 
 ```bash
-docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/london.properties --create --topic london_topic
-docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/paris.properties --create --topic paris_topic
+docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/london.properties --create --topic londonTopic
+docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/paris.properties --create --topic parisTopic
 ```
 
 List all topics from both clusters to see that, although they are hosted on the same underlying cluster, the topics are isolated from eachother:
@@ -59,8 +59,8 @@ docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy
 You can produce with the console tools as follows:
 
 ```bash
-echo testMessageLondon | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server conduktor-proxy:6969 --producer.config /clientConfig/london.properties --topic london_topic
-echo testMessageParis | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server conduktor-proxy:6969 --producer.config /clientConfig/paris.properties --topic paris_topic
+echo testMessageLondon | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server conduktor-proxy:6969 --producer.config /clientConfig/london.properties --topic londonTopic
+echo testMessageParis | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server conduktor-proxy:6969 --producer.config /clientConfig/paris.properties --topic parisTopic
 ```
 
 ### Step 6: Consume from the topics
@@ -68,8 +68,8 @@ echo testMessageParis | docker-compose exec -T kafka-client kafka-console-produc
 And consume the messages produced above. Note that the message `testMessageLondon` will never be consumed by a `Paris` cluster client due to cluster isolation. 
 
 ```bash
-docker-compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/london.properties --topic london_topic --from-beginning
-docker-compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/paris.properties --topic paris_topic --from-beginning
+docker-compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/london.properties --topic londonTopic --from-beginning
+docker-compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/paris.properties --topic parisTopic --from-beginning
 ```
 
 ### Step 7: Applying Multi Tenancy to existing topics
@@ -83,7 +83,6 @@ docker-compose exec kafka-client kafka-topics --bootstrap-server kafka1:9092 --c
 docker-compose exec kafka-client kafka-topics --bootstrap-server kafka1:9092 --create --topic existingSharedTopic
 echo existingLondonMessage | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server kafka1:9092 --topic existingLondonTopic
 echo existingSharedMessage | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server kafka1:9092 --topic existingSharedTopic
-
 ```
 
 ### Step 8: Configuring tenants for existing topics
@@ -93,12 +92,12 @@ We'll create the following mappings:
 * tenant: `Paris` can see only `existingSharedTopic`
 
 ```bash
-docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingLondonTopic -d '{ "name":"existingLondonTopic" }'
-docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingSharedTopic -d '{ "name":"existingSharedTopic" }'
-docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topicMappings/1-2/existingSharedTopic -d '{ "name":"existingSharedTopic" }'
-docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingLondonTopic" }'
-docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingSharedTopic" }'
-docker-compose exec kafka-client curl -X POST curl -X POST conduktor-proxy:8888/topics/1-2 -d '{ "name":"existingSharedTopic" }' 
+docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingLondonTopic -d '{ "topicName":"existingLondonTopic" }'
+docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-2/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingLondonTopic" }'
+docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-2 -d '{ "name":"existingSharedTopic" }' 
 ```
 
 ### Step 9: List topics as the different tenants
@@ -108,9 +107,20 @@ docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy
 docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/paris.properties --list
 ```
 
+You should see that the Paris tenant can only see `existingSharedTopic` whereas London can see `existingSharedTopic` and `existingLondonTopic` 
+
+### Step 10: Consume from the topics
+
+```bash
+docker-compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/london.properties --topic existingLondonTopic --from-beginning
+docker-compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/london.properties --topic existingSharedTopic --from-beginning
+docker-compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-proxy:6969 --consumer.config /clientConfig/paris.properties --topic existingSharedTopic --from-beginning
+```
+
+On `existingSharedTopic` the same messages are available to both tenants.
 
 
-### Step 7: Log into the platform
+### Step 11: Log into the platform
 
 > The remaining steps in this demo require a Conduktor Platform license. For more information on this [Arrange a technical demo](https://www.conduktor.io/contact/demo)
 
@@ -137,23 +147,23 @@ From a browser, navigate to `http://localhost:8080` and use the following to log
 Username: test@conduktor.io
 Password: password1
 
-### Step 8: View the clusters
+### Step 12: View the clusters
 
 From Conduktor Platform navigate to Admin -> Clusters, you should see 3 clusters as below:
 
 ![clusters](images/clusters.png "Clusters")
 
-### Step 9: Create Topics with Conduktor Platform
+### Step 13: Create Topics with Conduktor Platform
 
 To create topics through Conduktor Platform, navigate to `Console`, select the correct cluster from the top right, and click `Create Topic`
 
 ![create a topic](images/create_topic.png "Create Topic")
 
-Create a topic in cluster `London` named `london_topic` and one in `Paris` named `paris_topic`
+Create a topic in cluster `London` named `londonTopic` and one in `Paris` named `parisTopic`
 
 Switch back and forth between the `London` and `Paris` clusters and you will see that they only show the topics relevant to their clusters. 
 
-### Step 10: Produce with Conduktor Platform
+### Step 14: Produce with Conduktor Platform
 
 Let's produce some messages to the newly created topics. Go to `Console`, click on the topic you want to produce to, and select the produce tab.
 
@@ -163,7 +173,7 @@ Now we select a Value format of `String` and click `Generate Once` to create a a
 
 ![produce to a topic](images/produce2.png "Produce")
 
-### Step 11: Consumer with Conduktor Platform
+### Step 15: Consumer with Conduktor Platform
 
 To view produced messages, select the `Consume` tab in Conduktor Platform
 

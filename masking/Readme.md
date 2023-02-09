@@ -42,7 +42,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client schema
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `masked_topic`
+We create topics using the Kafka console tools, the below creates a topic named `maskedTopic`
 
 ```bash
 # Create a topic
@@ -51,7 +51,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic masked_topic
+    --topic maskedTopic
 ```
 
 List the created topic
@@ -124,7 +124,7 @@ echo '{
     kafka-json-schema-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic masked_topic \
+        --topic maskedTopic \
         --property value.schema='{ 
             "title": "User",
             "type": "object",
@@ -140,7 +140,7 @@ echo '{
 
 ### Step 7: Consume from the topic
 
-Let's consume from our `masked_topic`.
+Let's consume from our `maskedTopic`.
 
 ```bash
 # And consume through the proxy, it's masked
@@ -148,7 +148,7 @@ docker-compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
     --consumer.config /clientConfig/proxy.properties \
-    --topic masked_topic \
+    --topic maskedTopic \
     --from-beginning \
     --max-messages 1 | jq .
 ```
@@ -174,7 +174,7 @@ Let's consume directly from the underlying Kafka cluster.
 docker-compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic 1-1masked_topic \
+    --topic 1-1maskedTopic \
     --from-beginning \
     --max-messages 1 | jq .
 ```
@@ -214,12 +214,12 @@ From Conduktor Platform navigate to Admin -> Clusters, you should see 2 clusters
 
 ### Step 11: View the masked messages in Conduktor Platform
 
-Navigate to `Console` and select the `Proxy` cluster from the top right. You should now see the `masked_topic` topic and clicking on it will show you a masked version of the produced message.
+Navigate to `Console` and select the `Proxy` cluster from the top right. You should now see the `maskedTopic` topic and clicking on it will show you a masked version of the produced message.
 
 ![create a topic](images/through_proxy.png "View Masked Messages")
 
 ### Step 12: View the messages in Conduktor Platform
 
-Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `1-1masked_topic` topic (ignore the 1-1 prefix for now) and clicking on it will show you the produced message.
+Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `1-1maskedTopic` topic (ignore the 1-1 prefix for now) and clicking on it will show you the produced message.
 
 ![create a topic](images/through_backing_cluster.png "View Messages")
