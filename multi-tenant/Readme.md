@@ -91,14 +91,23 @@ We'll create the following mappings:
 * tenant: `London` can see `existingLondonTopic` and `existingSharedTopic`
 * tenant: `Paris` can see only `existingSharedTopic`
 
+First we create a topic mapping for each topic. These map a topic name for the tenant (`existingLondonTopic`/`existingSharedTopic` url param ) to a topic name in the Kafka cluster (`topicName` in the request body). These names do not have to match but they match here for clarity.
+
 ```bash
 docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingLondonTopic -d '{ "topicName":"existingLondonTopic" }'
 docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
 docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-2/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
+```
+
+Next we must add the topics to each tenant.
+
+```bash
 docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingLondonTopic" }'
 docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingSharedTopic" }'
 docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-2 -d '{ "name":"existingSharedTopic" }' 
 ```
+
+Note: the url params `1-1`/`1-2` represent the London/Paris tenants in these APIs. 
 
 ### Step 9: List topics as the different tenants
 

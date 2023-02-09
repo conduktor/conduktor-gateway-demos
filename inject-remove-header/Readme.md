@@ -363,7 +363,7 @@ echo 'k0:v0,k1:v1\tkey_value_pattern' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic remove_headerKeyValuePatternTopic \
+        --topic removeHeaderKeyValuePatternTopic \
         --property parse.key=false \
         --property parse.headers=true
 ```
@@ -377,7 +377,7 @@ docker-compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
     --consumer.config /clientConfig/proxy.properties \
-    --topic remove_headerKeyValuePatternTopic \
+    --topic removeHeaderKeyValuePatternTopic \
     --from-beginning \
     --max-messages 1 \
     --property print.headers=true
