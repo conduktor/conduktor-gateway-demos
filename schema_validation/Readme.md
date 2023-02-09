@@ -45,7 +45,7 @@ docker-compose up -d
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `sr_topic`
+We create topics using the Kafka console tools, the below creates a topic named `srTopic`
 
 ```bash
 docker-compose exec kafka-client \
@@ -53,7 +53,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic sr_topic
+    --topic srTopic
 ```
 
 List the created topic
@@ -70,7 +70,7 @@ docker-compose exec kafka-client \
 
 Conduktor Proxy provides a REST API that can be used to configure the schema validation feature. 
 
-The command below will instruct Conduktor Proxy to validate that the records on topic `sr_topic` refer to a schema that exists in the schema registry referred to by the proxy. 
+The command below will instruct Conduktor Proxy to validate that the records on topic `srTopic` refer to a schema that exists in the schema registry referred to by the proxy. 
 
 ```bash
 docker-compose exec kafka-client curl \
@@ -104,7 +104,7 @@ echo '{
     kafka-json-schema-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic sr_topic \
+        --topic srTopic \
         --property schema.registry.url=http://client-schema-registry:8082 \
         --property value.schema='{ 
             "title": "User",
@@ -122,7 +122,7 @@ echo '{
 You should see something similar to the following produced:
 
 ```bash
-[2022-12-12 21:49:51,205] ERROR Error when sending message to topic sr_topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+[2022-12-12 21:49:51,205] ERROR Error when sending message to topic srTopic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
 org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
 ```
 
@@ -133,14 +133,14 @@ To see why this happens let's query the 2 schema registries for the subject we a
 First if we look at the client Schema Registry (i.e. the one used by the producer) we see a schema present.
 
 ```bash
-docker-compose exec kafka-client curl http://client-schema-registry:8082/subjects/sr_topic-value/versions/1 | jq
+docker-compose exec kafka-client curl http://client-schema-registry:8082/subjects/srTopic-value/versions/1 | jq
 ```
 
 produces:
 
 ```bash
 {
-  "subject": "sr_topic-value",
+  "subject": "srTopic-value",
   "version": 1,
   "id": 1,
   "schemaType": "JSON",
@@ -151,7 +151,7 @@ produces:
 If we run the same queries against the Schema Registry associated with Conduktor Proxy we do not see the schema
 
 ```bash
-docker-compose exec kafka-client curl http://schema-registry:8081/subjects/sr_topic-value/versions/1 | jq
+docker-compose exec kafka-client curl http://schema-registry:8081/subjects/srTopic-value/versions/1 | jq
 ```
 
 produces:
@@ -159,7 +159,7 @@ produces:
 ```bash
 {
   "error_code": 40401,
-  "message": "Subject 'sr_topic-value' not found."
+  "message": "Subject 'srTopic-value' not found."
 }
 ```
 
@@ -183,7 +183,7 @@ docker-compose exec kafka-client curl \
 	"schemaType": "JSON",
 	"schema": "{\"type\":\"object\",\"properties\": {\"name\":{\"type\":\"integer\"}},\"additionalProperties\": false}"
   }' \
-  http://schema-registry:8081/subjects/sr_topic-value/versions     
+  http://schema-registry:8081/subjects/srTopic-value/versions     
 ```
 
 We have now created the situation where client and proxy see different schemas for id 1
@@ -233,7 +233,7 @@ echo '{
     kafka-json-schema-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic sr_topic \
+        --topic srTopic \
         --property schema.registry.url=http://client-schema-registry:8082 \
         --property value.schema='{ 
             "title": "User",
@@ -251,6 +251,6 @@ echo '{
 You should once again see an error like this:
 
 ```bash
-[2022-12-12 21:51:59,888] ERROR Error when sending message to topic sr_topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+[2022-12-12 21:51:59,888] ERROR Error when sending message to topic srTopic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
 org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
 ```

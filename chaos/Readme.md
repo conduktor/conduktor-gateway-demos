@@ -41,7 +41,7 @@ docker-compose up -d
 
 ### Step 3: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `conduktor_topic`
+We create topics using the Kafka console tools, the below creates a topic named `conduktorTopic`
 
 ```bash
 docker-compose exec kafka-client \
@@ -49,7 +49,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic conduktor_topic
+    --topic conduktorTopic
 ```
 
 List the created topic
@@ -110,18 +110,18 @@ docker-compose exec kafka-client kafka-producer-perf-test \
   --record-size 100 \
   --throughput 10 \
   --num-records 100 \
-  --topic conduktor_topic
+  --topic conduktorTopic
 ```
 
 This should produce output similar to this:
 
 ```bash
-[2022-11-16 17:00:42,193] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 5 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-16 17:00:42,474] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-16 17:00:42,193] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 5 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-16 17:00:42,474] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
 6 records sent, 0.8 records/sec (0.00 MB/sec), 1198.5 ms avg latency, 6632.0 ms max latency.
 org.apache.kafka.common.errors.InvalidRequiredAcksException: Produce request specified an invalid value for required acks.
-[2022-11-16 17:00:42,491] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-16 17:00:42,492] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 9 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-16 17:00:42,491] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-16 17:00:42,492] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 9 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
 100 records sent, 9.999000 records/sec (0.00 MB/sec), 2454.80 ms avg latency, 6852.00 ms max latency, 2046 ms 50th, 6560 ms 95th, 6852 ms 99th, 6852 ms 99.9th.
 ```
 
@@ -147,7 +147,7 @@ docker-compose exec kafka-client kafka-producer-perf-test \
   --record-size 100 \
   --throughput 10 \
   --num-records 100 \
-  --topic conduktor_topic
+  --topic conduktorTopic
 ```
 
 This should produce output similar to the following:
@@ -169,7 +169,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic conduktor_topic_duplicate
+    --topic conduktorTopicDuplicate
 ```
 
 ```bash
@@ -179,7 +179,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
-          "topics": ["conduktor_topic_duplicate"], 
+          "topics": ["conduktorTopicDuplicate"], 
           "duration": 1, 
           "rateInPercent": 100, 
           "quietPeriod": 1, 
@@ -199,7 +199,7 @@ docker-compose exec kafka-client kafka-producer-perf-test \
   --record-size 100 \
   --throughput 10 \
   --num-records 10 \
-  --topic conduktor_topic_duplicate
+  --topic conduktorTopicDuplicate
 ```
 
 And see the duplicated records:
@@ -209,7 +209,7 @@ docker-compose exec kafka-client kafka-console-consumer \
   --bootstrap-server conduktor-proxy:6969 \
   --consumer.config /clientConfig/proxy.properties \
   --from-beginning \
-  --topic conduktor_topic_duplicate
+  --topic conduktorTopicDuplicate
 ```
 
 This should produce output similar to this:
@@ -269,15 +269,15 @@ docker-compose exec kafka-client kafka-producer-perf-test \
   --record-size 100 \
   --throughput 10 \
   --num-records 10 \
-  --topic conduktor_topic
+  --topic conduktorTopic
 ```
 
 This should produce output similar to this:
 
 ```bash
-[2022-11-17 14:15:18,481] WARN [Producer clientId=perf-producer-client] Received invalid metadata error in produce request on partition conduktor_topic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-17 14:15:18,584] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 121 on topic-partition conduktor_topic-0, retrying (2147483588 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-17 14:15:18,584] WARN [Producer clientId=perf-producer-client] Received invalid metadata error in produce request on partition conduktor_topic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 14:15:18,481] WARN [Producer clientId=perf-producer-client] Received invalid metadata error in produce request on partition conduktorTopic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 14:15:18,584] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 121 on topic-partition conduktorTopic-0, retrying (2147483588 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 14:15:18,584] WARN [Producer clientId=perf-producer-client] Received invalid metadata error in produce request on partition conduktorTopic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
 1 records sent, 0.2 records/sec (0.00 MB/sec), 6511.0 ms avg latency, 6511.0 ms max latency.
 10 records sent, 1.531159 records/sec (0.00 MB/sec), 6010.20 ms avg latency, 6511.00 ms max latency, 6118 ms 50th, 6511 ms 95th, 6511 ms 99th, 6511 ms 99.9th.
 ```
@@ -304,7 +304,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic conduktor_topic_random
+    --topic conduktorTopicRandom
 ```
 
 Conduktor Proxy exposes a REST API to configure the chaos features.
@@ -318,7 +318,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
-          "topics": ["conduktor_topic_random"], 
+          "topics": ["conduktorTopicRandom"], 
           "nbMessages": 1, 
           "sizeInBytes": 10 
         },
@@ -336,7 +336,7 @@ docker-compose exec kafka-client kafka-producer-perf-test \
   --record-size 100 \
   --throughput 10 \
   --num-records 10 \
-  --topic conduktor_topic_random
+  --topic conduktorTopicRandom
 ```
 
 And see the appended bytes in the records:
@@ -346,7 +346,7 @@ docker-compose exec kafka-client kafka-console-consumer \
   --bootstrap-server conduktor-proxy:6969 \
   --consumer.config /clientConfig/proxy.properties \
   --from-beginning \
-  --topic conduktor_topic_random
+  --topic conduktorTopicRandom
 ```
 
 This should produce output similar to this:
@@ -409,17 +409,17 @@ docker-compose exec kafka-client kafka-producer-perf-test \
   --record-size 100 \
   --throughput 10 \
   --num-records 10 \
-  --topic conduktor_topic
+  --topic conduktorTopic
 ```
 
 This should produce output similar to this:
 
 ```bash
 1 records sent, 0.1 records/sec (0.00 MB/sec), 7357.0 ms avg latency, 7357.0 ms max latency.
-[2022-11-17 15:21:28,803] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 5 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-17 15:21:28,805] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-17 15:21:28,805] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 7 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-17 15:21:29,062] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 15:21:28,803] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 5 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 15:21:28,805] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 15:21:28,805] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 7 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 15:21:29,062] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
 10 records sent, 1.292825 records/sec (0.00 MB/sec), 7019.40 ms avg latency, 7357.00 ms max latency, 6990 ms 50th, 7357 ms 95th, 7357 ms 99th, 7357 ms 99.9th.
 ```
 
@@ -447,7 +447,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic conduktor_topic_slow
+    --topic conduktorTopicSlow
 ```
 
 ```bash
@@ -457,7 +457,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": {
-          "topicPatterns":["conduktor_topic_slow"],
+          "topicPatterns":["conduktorTopicSlow"],
           "duration":6000,
           "durationUnit":"MILLISECONDS",
           "quietPeriod":20000,
@@ -479,17 +479,17 @@ docker-compose exec kafka-client kafka-producer-perf-test \
   --record-size 100 \
   --throughput 10 \
   --num-records 10 \
-  --topic conduktor_topic_slow
+  --topic conduktorTopicSlow
 ```
 
 This should produce output similar to this:
 
 ```bash
 1 records sent, 0.1 records/sec (0.00 MB/sec), 7251.0 ms avg latency, 7251.0 ms max latency.
-[2022-11-17 15:26:32,507] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 5 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-17 15:26:32,510] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-17 15:26:32,510] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 7 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-17 15:26:32,511] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktor_topic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 15:26:32,507] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 5 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 15:26:32,510] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 15:26:32,510] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 7 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+[2022-11-17 15:26:32,511] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
 10 records sent, 1.354463 records/sec (0.00 MB/sec), 6830.00 ms avg latency, 7251.00 ms max latency, 6900 ms 50th, 7251 ms 95th, 7251 ms 99th, 7251 ms 99.9th.
 ```
 
@@ -517,7 +517,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic conduktor_topic_schema
+    --topic conduktorTopicSchema
 ```
 
 ```bash
@@ -527,7 +527,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "tenant": "1-1",
-        "topic": "conduktor_topic_schema",
+        "topic": "conduktorTopicSchema",
         "messageFormat": "JSON"
     }'
 ```
@@ -539,7 +539,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
-          "topics": ["conduktor_topic_schema"], 
+          "topics": ["conduktorTopicSchema"], 
           "fakeSchemaId": 999 
         },
         "direction": "REQUEST",
@@ -553,7 +553,7 @@ Let's produce a record to our created topic.
 ```bash
 docker-compose exec schema-registry bash -c "cat /clientConfig/payload.json | kafka-json-schema-console-producer \
     --bootstrap-server conduktor-proxy:6969 \
-    --topic conduktor_topic_schema  \
+    --topic conduktorTopicSchema  \
     --producer.config /clientConfig/proxy.properties \
     --property value.schema='{ 
         \"title\": \"someSchema\", 
@@ -571,7 +571,7 @@ And consume them with a schema aware consumer.
 ```bash
 docker-compose exec schema-registry kafka-json-schema-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
-    --topic conduktor_topic_schema \
+    --topic conduktorTopicSchema \
     --consumer.config /clientConfig/proxy.properties \
     --from-beginning 
 ```

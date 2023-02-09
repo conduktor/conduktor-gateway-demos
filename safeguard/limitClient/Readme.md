@@ -38,7 +38,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `conduktor_topic`
+We create topics using the Kafka console tools, the below creates a topic named `conduktorTopic`
 
 ```bash
 docker-compose exec kafka-client \
@@ -46,7 +46,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic conduktor_topic
+    --topic conduktorTopic
 ```
 
 List the created topic
@@ -85,30 +85,30 @@ docker-compose exec kafka-client curl \
 
 ### Step 6: Attempt to call to produce data
 
-Let's produce to the `conduktor_topic` topic
+Let's produce to the `conduktorTopic` topic
 
 ```bash
 echo 'testMessage' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic conduktor_topic
+        --topic conduktorTopic
 ```
 
-Let's produce to the `conduktor_topic` topic again
+Let's produce to the `conduktorTopic` topic again
 
 ```bash
 docker-compose exec kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic conduktor_topic
+        --topic conduktorTopic
 ```
 
 You should see an output similar to the following in the terminal right after you enter the message
 
 ```bash
-ERROR Error when sending message to topic conduktor_topic with key: null, value: 1 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+ERROR Error when sending message to topic conduktorTopic with key: null, value: 1 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
 org.apache.kafka.common.errors.PolicyViolationException: Client calls produce exceed the limitation
 ```
 
@@ -136,7 +136,7 @@ docker-compose exec kafka-client curl \
 
 ### Step 6: Attempt to call to consume data
 
-Let's consume data from the `conduktor_topic` topic
+Let's consume data from the `conduktorTopic` topic
 
 ```bash
 docker-compose exec kafka-client kafka-console-consumer \
@@ -144,11 +144,11 @@ docker-compose exec kafka-client kafka-console-consumer \
   --consumer.config /clientConfig/proxy.properties \
   --from-beginning \
   --max-messages 1 \
-  --topic conduktor_topic
+  --topic conduktorTopic
 ```
 You should see an output similar to the following in the terminal right after you enter the message
 
-Let's consume data from the `conduktor_topic` topic again
+Let's consume data from the `conduktorTopic` topic again
 
 ```bash
 docker-compose exec kafka-client kafka-console-consumer \
@@ -156,13 +156,13 @@ docker-compose exec kafka-client kafka-console-consumer \
   --consumer.config /clientConfig/proxy.properties \
   --from-beginning \
   --max-messages 1 \
-  --topic conduktor_topic
+  --topic conduktorTopic
 ```
 
 You should see an output similar to the following in the terminal but in a latency (about 20 seconds after your first consume call) because error below happened,
 and kafka consumer had to retry until successfully
 
 ```bash
-ERROR Error when sending message to topic conduktor_topic with key: null, value: 1 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+ERROR Error when sending message to topic conduktorTopic with key: null, value: 1 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
 org.apache.kafka.common.errors.PolicyViolationException: Client calls fetch exceed the limitation
 ```

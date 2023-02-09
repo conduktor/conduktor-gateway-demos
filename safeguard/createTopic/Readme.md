@@ -68,7 +68,7 @@ docker-compose exec kafka-client kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create \
-    --topic invalid_topic \
+    --topic invalidTopic \
     --replication-factor 1 \
     --partitions 1
 ```
@@ -90,7 +90,7 @@ docker-compose exec kafka-client kafka-topics \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create \
-    --topic valid_topic \
+    --topic validTopic \
     --replication-factor 2 \
     --partitions 3
 ```
@@ -130,11 +130,11 @@ From Conduktor Platform navigate to Admin -> Clusters, you should see 2 clusters
 
 ### Step 9: Attempt to create an invalid topic with Conduktor Platform
 
-Navigate to `Console` and select the `Proxy` cluster from the top right. You should now see the `valid_topic` created earlier.
+Navigate to `Console` and select the `Proxy` cluster from the top right. You should now see the `validTopic` created earlier.
 
 Click the `Create Topic` button and fill out the invalid topic details once more:
 
-* name: invalid_topic
+* name: invalidTopic
 * Partitions: 1
 * Replication Factor: 1
 

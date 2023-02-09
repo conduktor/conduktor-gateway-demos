@@ -39,7 +39,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
 
 ### Step 4: Create a topic
 
-We create topics using the Kafka console tools, the below creates a topic named `safeguard_topic`
+We create topics using the Kafka console tools, the below creates a topic named `safeguardTopic`
 
 ```bash
 # Create a topic
@@ -48,7 +48,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic safeguard_topic
+    --topic safeguardTopic
 ```
 
 List the created topic
@@ -98,14 +98,14 @@ docker-compose exec kafka-client curl \
 
 ### Step 5: Attempt to alter config
 
-Next we try to alter configs of safeguard_topic with a specification that does not match the above.
+Next we try to alter configs of safeguardTopic with a specification that does not match the above.
 
 ```bash
 # Now, alter topic with invalid configs
 docker-compose exec kafka-client kafka-configs \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
-    --alter --topic safeguard_topic \
+    --alter --topic safeguardTopic \
     --add-config retention.ms=10000,retention.bytes=10000,segment.bytes=10000
 ```
 
@@ -125,7 +125,7 @@ docker-compose exec kafka-client kafka-configs \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --alter \
-    --alter --topic safeguard_topic \
+    --alter --topic safeguardTopic \
     --add-config retention.ms=50,retention.bytes=50,segment.bytes=50
 ```
 
@@ -135,7 +135,7 @@ docker-compose exec kafka-client kafka-configs \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --describe \
-    --topic safeguard_topic
+    --topic safeguardTopic
 ```
 
 You should see an output similar to the following:
@@ -181,7 +181,7 @@ From Conduktor Platform navigate to Admin -> Clusters, you should see 2 clusters
 ### Step 9: View topic configurations with Conduktor Platform
 
 Navigate to `Console` and select the `Proxy` cluster from the top right.
-You should now see the safeguard_topic topic and clicking on it and select `Configuration` tab.
+You should now see the safeguardTopic topic and clicking on it and select `Configuration` tab.
 
 You should see an output similar to the following:
 

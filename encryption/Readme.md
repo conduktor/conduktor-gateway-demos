@@ -42,7 +42,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client schema
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `encrypted_topic`
+We create topics using the Kafka console tools, the below creates a topic named `encryptedTopic`
 
 ```bash
 docker-compose exec kafka-client \
@@ -50,7 +50,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic encrypted_topic
+    --topic encryptedTopic
 ```
 
 List the created topic
@@ -65,7 +65,7 @@ docker-compose exec kafka-client \
 
 For field encryption to work we must tell the proxy the format it can expect messages for the newly created topic. 
 
-Conduktor-Proxy presents a REST API for managing Proxy features and the following configures Conduktor Proxy to expect `JSON` format data for topic `encrypted_topic`
+Conduktor-Proxy presents a REST API for managing Proxy features and the following configures Conduktor Proxy to expect `JSON` format data for topic `encryptedTopic`
 
 ```bash
 docker-compose exec kafka-client curl \
@@ -74,7 +74,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "tenant": "1-1",
-        "topic": "encrypted_topic",
+        "topic": "encryptedTopic",
         "messageFormat": "JSON"
     }'
 ```
@@ -83,7 +83,7 @@ docker-compose exec kafka-client curl \
 
 The same REST API can be used to configure the encryption feature. 
 
-The command below will instruct Conduktor Proxy to encrypt the `password` and `visa` fields in records on topic `encrypted_topic`. 
+The command below will instruct Conduktor Proxy to encrypt the `password` and `visa` fields in records on topic `encryptedTopic`. 
 
 ```bash
 docker-compose exec kafka-client curl \
@@ -92,7 +92,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
-            "topic": "encrypted_topic",
+            "topic": "encryptedTopic",
             "fields": [ { 
                 "fieldName": "password",
                 "keySecretId": "secret-key-password",
@@ -125,7 +125,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
-            "topic": "encrypted_topic",
+            "topic": "encryptedTopic",
             "fields": [ { 
                 "fieldName": "password",
                 "keySecretId": "secret-key-password",
@@ -164,7 +164,7 @@ echo '{
     kafka-json-schema-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic encrypted_topic \
+        --topic encryptedTopic \
         --property value.schema='{ 
             "title": "User",
             "type": "object",
@@ -180,14 +180,14 @@ echo '{
 
 ### Step 8: Consume from the topic
 
-Let's consume from our `encrypted_topic`.
+Let's consume from our `encryptedTopic`.
 
 ```bash
 docker-compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
     --consumer.config /clientConfig/proxy.properties \
-    --topic encrypted_topic \
+    --topic encryptedTopic \
     --from-beginning \
     --max-messages 1 | jq .
 ```
@@ -212,7 +212,7 @@ To confirm the fields are encrypted in Kafka we can consume directly from the un
 docker-compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic 1-1encrypted_topic \
+    --topic 1-1encryptedTopic \
     --from-beginning \
     --max-messages 1 | jq .
 ```
@@ -264,12 +264,12 @@ From Conduktor Platform navigate to Admin -> Clusters, you should see 2 clusters
 
 ### Step 12: View the unencrypted messages in Conduktor Platform
 
-Navigate to `Console` and select the `Proxy` cluster from the top right. You should now see the `encrypted_topic` topic and clicking on it will show you an unencrypted version of the produced message.
+Navigate to `Console` and select the `Proxy` cluster from the top right. You should now see the `encryptedTopic` topic and clicking on it will show you an unencrypted version of the produced message.
 
 ![create a topic](images/through_proxy.png "View Unencrypted Messages")
 
 ### Step 13: View the encrypted messages in Conduktor Platform
 
-Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `1-1encrypted_topic` topic (ignore the 1-1 prefix for now) and clicking on it will show you an encrypted version of the produced message.
+Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `1-1encryptedTopic` topic (ignore the 1-1 prefix for now) and clicking on it will show you an encrypted version of the produced message.
 
 ![create a topic](images/through_backing_cluster.png "View Encrypted Messages")

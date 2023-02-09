@@ -38,7 +38,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `conduktor_topic`
+We create topics using the Kafka console tools, the below creates a topic named `conduktorTopic`
 
 ```bash
 docker-compose exec kafka-client \
@@ -46,7 +46,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic conduktor_topic
+    --topic conduktorTopic
 ```
 
 List the created topic
@@ -81,19 +81,19 @@ docker-compose exec kafka-client curl \
 
 ### Step 6: Attempt to create new connection
 
-Let's produce to the `conduktor_topic` topic 
+Let's produce to the `conduktorTopic` topic 
 
 ```bash
 echo 'testMessage' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic conduktor_topic
+        --topic conduktorTopic
 ```
 
 You should see an output similar to the following in the second terminal:
 
 ```bash
-ERROR ERROR Error when sending message to topic conduktor_topic with key: null, value: 1 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)                                                                  
+ERROR ERROR Error when sending message to topic conduktorTopic with key: null, value: 1 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)                                                                  
 org.apache.kafka.common.errors.PolicyViolationException: Client connections exceed the limitation
 ```

@@ -53,7 +53,7 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
 
   conduktor-proxy:
-    image: conduktor/conduktor-proxy:0.3.0-amd64
+    image: conduktor/conduktor-proxy:1.0.1-amd64
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:

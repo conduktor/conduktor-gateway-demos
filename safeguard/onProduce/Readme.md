@@ -39,7 +39,7 @@ docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
 
 ### Step 4: Create a topic
 
-We create topics using the Kafka console tools, the below creates a topic named `safeguard_topic`
+We create topics using the Kafka console tools, the below creates a topic named `safeguardTopic`
 
 ```bash
 # Create a topic
@@ -48,7 +48,7 @@ docker-compose exec kafka-client \
     --bootstrap-server conduktor-proxy:6969 \
     --command-config /clientConfig/proxy.properties \
     --create --if-not-exists \
-    --topic safeguard_topic
+    --topic safeguardTopic
 ```
 
 List the created topic
@@ -87,7 +87,7 @@ docker-compose exec kafka-client curl \
 
 ### Step 6: Produce an invalid message
 
-Next we try to produce message to safeguard_topic with a specification that does not match the above.
+Next we try to produce message to safeguardTopic with a specification that does not match the above.
 
 ```bash
 # Now, produce an invalid message
@@ -95,13 +95,13 @@ echo 'value' | docker-compose exec -T kafka-client \
     kafka-console-producer \
     --bootstrap-server conduktor-proxy:6969 \
     --producer.config /clientConfig/proxy.properties \
-    --topic safeguard_topic
+    --topic safeguardTopic
 ```
 
 You should see an output similar to the following:
 
 ```bash
-ERROR Error when sending message to topic safeguard_topic with key: null, value: 5 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)                                                                                         
+ERROR Error when sending message to topic safeguardTopic with key: null, value: 5 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)                                                                                         
 org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Headers are required, offset=0. Invalid value for 'acks': -1. Valid value is one of the values: 0, 1
 ```
 
@@ -113,7 +113,7 @@ echo "h1:v1\tkey\tvalue" | docker-compose exec -T kafka-client \
     kafka-console-producer \
     --bootstrap-server conduktor-proxy:6969 \
     --producer.config /clientConfig/proxy.properties \
-    --topic safeguard_topic \
+    --topic safeguardTopic \
     --property parse.key=true \
     --property parse.headers=true \
     --request-required-acks=1
@@ -125,7 +125,7 @@ docker-compose exec kafka-client \
     kafka-console-consumer \
     --bootstrap-server conduktor-proxy:6969 \
     --consumer.config /clientConfig/proxy.properties \
-    --topic safeguard_topic \
+    --topic safeguardTopic \
     --from-beginning \
     --property print.key=true \
     --property print.headers=true
@@ -166,7 +166,7 @@ From Conduktor Platform navigate to Admin -> Clusters, you should see 2 clusters
 ### Step 10: View messages in topic with Conduktor Platform
 
 Navigate to `Console` and select the `Proxy` cluster from the top right.
-You should now see the safeguard_topic topic and clicking on it.
+You should now see the safeguardTopic topic and clicking on it.
 
 You should see an output similar to the following:
 
