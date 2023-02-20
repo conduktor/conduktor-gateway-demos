@@ -12,6 +12,9 @@ This demo shows you how to generate client tokens and use them in your applicati
 
 ## Running the demo
 
+### Architecture diagram
+![architecture diagram](images/jwt-auth.png "authentication")
+
 ### Step 1: Review the environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following:

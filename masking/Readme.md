@@ -4,6 +4,9 @@
 
 Conduktor Proxy's data masking feature masks sensitive fields within messages as they are consumed through the proxy.
 
+### Architecture diagram
+![architecture diagram](images/masking.png "masking")
+
 ### Video
 
 [![asciicast](https://asciinema.org/a/TifQJzrUBufiun4QktEUgEt0I.svg)](https://asciinema.org/a/TifQJzrUBufiun4QktEUgEt0I)

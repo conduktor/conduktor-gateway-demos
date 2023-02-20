@@ -4,6 +4,9 @@
 
 Conduktor Proxy's Schema Validation feature detects messages that have invalid schema information and rejects them. 
 
+### Architecture diagram
+![architecture diagram](images/schema-validation.png "schema validation")
+
 ### Video
 
 [![asciicast](https://asciinema.org/a/sxVe031UekMiV533iSkDgFBG8.svg)](https://asciinema.org/a/sxVe031UekMiV533iSkDgFBG8)

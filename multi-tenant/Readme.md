@@ -4,6 +4,9 @@
 
 Conduktor Proxy's multi tenancy feature allows 1 Kafka cluster to appear as a number of isolated clusters to clients. Each cluster/tenant can be operated upon separately with no concern of side effects for other clusters.
 
+### Architecture diagram
+![architecture diagram](images/multi-tenant.png "multi tenant")
+
 ### Video
 
 [![asciicast](https://asciinema.org/a/PncSYV3jST1cdlhla9JGGAVHy.svg)](https://asciinema.org/a/PncSYV3jST1cdlhla9JGGAVHy)

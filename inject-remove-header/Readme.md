@@ -4,6 +4,9 @@
 
 Conduktor Proxy's inject/remove header feature inject or remove headers of the messages as they are produced through the proxy.
 
+### Architecture diagram
+![architecture diagram](images/inject-remove-headers.png "inject-remove-headers")
+
 ### Video
 
 [![asciicast](https://asciinema.org/a/fl8Kd5mik36FIQuQzG9EAG8Se.svg)](https://asciinema.org/a/fl8Kd5mik36FIQuQzG9EAG8Se)
