@@ -4,7 +4,7 @@ In this demo we will impose limit connection attempts because creating a new con
 
 ### Video
 
-[![asciicast](https://asciinema.org/a/mzZ1z9EjoLhilyGZwsx3GLCbC.svg)](https://asciinema.org/a/mzZ1z9EjoLhilyGZwsx3GLCbC)
+[![asciicast](https://asciinema.org/a/Y5OXtMXjfEGpRnHV1koCw3Gi3.svg)](https://asciinema.org/a/Y5OXtMXjfEGpRnHV1koCw3Gi3)
 
 ## Running the demo
 
