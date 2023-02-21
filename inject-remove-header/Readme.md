@@ -6,7 +6,7 @@ Conduktor Proxy's inject/remove header feature inject or remove headers of the m
 
 ### Video
 
-[![asciicast](https://asciinema.org/a/fl8Kd5mik36FIQuQzG9EAG8Se.svg)](https://asciinema.org/a/fl8Kd5mik36FIQuQzG9EAG8Se)
+[![asciicast](https://asciinema.org/a/4oGSTAsrntPIvxLaRl1vkD9Bb.svg)](https://asciinema.org/a/4oGSTAsrntPIvxLaRl1vkD9Bb)
 
 ## Running the demo
 

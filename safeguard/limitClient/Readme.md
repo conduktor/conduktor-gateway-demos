@@ -4,7 +4,7 @@ In this demo we will impose protecting cluster by limiting client calls to produ
 
 ### Video
 
-[![asciicast](https://asciinema.org/a/qw1O5phcqkoF3XLRZkan7cUR7.svg)](https://asciinema.org/a/qw1O5phcqkoF3XLRZkan7cUR7)
+[![asciicast](https://asciinema.org/a/darX1GOKB4sVMnfvzSfRSAhIr.svg)](https://asciinema.org/a/darX1GOKB4sVMnfvzSfRSAhIr)
 
 ## Running the demo
 
