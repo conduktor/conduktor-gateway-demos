@@ -16,6 +16,9 @@ In this demo we will inject the following disruptions with Conduktor Proxy and o
 * Slow Topic - Introduce latency for specific topics
 * Invalid Schema Id - Simulate broker responses as if the schema provided in a message was invalid.
 
+### Architecture diagram
+![architecture diagram](images/chaos.png "chaos")
+
 ### Video
 
 [![asciicast](https://asciinema.org/a/YdyxC0HDIR6b7MhNTUhgTj6DE.svg)](https://asciinema.org/a/YdyxC0HDIR6b7MhNTUhgTj6DE)

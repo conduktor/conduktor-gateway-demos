@@ -9,3 +9,6 @@ Kafka is an extremely configurable system. This flexibility is great but can lea
 * [On produce Safeguard](onProduce/Readme.md) - Protect Kafka from inefficient messages.
 * [Limit Clients Calls](limitClient/Readme.md) - Limit client calls to Conduktor Proxy.
 * [Limit Clients Connections](limitConnect/Readme.md) - Limit client connections.
+
+### Architecture diagram
+![architecture diagram](safeguard.png "safeguard")

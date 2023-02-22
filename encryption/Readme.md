@@ -6,6 +6,9 @@ Conduktor Proxy's encryption feature encrypts sensitive fields within messages a
 
 These fields are stored on disk encrypted but can easily be read by clients reading through the proxy.
 
+### Architecture diagram
+![architecture diagram](images/encryption.png "encryption")
+
 ### Video
 
 [![asciicast](https://asciinema.org/a/7vzzV57noPXyzL8KPnp1UrP48.svg)](https://asciinema.org/a/7vzzV57noPXyzL8KPnp1UrP48)
