@@ -1,6 +1,6 @@
 # Conduktor Proxy Topic Concentration Demo
 
-## What is Topic Conncentration?
+## What is Topic Concentration?
 
 Conduktor Proxy's topic concentration feature allows you to store multiple topics's data on a single underlying Kafka 
 topic. To clients, it appears that there are multiple topics and these can be read from as normal but in the underlying 
@@ -83,7 +83,7 @@ docker-compose exec kafka-client \
     --partitions 1
 ```
 
-If we list topics from the backend cluster now we see 2 topics. Source topic and the concnetrated topic
+If we list topics from the backend cluster now we see 2 topics. Source topic and the concentrated topic
 
 ```bash
 docker-compose exec kafka-client \
