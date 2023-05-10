@@ -1,0 +1,128 @@
+kafkaSelector:
+  file:
+    path: /app/resources/kafka.config
+hostPortConfiguration:
+  proxyBindHost: 0.0.0.0
+  proxyHost: conduktor-proxy
+  hostPrefix: broker
+  tenantInHostname: false
+  portRange: 6969:6975
+  proxyPort: 12345
+routing: port
+schemaRegistry:
+  #  host: http://localhost:8081
+  host: http://schema-registry:8081
+  cacheSize: 50
+authenticationConfig:
+  #-----------current values NONE, SASL_PLAIN, SASL_SSL-----------##
+  authenticatorType: SASL_PLAIN
+  connectionsMaxReauthMs: 10000
+  exponentialBackoff:
+    multiplier: 2
+    backoffMaxMs: 5000
+  sslConfig:
+    updateContextIntervalMinutes: 600000
+    keyStore:
+      keyStorePath: ignored
+      keyStorePassword: ignored
+      keyPassword: ignored
+      keyStoreType: jks
+      updateIntervalMsecs: 600000
+httpConfig:
+  port: 8888
+  securedMetrics: true
+  superUsers: [{username: superUser, password: superUser}]
+threadConfig:
+  downStreamThread: 2
+  upstream:
+    numberOfThread: 4
+    maxPendingTask: 2048
+#-----------the maximum period the proxy will store request state if a response is not received-----------##
+maxResponseLatency: 3000
+#-----------the maximum time an idempotent producer can be idle before we will stop tracking its sequence ids-----------##
+maxIdleProducerMs: 600000
+#-----------maximum time the proxy will maintain an inflight request-----------##
+inFlightRequestExpiryMs: 30000
+upstreamConnectionConfig:
+  numOfConnection: 10
+  #-----------max idle time of connection from proxy to kafka server, if exceeded, the connection got killed.-----------##
+  maxIdleTimeMs: 200000
+topicStoreConfig:
+  topicMappingServiceBackingTopic: _topicMappings
+  topicRegistryServiceBackingTopic: _topicRegistry
+  realTopicPartitionCount: 3
+userPoolConfig:
+  type: JWT
+  conduktor:
+    authHost: ignored
+    bearerToken: ignored
+    defaultReAuthIntervalMs: 604800000
+    failedBackoffPeriodMs: 500
+    authTimeoutMs: 500
+    tokenSecret: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
+    tokenIss: ignored
+  jwt:
+    secretKey: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
+    signatureAlgorithm: HS256
+    defaultReAuthIntervalMs: 604800000
+  platformRbac:
+    platformUrl: ignored
+    bearerToken: ignored
+    tokenSecret: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
+interceptorConfig:
+  backingTopic: _interceptorConfigs
+  configLocation: ~
+  restrictingGlobalInterceptors:
+    - S3_REFERENCE
+    - BATCH_S3_REFERENCE
+tenantStoreConfig:
+  tenantConfigurationServiceBackingTopic: _tenantConfigMappings
+offsetStoreConfig:
+  committedOffsetBackingTopic: _offsetStore
+  consumerGroupSubscriptionBackingTopic: _consumerGroupSubscriptionBackingTopic
+featureFlags:
+  restrictingTenantApis: false
+  audit: true
+  autoConcentrateTenants: false
+  rbac: false
+  tracking: false
+  singleTenant: false
+  jwtTokenEndpoint: true
+  noInternalTopics: false
+  caching: true
+  deleteIdleTenants: false
+resourceNameBackingTopic: _resourceNames
+profiling: false
+auditLogConfig:
+  specVersion: 0.1.0
+  auditLogServiceBackingTopic: _auditLogs
+  replicationFactorOfTopic: 1
+  numPartitionsOfTopic: 3
+storeTtlMs: 604800000
+rbacConfig:
+  aclEntryTtl: 600000
+  platformEndpoint: http://localhost:8080/admin/api/p
+  bearerToken: ignored
+tracking:
+  endpoint: https://api.segment.io
+  writeKey: ignored
+caching:
+  dbPath: caching_storage
+licenseConfig:
+  licenseBackingTopic: _license
+  keyAlgorithm: EC
+  publicKey: MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMOpFpNv+/ef7vpXFbNUzSVl8KT1ZIyvNrKG8+ZN9zib4XaqAeLADdLW2y3jNIYwnGquknEI30pxcz3/LQhwpGg==
+  licenseKey: ~
+deleteIdleTenantsConfig:
+  # SOFT - delete only underlying topics (will re-create when user manipulates proxy topics mapped to it).
+  # HARD - delete all resources: underlying topics, proxy topics, topics mappings, interceptor configs, users (be careful with this)
+  mode: SOFT
+  timerConfig:
+    # 10 minutes
+    initialDelayS: 600
+    # 1 hour
+    delayS: 3_600
+    # 1 day
+    ttlS: 86_400
+consumerStoreConfig:
+  groupIdMappingServiceBackingTopic: _groupIdMappings
