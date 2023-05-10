@@ -7,3 +7,4 @@
 * [Schema Validation](schema_validation/Readme.md) - Protect Kafka from messages that have invalid schema information.
 * [JWT Authentication](jwt_auth/Readme.md) - Authenticate clients in a multi-tenant environment
 * [Virtual Topics](virtual_topics/Readme.md) - Create virtual topics on top of existing Kafka topics to represent your data in different shapes.
+* [Topic Concentration](topic_concentration/Readme.md) - Concentrated data from multiple topics into a single topic.
