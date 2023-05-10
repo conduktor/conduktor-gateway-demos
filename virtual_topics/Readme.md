@@ -139,7 +139,7 @@ docker-compose exec kafka-client \
         --from-beginning  
 ```
 
-You should see only one message consumed with the format changed accoring to our SQL statement's projection.
+You should see only one message consumed with the format changed according to our SQL statement's projection.
 
 ```json
 {"originalName":"Tom","yearsSinceBirth":38}
