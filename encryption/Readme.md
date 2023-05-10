@@ -66,22 +66,6 @@ docker-compose exec kafka-client \
     --list
 ```
 
-For field encryption to work we must tell the proxy the format it can expect messages for the newly created topic. 
-
-Conduktor-Proxy presents a REST API for managing Proxy features and the following configures Conduktor Proxy to expect `JSON` format data for topic `encryptedTopic`
-
-```bash
-docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant" \
-    --header 'Content-Type: application/json' \
-    --data-raw '{
-        "tenant": "1-1",
-        "topic": "encryptedTopic",
-        "messageFormat": "JSON"
-    }'
-```
-
 ### Step 5: Configure encryption
 
 The same REST API can be used to configure the encryption feature. 
@@ -90,8 +74,9 @@ The command below will instruct Conduktor Proxy to encrypt the `password` and `v
 
 ```bash
 docker-compose exec kafka-client curl \
+    -u "superUser:superUser" \
     --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/feature/encryption" \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/encryption" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
@@ -123,8 +108,9 @@ Next we configure Conduktor Proxy to decrypt the fields when fetching data
 
 ```bash
 docker-compose exec kafka-client curl \
+    -u "superUser:superUser" \
     --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/feature/decryption" \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/decryption" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
@@ -215,7 +201,7 @@ To confirm the fields are encrypted in Kafka we can consume directly from the un
 docker-compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic 1-1encryptedTopic \
+    --topic someTenantencryptedTopic \
     --from-beginning \
     --max-messages 1 | jq .
 ```
@@ -236,15 +222,9 @@ You should see an output similar to the below:
 
 > The remaining steps in this demo require a Conduktor Platform license. For more information on this [Arrange a technical demo](https://www.conduktor.io/contact/demo)
 
-Once you have a license key, place it in `platform-config.yaml` under the key: `lincense` e.g.:
+Once you have a license key, place it in `platform-config.yaml` under the key: `license` e.g.:
 
 ```yaml
-auth:
-  demo-users:
-    - email: "test@conduktor.io"
-      password: "password1"
-      groups:
-        - ADMIN
 license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 ```
 
@@ -254,10 +234,10 @@ the start the Conduktor Platform container:
 docker-compose up -d conduktor-platform
 ```
 
-From a browser, navigate to `http://localhost:8080` and use the following to log in:
+From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
 
-Username: test@conduktor.io
-Password: password1
+Username: bob@conduktor.io
+Password: admin
 
 ### Step 11: View the clusters in Conduktor Platform
 
@@ -267,12 +247,12 @@ From Conduktor Platform navigate to Admin -> Clusters, you should see 2 clusters
 
 ### Step 12: View the unencrypted messages in Conduktor Platform
 
-Navigate to `Console` and select the `Proxy` cluster from the top right. You should now see the `encryptedTopic` topic and clicking on it will show you an unencrypted version of the produced message.
+Navigate to `Console` and select the `cdk-gateway` cluster from the top right. You should now see the `encryptedTopic` topic and clicking on it will show you an unencrypted version of the produced message.
 
 ![create a topic](images/through_proxy.png "View Unencrypted Messages")
 
 ### Step 13: View the encrypted messages in Conduktor Platform
 
-Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `1-1encryptedTopic` topic (ignore the 1-1 prefix for now) and clicking on it will show you an encrypted version of the produced message.
+Navigate to `Console` and select the `gateway-backing-cluster` cluster from the cluster selector in the top right. You should now see the `someTenantencryptedTopic` topic (ignore the tenant prefix for now) and clicking on it will show you an encrypted version of the produced message.
 
 ![create a topic](images/through_backing_cluster.png "View Encrypted Messages")
