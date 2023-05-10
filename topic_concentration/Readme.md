@@ -204,7 +204,6 @@ docker-compose exec kafka-client \
         --consumer.config /clientConfig/proxy.properties \
         --topic times100_testTenant \
         --from-beginning
-
 ```
 
 ### Step 7: View the underlying concentrated topic
@@ -212,10 +211,6 @@ docker-compose exec kafka-client \
 If we consume the concentrated topic we see both client topic's messages
 
 ```bash
-docker-compose exec kafka-client \
-  kafka-topics \
-    --bootstrap-server kafka1:9092 \
-    --list
 docker-compose exec kafka-client \
 kafka-console-consumer  \
 --bootstrap-server kafka1:9092 \
