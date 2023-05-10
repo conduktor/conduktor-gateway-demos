@@ -1,0 +1,97 @@
+# CREATE ENCRYPTED TOPIC 
+docker-compose exec kafka-client \
+  kafka-topics \
+    --bootstrap-server conduktor-proxy:6969 \
+    --command-config /clientConfig/proxy.properties \
+    --create --if-not-exists \
+    --topic encryptedTopic
+
+
+# ENCRYPT FIELDS PASSWORD AND VISA
+
+docker-compose exec kafka-client curl \
+    -u "superUser:superUser" \
+    --silent \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/encryption" \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "config": { 
+            "topic": "encryptedTopic",
+            "fields": [ { 
+                "fieldName": "password",
+                "keySecretId": "secret-key-password",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
+                }
+            },
+            { 
+                "fieldName": "visa",
+                "keySecretId": "secret-key-visaNumber",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
+                } 
+            }] 
+        },
+        "direction": "REQUEST",
+        "apiKeys": "PRODUCE"
+    }'
+
+
+# DECRYPT FIELDS PASSWORD AND VISA 
+
+docker-compose exec kafka-client curl \
+    -u "superUser:superUser" \
+    --silent \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/decryption" \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "config": { 
+            "topic": "encryptedTopic",
+            "fields": [ { 
+                "fieldName": "password",
+                "keySecretId": "secret-key-password",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
+                }
+            },
+            { 
+                "fieldName": "visa",
+                "keySecretId": "secret-key-visaNumber",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
+                } 
+            }] 
+        },
+        "direction": "RESPONSE",
+        "apiKeys": "FETCH"
+    }'
+
+
+# PRODUCE MESSAGE IN TOPIC WITH SCHEMA 
+
+echo '{ 
+    "name": "conduktor",
+    "username": "test@conduktor.io",
+    "password": "password1",
+    "visa": "visa123456",
+    "address": "Conduktor Towers, London" 
+}' | jq -c | docker-compose exec -T schema-registry \
+    kafka-json-schema-console-producer  \
+        --bootstrap-server conduktor-proxy:6969 \
+        --producer.config /clientConfig/proxy.properties \
+        --topic encryptedTopic \
+        --property value.schema='{ 
+            "title": "User",
+            "type": "object",
+            "properties": { 
+                "name": { "type": "string" },
+                "username": { "type": "string" },
+                "password": { "type": "string" },
+                "visa": { "type": "string" },
+                "address": { "type": "string" } 
+            } 
+        }'
