@@ -1,4 +1,4 @@
-# Conduktor Proxy Demos
+# Conduktor Gateway Demos
 
 * [Multi Tenancy](multi-tenant/Readme.md) - host multiple, isolated tenants on a single Kafka cluster.
 * [End To End Encryption](encryption/Readme.md) - Seamlessly encrypt data at rest.

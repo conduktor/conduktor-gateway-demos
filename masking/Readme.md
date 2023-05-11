@@ -1,8 +1,8 @@
-# Conduktor Proxy Data Masking Demo
+# Conduktor Gateway Data Masking Demo
 
-## What is Conduktor Proxy Data Masking?
+## What is Conduktor Gateway Data Masking?
 
-Conduktor Proxy's data masking feature masks sensitive fields within messages as they are consumed through the proxy.
+Conduktor Gateway's data masking feature masks sensitive fields within messages as they are consumed through the Gateway.
 
 ### Architecture diagram
 ![architecture diagram](images/masking.png "masking")
@@ -19,7 +19,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 
 * A single Zookeeper Server
 * A 2 node Kafka cluster
-* A single Conduktor Proxy container
+* A single Conduktor Gateway container
 * A Conduktor Platform container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
@@ -28,7 +28,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 `platform-config.yaml` defines 2 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* Proxy - a connection through Conduktor Proxy to the underlying Kafka
+* Proxy - a connection through Conduktor Gateway to the underlying Kafka
 
 Note: Proxy and backing Kafka can use different security schemes. 
 In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
@@ -40,7 +40,11 @@ Start the environment with
 ```bash
 
 # setup our environment 
-docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client schema-registry
+docker-compose up -d zookeeper kafka1 kafka2 kafka-client schema-registry
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started"
 ```
 
 ### Step 4: Create topics
@@ -77,8 +81,9 @@ The command below will instruct Conduktor Proxy to mask the `password` and `visa
 ```bash
 # Mask configuration
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/feature/data-masking" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/data-masking" \
     --header 'Content-Type: application/json' \
     --data-raw '{
                   "config": {
@@ -177,7 +182,7 @@ Let's consume directly from the underlying Kafka cluster.
 docker-compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic 1-1maskedTopic \
+    --topic someTenantmaskedTopic \
     --from-beginning \
     --max-messages 1 | jq .
 ```
@@ -186,15 +191,9 @@ docker-compose exec schema-registry \
 
 > The remaining steps in this demo require a Conduktor Platform license. For more information on this [Arrange a technical demo](https://www.conduktor.io/contact/demo)
 
-Once you have a license key, place it in `platform-config.yaml` under the key: `lincense` e.g.:
+Once you have a license key, place it in `platform-config.yaml` under the key: `license` e.g.:
 
 ```yaml
-auth:
-  demo-users:
-    - email: "test@conduktor.io"
-      password: "password1"
-      groups:
-        - ADMIN
 license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 ```
 
@@ -204,10 +203,10 @@ the start the Conduktor Platform container:
 docker-compose up -d conduktor-platform
 ```
 
-From a browser, navigate to `http://localhost:8080` and use the following to log in:
+From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
 
-Username: test@conduktor.io
-Password: password1
+Username: bob@conduktor.io
+Password: admin
 
 ### Step 10: View the clusters in Conduktor Platform
 

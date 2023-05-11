@@ -25,7 +25,11 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker-compose up -d
+docker-compose up -d  zookeeper kafka-client kafka2 kafka1 schema-registry
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started" 
 ```
 
 ### Step 3: Create topics

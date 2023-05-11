@@ -33,7 +33,11 @@ In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
+docker-compose up -d zookeeper kafka1 kafka2 kafka-client
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started"
 ```
 
 ### Step 4: Create topics
@@ -65,8 +69,9 @@ Conduktor Proxy provides a REST API used to configure the safeguard feature to l
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/feature/guard-limit-client" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/guard-limit-client" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 

@@ -1,10 +1,10 @@
-# Conduktor Proxy Encryption Demo
+# Conduktor Gateway Encryption Demo
 
-## What is Conduktor Proxy Encryption?
+## What is Conduktor Gateway Encryption?
 
-Conduktor Proxy's encryption feature encrypts sensitive fields within messages as they are produced through the proxy. 
+Conduktor Gateway's encryption feature encrypts sensitive fields within messages as they are produced through the Gateway. 
 
-These fields are stored on disk encrypted but can easily be read by clients reading through the proxy.
+These fields are stored on disk encrypted but can easily be read by clients reading through the Gateway.
 
 ### Architecture diagram
 ![architecture diagram](images/encryption.png "encryption")
@@ -21,7 +21,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 
 * A single Zookeeper Server
 * A 2 node Kafka cluster
-* A single Conduktor Proxy container
+* A single Conduktor Gateway container
 * A Conduktor Platform container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
@@ -30,17 +30,21 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 `platform-config.yaml` defines 2 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* Proxy - a connection through Conduktor Proxy to the underlying Kafka
+* Proxy - a connection through Conduktor Gateway to the underlying Kafka
 
-Note: Proxy and backing Kafka can use different security schemes. 
-In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
+Note: Gateway and backing Kafka can use different security schemes. 
+In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 
 ### Step 3: Start the environment
 
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client schema-registry
+docker-compose up -d zookeeper kafka1 kafka2 kafka-client schema-registry
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started"
 ```
 
 ### Step 4: Create topics
@@ -70,12 +74,12 @@ docker-compose exec kafka-client \
 
 The same REST API can be used to configure the encryption feature. 
 
-The command below will instruct Conduktor Proxy to encrypt the `password` and `visa` fields in records on topic `encryptedTopic`. 
+The command below will instruct Conduktor Gateway to encrypt the `password` and `visa` fields in records on topic `encryptedTopic`. 
 
 ```bash
 docker-compose exec kafka-client curl \
     -u "superUser:superUser" \
-    --silent \
+    -vvv \
     --request POST "conduktor-proxy:8888/tenant/someTenant/feature/encryption" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -104,12 +108,12 @@ docker-compose exec kafka-client curl \
 ```
 ### Step 6: Configure Decryption
 
-Next we configure Conduktor Proxy to decrypt the fields when fetching data
+Next we configure Conduktor Gateway to decrypt the fields when fetching data
 
 ```bash
 docker-compose exec kafka-client curl \
     -u "superUser:superUser" \
-    --silent \
+    -vvv \
     --request POST "conduktor-proxy:8888/tenant/someTenant/feature/decryption" \
     --header 'Content-Type: application/json' \
     --data-raw '{

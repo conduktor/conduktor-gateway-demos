@@ -1,8 +1,8 @@
-# Conduktor Proxy Schema Validation Demo
+# Conduktor Gateway Schema Validation Demo
 
-## What is Conduktor Proxy Schema Validation?
+## What is Conduktor Gateway Schema Validation?
 
-Conduktor Proxy's Schema Validation feature detects messages that have invalid schema information and rejects them. 
+Conduktor Gateway's Schema Validation feature detects messages that have invalid schema information and rejects them. 
 
 ### Architecture diagram
 ![architecture diagram](images/schema-validation.png "schema validation")
@@ -20,33 +20,26 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Zookeeper Server
 * A 2 node Kafka cluster
 * 2 Schema Registry containers
-* A single Conduktor Proxy container
-* A Conduktor Platform container
+* A single Conduktor Gateway container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-Note that there are 2 Schema registries. client-schema-registry will be used to produce new messages through kafka clients. schema-registry is attached to Conduktor Proxy.
+Note that there are 2 Schema registries. client-schema-registry will be used to produce new messages through kafka clients. schema-registry is attached to Conduktor Gateway.
 
-This means that schemas created by Kafka clients will not be valid in proxy, enabling the test scenario.
+This means that schemas created by Kafka clients will not be valid in Gateway, enabling the test scenario.
 
-### Step 2: Review the platform configuration
-
-`platform-config.yaml` defines 2 clusters:
-
-* Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* Proxy - a connection through Conduktor Proxy to the underlying Kafka
-
-Note: Proxy and backing Kafka can use different security schemes. 
-In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
-
-### Step 3: Start the environment
+### Step 2: Start the environment
 
 Start the environment with
 
 ```bash
-docker-compose up -d
+docker-compose up -d zookeeper kafka-client kafka2 kafka1 client-schema-registry schema-registry
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started"
 ```
 
-### Step 4: Create topics
+### Step 3: Create topics
 
 We create topics using the Kafka console tools, the below creates a topic named `srTopic`
 
@@ -69,16 +62,17 @@ docker-compose exec kafka-client \
     --list
 ```
 
-### Step 5: Configure Schema validation
+### Step 4: Configure Schema validation
 
-Conduktor Proxy provides a REST API that can be used to configure the schema validation feature. 
+Conduktor Gateway provides a REST API that can be used to configure the schema validation feature. 
 
-The command below will instruct Conduktor Proxy to validate that the records on topic `srTopic` refer to a schema that exists in the schema registry referred to by the proxy. 
+The command below will instruct Conduktor Gateway to validate that the records on topic `srTopic` refer to a schema that exists in the schema registry referred to by the Gateway. 
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/feature/guard-produce" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/guard-produce" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": {
@@ -92,7 +86,7 @@ docker-compose exec kafka-client curl \
     }'
 ```
 
-### Step 6: Produce data to the topic
+### Step 5: Produce data to the topic
 
 Let's produce a simple record to the topic.
 
@@ -129,7 +123,7 @@ You should see something similar to the following produced:
 org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
 ```
 
-### Step 7: Confirm the schemas
+### Step 6: Confirm the schemas
 
 To see why this happens let's query the 2 schema registries for the subject we are trying to produce with.
 
@@ -151,7 +145,7 @@ produces:
 }
 ```
 
-If we run the same queries against the Schema Registry associated with Conduktor Proxy we do not see the schema
+If we run the same queries against the Schema Registry associated with Conduktor Gateway we do not see the schema
 
 ```bash
 docker-compose exec kafka-client curl http://schema-registry:8081/subjects/srTopic-value/versions/1 | jq
@@ -166,11 +160,11 @@ produces:
 }
 ```
 
-Because the subject is not available in this Schema Registry it is rejected by the proxy.
+Because the subject is not available in this Schema Registry it is rejected by the Gateway.
 
-### Step 8: Differing schemas
+### Step 7: Differing schemas
 
-Now let's add a schema with the correct Id but incorrect content to the proxy cluster
+Now let's add a schema with the correct Id but incorrect content to the Gateway cluster
 
 ```bash
 docker-compose exec kafka-client curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" \
@@ -189,7 +183,7 @@ docker-compose exec kafka-client curl \
   http://schema-registry:8081/subjects/srTopic-value/versions     
 ```
 
-We have now created the situation where client and proxy see different schemas for id 1
+We have now created the situation where client and Gateway see different schemas for id 1
 
 ```bash
 docker-compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
@@ -221,9 +215,9 @@ produces:
 }
 ```
 
-### Step 9: Produce data to the topic again
+### Step 8: Produce data to the topic again
 
-We produce with the client schema, this time schema id: 1 is present on both Schema Registries but the proxy should not be able to deserialize the message using it's schema.
+We produce with the client schema, this time schema id: 1 is present on both Schema Registries but the Gateway should not be able to deserialize the message using it's schema.
 
 ```bash
 echo '{ 

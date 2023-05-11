@@ -1,9 +1,13 @@
 organization:
   name: "conduktor"
 
+admin:
+  email: "bob@conduktor.io"
+  password: "admin"
+
 clusters:
   - id: default
-    name: Backing Cluster
+    name: gateway-backing-cluster
     color: "#0013E7"
     ignoreUntrustedCertificate: false
     bootstrapServers: "kafka1:9092"
@@ -14,29 +18,32 @@ clusters:
       properties:
     labels: {}
   - id: london
-    name: London
-    color: "#0013E8"
+    name: london
+    color: "#A020F0"
     ignoreUntrustedCertificate: false
     bootstrapServers: "conduktor-proxy:6969"
+    schemaRegistry:
+      url: "http://schema-registry:8081"
+      ignoreUntrustedCertificate: false
+      properties:
     properties: |
       security.protocol=SASL_PLAINTEXT
       sasl.mechanism=PLAIN
-      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="test@conduktor.io" password="${LONDON_TOKEN}";
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="london" password="${LONDON_TOKEN}";
     labels: { }
   - id: paris
-    name: Paris
-    color: "#0013E9"
+    name: paris
+    color: "#B020F0"
     ignoreUntrustedCertificate: false
     bootstrapServers: "conduktor-proxy:6969"
+    schemaRegistry:
+      url: "http://schema-registry:8081"
+      ignoreUntrustedCertificate: false
+      properties:
     properties: |
       security.protocol=SASL_PLAINTEXT
       sasl.mechanism=PLAIN
-      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="test@conduktor.io" password="${PARIS_TOKEN}";
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="london" password="${PARIS_TOKEN}";
     labels: { }
 
-auth:
-  demo-users:
-    - email: "test@conduktor.io"
-      password: "password1"
-      groups:
-        - ADMIN
+license:

@@ -70,30 +70,6 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
       SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
-      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
-      SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: schema-registry
-
-  client-schema-registry:
-    image: confluentinc/cp-schema-registry:latest
-    hostname: client-schema-registry
-    container_name: client-schema-registry
-
-    depends_on:
-      - kafka1
-    ports:
-      - "8082:8082"
-    volumes:
-      - type: bind
-        source: "./clientConfig"
-        target: /clientConfig
-        read_only: true
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: client-schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
-      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
-      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8082"
-      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _client_schemas
-      SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: client-schema-registry
 
   conduktor-proxy:
     image: conduktor/conduktor-proxy:1.0.4_rc1-amd64
@@ -109,6 +85,7 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
       AUTHENTICATION_AUTHENTICATOR_TYPE: SASL_PLAIN
+      PROXY_PORT: 12345
       USER_POOL_TYPE: JWT
       USER_POOL_SECRET_KEY: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
       PROXY_HOST: conduktor-proxy
@@ -118,7 +95,6 @@ services:
       ADMIN_API_USERS: "[{username: superUser, password: superUser}]"
       ADMIN_API_SECRET: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
       JAVA_TOOL_OPTIONS: -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1
-      DOWNSTREAM_THREAD: 10
 
   kafka-client:
     image: confluentinc/cp-kafka:latest
