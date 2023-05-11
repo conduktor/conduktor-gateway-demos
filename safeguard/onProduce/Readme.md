@@ -34,7 +34,11 @@ Start the environment with
 
 ```bash
 # setup environment
-docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
+docker-compose up -d zookeeper kafka1 kafka2 kafka-client
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started"
 ```
 
 ### Step 4: Create a topic
@@ -69,8 +73,9 @@ Conduktor Proxy provides a REST API used to configure the safeguard feature.
 ```bash
 # Configure safeguard
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/feature/guard-produce" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/guard-produce" \
     --header 'Content-Type: application/json' \
     --data-raw '{
                   "config": {
@@ -134,15 +139,9 @@ docker-compose exec kafka-client \
 
 > The remaining steps in this demo require a Conduktor Platform license. For more information on this [Arrange a technical demo](https://www.conduktor.io/contact/demo)
 
-Once you have a license key, place it in `platform-config.yaml` under the key: `lincense` e.g.:
+Once you have a license key, place it in `platform-config.yaml` under the key: `license` e.g.:
 
 ```yaml
-auth:
-  demo-users:
-    - email: "test@conduktor.io"
-      password: "password1"
-      groups:
-        - ADMIN
 license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 ```
 
@@ -152,10 +151,10 @@ the start the Conduktor Platform container:
 docker-compose up -d conduktor-platform
 ```
 
-From a browser, navigate to `http://localhost:8080` and use the following to log in:
+From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
 
-Username: test@conduktor.io
-Password: password1
+Username: bob@conduktor.io
+Password: admin
 
 ### Step 9: View the clusters in Conduktor Platform
 

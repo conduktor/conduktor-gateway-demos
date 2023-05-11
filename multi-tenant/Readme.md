@@ -1,8 +1,8 @@
-# Conduktor Proxy Multi Tenant Demo
+# Conduktor Gateway Multi Tenant Demo
 
 ## What is Multi Tenancy?
 
-Conduktor Proxy's multi tenancy feature allows 1 Kafka cluster to appear as a number of isolated clusters to clients. Each cluster/tenant can be operated upon separately with no concern of side effects for other clusters.
+Conduktor Gateway's multi tenancy feature allows 1 Kafka cluster to appear as a number of isolated clusters to clients. Each cluster/tenant can be operated upon separately with no concern of side effects for other clusters.
 
 ### Architecture diagram
 ![architecture diagram](images/multi-tenant.png "multi tenant")
@@ -19,7 +19,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 
 * A single Zookeeper Server
 * A 2 node Kafka cluster
-* A single Conduktor Proxy container
+* A single Conduktor Gateway container
 * A Conduktor Platform container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
@@ -28,8 +28,8 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 `platform-config.yaml` defines 3 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* London - a connection through Conduktor Proxy that represents the London tenant
-* Paris - a connection through Conduktor Proxy that represents the Paris tenant
+* London - a connection through Conduktor Gateway that represents the London tenant
+* Paris - a connection through Conduktor Gateway that represents the Paris tenant
 
 Note: Tenancy is determined by the SASL credentials configured for each cluster. These credentials provide a token that encodes tenancy information.
 
@@ -38,7 +38,11 @@ Note: Tenancy is determined by the SASL credentials configured for each cluster.
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka1 kafka2 conduktor-proxy kafka-client
+docker-compose up -d zookeeper kafka1 kafka2 kafka-client
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started"
 ```
 
 ### Step 4: Create topics
@@ -77,7 +81,7 @@ docker-compose exec kafka-client kafka-console-consumer --bootstrap-server condu
 
 ### Step 7: Applying Multi Tenancy to existing topics
 
-During migration to Conduktor Proxy you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Proxy allows this via administration APIs. In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Proxy
+During migration to Conduktor Gateway you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Gateway allows this via administration APIs. In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Gateway
 
 Let's start by creating some pre-exiting topics and adding data
 
@@ -97,20 +101,20 @@ We'll create the following mappings:
 First we create a topic mapping for each topic. These map a topic name for the tenant (`existingLondonTopic`/`existingSharedTopic` url param ) to a topic name in the Kafka cluster (`topicName` in the request body). These names do not have to match but they match here for clarity.
 
 ```bash
-docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingLondonTopic -d '{ "topicName":"existingLondonTopic" }'
-docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-1/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
-docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topicMappings/1-2/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topicMappings/london/existingLondonTopic -d '{ "topicName":"existingLondonTopic" }'
+docker-compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topicMappings/london/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topicMappings/paris/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
 ```
 
 Next we must add the topics to each tenant.
 
 ```bash
-docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingLondonTopic" }'
-docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-1 -d '{ "name":"existingSharedTopic" }'
-docker-compose exec kafka-client curl -X POST conduktor-proxy:8888/topics/1-2 -d '{ "name":"existingSharedTopic" }' 
+docker-compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topics/london -d '{ "name":"existingLondonTopic" }'
+docker-compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topics/london -d '{ "name":"existingSharedTopic" }'
+docker-compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topics/paris -d '{ "name":"existingSharedTopic" }' 
 ```
 
-Note: the url params `1-1`/`1-2` represent the London/Paris tenants in these APIs. 
+Note: the url params `london`/`paris` represent the London/Paris tenants in these APIs. 
 
 ### Step 9: List topics as the different tenants
 
@@ -136,15 +140,9 @@ On `existingSharedTopic` the same messages are available to both tenants.
 
 > The remaining steps in this demo require a Conduktor Platform license. For more information on this [Arrange a technical demo](https://www.conduktor.io/contact/demo)
 
-Once you have a license key, place it in `platform-config.yaml` under the key: `lincense` e.g.:
+Once you have a license key, place it in `platform-config.yaml` under the key: `license` e.g.:
 
 ```yaml
-auth:
-  demo-users:
-    - email: "test@conduktor.io"
-      password: "password1"
-      groups:
-        - ADMIN
 license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 ```
 
@@ -154,10 +152,10 @@ the start the Conduktor Platform container:
 docker-compose up -d conduktor-platform
 ```
 
-From a browser, navigate to `http://localhost:8080` and use the following to log in:
+From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
 
-Username: test@conduktor.io
-Password: password1
+Username: bob@conduktor.io
+Password: admin
 
 ### Step 12: View the clusters
 

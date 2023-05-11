@@ -1,12 +1,12 @@
-# Conduktor Proxy Chaos Demo
+# Conduktor Gateway Chaos Demo
 
-## What is Conduktor Proxy Chaos?
+## What is Conduktor Gateway Chaos?
 
 Chaos testing is the process of testing a distributed computing system to ensure that it can withstand unexpected disruptions. Kafka is an extremely resilient system and so it can be difficult to injects disruptions in order to be sure that applications can handle them.
 
-Conduktor Proxy comes to the rescue, simulating common Kafka disruptions without and actual disruption occurring in the underlying Kafka cluster. 
+Conduktor Gateway comes to the rescue, simulating common Kafka disruptions without and actual disruption occurring in the underlying Kafka cluster. 
 
-In this demo we will inject the following disruptions with Conduktor Proxy and observe the result:
+In this demo we will inject the following disruptions with Conduktor Gateway and observe the result:
 
 * Broken Broker - Inject intermittent errors in client connections to brokers
 * Duplication - Simulate request duplication
@@ -31,7 +31,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 
 * A single Zookeeper Server
 * A 2 node Kafka cluster
-* A single Conduktor Proxy container
+* A single Conduktor Gateway container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
 ### Step 2: Start the environment
@@ -39,7 +39,11 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker-compose up -d
+docker-compose up -d zookeeper kafka1 kafka-client kafka2 schema-registry
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started"
 ```
 
 ### Step 3: Create topics
@@ -67,7 +71,7 @@ docker-compose exec kafka-client \
 
 ## Running the demo: Injecting Chaos
 
-Conduktor-Proxy provides a number of different ways to inject Chaos into your data flows:
+Conduktor Gateway provides a number of different ways to inject Chaos into your data flows:
 
 * [Broken Broker](#brokenBroker)
 * [Duplicate Writes](#duplicateWrites)
@@ -79,14 +83,15 @@ Conduktor-Proxy provides a number of different ways to inject Chaos into your da
 
 ### <a name="brokenBroker"></a> Step 4: Broken Broker
 
-Conduktor Proxy exposes a REST API to configure the chaos features.
+Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Proxy to inject failures for some Produce requests that are consistent with broker side issues. 
+The command below will instruct Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/broken-broker" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/broken-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": {
@@ -105,7 +110,7 @@ docker-compose exec kafka-client curl \
 ```
 ### Step 5: Inject some chaos
 
-Let's produce some records to our created topic and observe some errors being injected by Conduktor Proxy.
+Let's produce some records to our created topic and observe some errors being injected by Conduktor Gateway.
 
 ```bash
 docker-compose exec kafka-client kafka-producer-perf-test \
@@ -136,8 +141,9 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/broken-broker/apiKeys/PRODUCE/direction/REQUEST"
+    -u superUser:superUser \
+    -vvv \
+    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/broken-broker/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
 ### Step 7: Run with no Chaos
@@ -162,9 +168,9 @@ This should produce output similar to the following:
 
 ### <a name="duplicateWrites"></a> Step 8: Duplicate Writes
 
-Conduktor Proxy exposes a REST API to configure the chaos features.
+Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Proxy to inject duplicate records on produce requests.
+The command below will instruct Conduktor Gateway to inject duplicate records on produce requests.
 
 ```bash
 docker-compose exec kafka-client \
@@ -177,8 +183,9 @@ docker-compose exec kafka-client \
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/duplicate-resource" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/duplicate-resource" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
@@ -235,20 +242,22 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/duplicate-resource/apiKeys/PRODUCE/direction/REQUEST"
+    -u superUser:superUser \
+    -vvv \
+    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/duplicate-resource/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
 ### <a name="leaderElection"></a> Step 11: Leader Election
 
-Conduktor Proxy exposes a REST API to configure the chaos features.
+Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Proxy to simulate a leader election on partitions being produced to through Conduktor Proxy.
+The command below will instruct Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/leader-election" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/leader-election" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": {
@@ -293,8 +302,9 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/leader-election/apiKeys/PRODUCE/direction/REQUEST"
+    -u superUser:superUser \
+    -vvv \
+    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/leader-election/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
 ### <a name="randomBytes"></a> Step 14: Random Bytes
@@ -310,14 +320,15 @@ docker-compose exec kafka-client \
     --topic conduktorTopicRandom
 ```
 
-Conduktor Proxy exposes a REST API to configure the chaos features.
+Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Proxy to append random bytes to messages produced.
+The command below will instruct Conduktor Gateway to append random bytes to messages produced.
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/random-bytes" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/random-bytes" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
@@ -373,20 +384,22 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/random-bytes/apiKeys/PRODUCE/direction/REQUEST"
+    -u superUser:superUser \
+    -vvv \
+    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/random-bytes/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
 ### <a name="slowBroker"></a> Step 17: Slow Broker
 
-Conduktor Proxy exposes a REST API to configure the chaos features.
+Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Proxy to simulate slow responses from brokers.
+The command below will instruct Conduktor Gateway to simulate slow responses from brokers.
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/slow-broker" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/slow-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": {
@@ -434,15 +447,16 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/slow-broker/apiKeys/PRODUCE/direction/REQUEST"
+    -u superUser:superUser \
+    -vvv \
+    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/slow-broker/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
 ### <a name="slowTopic"></a> Step 20: Slow Topic
 
-Conduktor Proxy exposes a REST API to configure the chaos features.
+Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Proxy to simulate slow responses from the brokers. It differs from the above in that it will operate only on a set of topics rather than all traffic.
+The command below will instruct Conduktor Gateway to simulate slow responses from the brokers. It differs from the above in that it will operate only on a set of topics rather than all traffic.
 
 ```bash
 docker-compose exec kafka-client \
@@ -455,8 +469,9 @@ docker-compose exec kafka-client \
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/slow-topic" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/slow-topic" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": {
@@ -504,15 +519,16 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/slow-topic/apiKeys/PRODUCE/direction/REQUEST"
+    -u superUser:superUser \
+    -vvv \
+    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/slow-topic/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
 ### <a name="invalidSchema"></a> Step 23: Invalid Schema
 
-Conduktor Proxy exposes a REST API to configure the chaos features.
+Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Proxy to inject Schema Ids into messages. This simulates a situation where clients cannot deserialize messages with the schema information provided.
+The command below will instruct Conduktor Gateway to inject Schema Ids into messages. This simulates a situation where clients cannot deserialize messages with the schema information provided.
 
 ```bash
 docker-compose exec kafka-client \
@@ -525,20 +541,9 @@ docker-compose exec kafka-client \
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant" \
-    --header 'Content-Type: application/json' \
-    --data-raw '{
-        "tenant": "1-1",
-        "topic": "conduktorTopicSchema",
-        "messageFormat": "JSON"
-    }'
-```
-
-```bash
-docker-compose exec kafka-client curl \
-    --silent \
-    --request POST "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/invalid-schema" \
+    -u superUser:superUser \
+    -vvv \
+    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/invalid-schema" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
@@ -613,8 +618,9 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    --silent \
-    --request DELETE "conduktor-proxy:8888/tenant/1-1/user/test@conduktor.io/feature/invalid-schema/apiKeys/PRODUCE/direction/REQUEST"
+    -u superUser:superUser \
+    -vvv \
+    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/invalid-schema/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
 

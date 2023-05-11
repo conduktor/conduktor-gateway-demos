@@ -72,7 +72,7 @@ services:
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
 
   conduktor-proxy:
-    image: conduktor/conduktor-proxy:1.0.2_rc12.2-amd64
+    image: conduktor/conduktor-proxy:1.0.4_rc1-amd64
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:
@@ -80,6 +80,8 @@ services:
     ports:
       - "6969:6969"
       - "6970:6970"
+      - "9999:9999"
+      - "8888:8888"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
       AUTHENTICATION_AUTHENTICATOR_TYPE: SASL_PLAIN

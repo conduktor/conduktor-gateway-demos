@@ -53,25 +53,32 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
 
   conduktor-proxy:
-    image: conduktor/conduktor-proxy:1.0.1-amd64
+    image: conduktor/conduktor-proxy:1.0.4_rc1-amd64
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:
       - kafka1
-      - kafka2
     ports:
       - "6969:6969"
       - "6970:6970"
+      - "9999:9999"
+      - "8888:8888"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
       AUTHENTICATION_AUTHENTICATOR_TYPE: SASL_PLAIN
       USER_POOL_TYPE: JWT
-      USER_POOL_CLASSNAME: io.conduktor.proxy.service.userPool.JwtUserPoolService
-      USER_POOL_SECRET_KEY: secret
+      USER_POOL_SECRET_KEY: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
       PROXY_HOST: conduktor-proxy
+      SCHEMA_REGISTRY_HOST: http://schema-registry:8081
+      INTERCEPTOR_CONFIG_LOCATION: "~"
+      FEATURE_FLAGS_JWT_TOKEN_ENDPOINT: true
+      ADMIN_API_USERS: "[{username: superUser, password: superUser, admin: true}]"
+      ADMIN_API_SECRET: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
+      JAVA_TOOL_OPTIONS: -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1
+      DOWNSTREAM_THREAD: 10
 
   conduktor-platform:
-    image: conduktor/conduktor-platform:latest
+    image: conduktor/conduktor-platform:1.14.0
     hostname: platform
     container_name: platform
     ports:
@@ -89,8 +96,8 @@ services:
       ORGANISATION_NAME: "conduktor"
       ADMIN_EMAIL: "test@conduktor.io"
       ADMIN_PSW: "password1"
-      LONDON_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoxLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.Eb94MxCyesPeVdQmm0EDBGvhwcx8j-ST-mvmdAId_j0
-      PARIS_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoyLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.aAJfAwb-oCpnoS6b5DmmD2QJuHUJB4PEDv1w4eew8HU
+      LONDON_TOKEN: eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6ImxvbmRvbiIsInRlbmFudCI6ImxvbmRvbiIsImV4cCI6MTY5MTU4NDIwOH0.DbHmjG2PscVJiWx8DGSYT4QE1cZRpxgwk_T_EpmLYN4oofjL3QxlvQ3KRpGAl9QA1M6ZElY6helQKWDqQKf-YQ
+      PARIS_TOKEN: eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6InBhcmlzIiwidGVuYW50IjoicGFyaXMiLCJleHAiOjE2OTE1ODQyMjh9.DAL6zSImURcwHjXXkohNThJRiK8QrgES_sUzCZyD7MT9fdezqOKGK4YPlw3q4Nhhlaf5_BRiWCDC3kMIQAGQ-w
 
   kafka-client:
     image: confluentinc/cp-kafka:latest

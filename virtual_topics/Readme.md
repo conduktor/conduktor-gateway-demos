@@ -20,25 +20,19 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Conduktor Proxy container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-### Step 2: Review the platform configuration
-
-`platform-config.yaml` defines 2 clusters:
-
-* Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* Proxy - a connection through Conduktor Proxy to the underlying Kafka
-
-Note: Proxy and backing Kafka can use different security schemes. 
-In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
-
-### Step 3: Start the environment
+### Step 2: Start the environment
 
 Start the environment with
 
 ```bash
-docker-compose up -d
+docker-compose up -d  zookeeper kafka-client kafka2 kafka1 schema-registry
+sleep 10
+docker-compose up -d conduktor-proxy
+sleep 5
+echo "Environment started" 
 ```
 
-### Step 4: Create source topic
+### Step 3: Create source topic
 
 We create an existing topic in the Kafka cluster, this will form the basis of our virtual topic. 
 
@@ -75,7 +69,7 @@ docker-compose exec kafka-client \
     --partitions 1
 ```
 
-### Step 5: Configure filtering
+### Step 4: Configure filtering
 
 In this demo we will filter personnel records for a single name. To do this we apply a SQL like filter to the virtual 
 topic via Conduktor Gateway's interceptor features. 
@@ -95,7 +89,7 @@ docker-compose exec kafka-client curl \
     }'
 ```
 
-### Step 7: Produce data to the underlying topic
+### Step 5: Produce data to the underlying topic
 
 Now we will produce 2 records to the underlying topic
 
@@ -126,7 +120,7 @@ docker-compose exec kafka-client \
         --from-beginning  
 ```
 
-### Step 8: Consume from the topic
+### Step 6: Consume from the topic
 
 Let's consume from our virtual topic `virtualTopic`.
 
@@ -146,7 +140,7 @@ You should see only one message consumed with the format changed according to ou
 
 ```
 
-### Step 9: Cleaning up
+### Step 7: Cleaning up
 
 You can delete the interceptor on the virtual topic and once more you will see 2 records when consuming:
 
