@@ -8,7 +8,7 @@ Conduktor Gateway can sit in front of multiple Kafka clusters, making them appea
 
 Test applications can read live production data from a production cluster, for realistic testing, without affecting or altering that production data, and then use test topics on a test cluster to write data, all without having to reconfigure any applications.  There is no need to do expensive replication of data to get useful and accurate testing data.  
 
-Failover is made much simpler by Conduktor Gateway managing the routing in your Kafka environment.  Say you want to do a managed failover from cluster A to cluster B as part of planned maintenance.  If your applications connect to Conduktor Gateway, to do this move just alter the Gateway configuration, and your applications are routed to the new cluster, with no need for application restarts or changes.
+Failover is made much simpler by Conduktor Gateway managing the routing in your Kafka environment.  Say you want to do a managed failover from cluster A to cluster B as part of planned maintenance.  If your applications connects to Conduktor Gateway, to do this move just alter the Gateway configuration, and your applications are routed to the new cluster, with no need for application restarts or changes.
 
 Data costs and complexity are reduced by consolidating data from multiple sources in to a central resource.  For example, you might have data centres in multiple regions, perhaps because they are close to the applications using that data, but also because of legal requirements to keep data stored in a particular region. Conduktor Gateway gives a central consuming application access to data in all these regions, with a single set of connection configuration and a single set of credentials. Requests are routed to the right backend cluster, avoiding replication and avoiding complicated sets of configuration. Gateway manages the complexity of the multiple backends, allowing the application team to focus on getting the most value from the easily accessible data.
 
@@ -48,7 +48,7 @@ Note:  You might see the error message `! conduktor-proxy The requested image's 
 If you do see this, it is likely that the conduktor-proxy container has still started successfully.  Run `docker ps` and confirm you see a docker container running with the name ` conduktor-proxy`. You can also check the logs for this container using `docker logs -f <container id>`, looking for the messages `Proxy HTTP server started on port 8888`.
 
 ### Step 4: Create topics
-Create a topic on each of the backing kafka clusters, connecting to each individual Kafka cluster directly and creating topics using the Kafka console tools.  The `eurpoe_cars` topic is created on the cluster with hostname`kafka1_m`, which is running on port 9092, and `us_cars` is created on cluster with hostname `kafka1_s1`.
+Create a topic on each of the backing kafka clusters, connecting to each individual Kafka cluster directly and creating topics using the Kafka console tools.  The `europe_cars` topic is created on the cluster with hostname`kafka1_m`, which is running on port 9092, and `us_cars` is created on cluster with hostname `kafka1_s1`.
 
 ```bash
 docker-compose exec kafka-client \
