@@ -119,7 +119,7 @@ services:
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
 
   conduktor-proxy:
-    image: ghcr.io/conduktor/conduktor-proxy:merge-cluster
+    image: conduktor/conduktor-proxy:1.7.3-amd64
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:
