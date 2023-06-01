@@ -43,12 +43,12 @@ Start the environment using:
 docker-compose up -d 
 ```
 
-Note:  You might see the error message `! conduktor-proxy The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested`.
+Note:  You might see the warning message `! conduktor-proxy The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested`.
 
 If you do see this, it is likely that the conduktor-proxy container has still started successfully.  Run `docker ps` and confirm you see a docker container running with the name ` conduktor-proxy`. You can also check the logs for this container using `docker logs -f <container id>`, looking for the messages `Proxy HTTP server started on port 8888`.
 
 ### Step 4: Create topics
-Create a topic on each of the backing kafka clusters, connecting to each individual Kafka cluster directly and creating topics using the Kafka console tools.  The `europe_cars` topic is created on the cluster with hostname`kafka1_m`, which is running on port 9092, and `us_cars` is created on cluster with hostname `kafka1_s1`.
+Create a topic on each of the backing kafka clusters, connecting to each individual Kafka cluster directly and creating topics using the Kafka console tools.  The `europe_cars` topic is created on the cluster with hostname `kafka1_m`, which is running on port 9092, and `us_cars` is created on cluster with hostname `kafka1_s1`.
 
 ```bash
 docker-compose exec kafka-client \
@@ -63,7 +63,7 @@ docker-compose exec kafka-client \
   kafka-topics \
     --bootstrap-server kafka1_s1:19092 \
     --create --if-not-exists \
-    --topic cars
+    --topic cars1
 ```
 
 Register these topics and the associated cluster id with Conduktor Gateway.  These commands make a `topic Mapping` which is the mapping that defines the routing from the topic the client applications calling the Gateway specify though to the name of the topic on the Kafka cluster that this topic has been configured to route to.  This example routes the topic `eu_cars`, as seen by the client application, on to the `cars` topic on the main (default) cluster, and the topic `us_cars` to the `cars` topic on the secondary cluster (`cluster1`).
@@ -93,7 +93,7 @@ docker-compose exec kafka-client curl \
 -H "content-type:application/json" \
 -H "authorization:Basic bm9uZTpub25l" \
 'conduktor-proxy:8888/topicMappings/passThroughTenant/us_cars' \
--d '{ "clusterId" : "cluster1", "topicName":"cars", "isVirtual": "true"}'
+-d '{ "clusterId" : "cluster1", "topicName":"cars1", "isVirtual": "true"}'
 
 docker-compose exec kafka-client curl \
 -X POST \
@@ -183,7 +183,7 @@ eu_car_record
 docker-compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1_s1:19092 \
-    --topic cars \
+    --topic cars1 \
     --from-beginning \
     --max-messages 1 
 ```
