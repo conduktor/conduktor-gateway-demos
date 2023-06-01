@@ -76,7 +76,7 @@ docker-compose exec kafka-client curl \
 -H "content-type:application/json" \
 -H "authorization:Basic bm9uZTpub25l" \
 'conduktor-proxy:8888/topicMappings/passThroughTenant/eu_cars' \
--d '{ "topicName":"cars", "isConcentrated": false, "isCompacted": "false"}'
+-d '{ "topicName":"cars", "isVirtual": true}'
 
 docker-compose exec kafka-client curl \
 -X POST \
@@ -93,7 +93,7 @@ docker-compose exec kafka-client curl \
 -H "content-type:application/json" \
 -H "authorization:Basic bm9uZTpub25l" \
 'conduktor-proxy:8888/topicMappings/passThroughTenant/us_cars' \
--d '{ "clusterId" : "cluster1", "topicName":"cars", "isConcentrated": false, "isCompacted": "false"}'
+-d '{ "clusterId" : "cluster1", "topicName":"cars", "isVirtual": "true"}'
 
 docker-compose exec kafka-client curl \
 -X POST \
@@ -169,7 +169,7 @@ To show that the messages were routed correctly on the backing Kafka clusters, c
 docker-compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1_m:9092 \
-    --topic eu_cars \
+    --topic cars \
     --from-beginning \
     --max-messages 1 
 ```
@@ -183,7 +183,7 @@ eu_car_record
 docker-compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1_s1:19092 \
-    --topic us_cars \
+    --topic cars \
     --from-beginning \
     --max-messages 1 
 ```
