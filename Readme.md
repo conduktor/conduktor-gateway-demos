@@ -8,7 +8,7 @@ https://www.conduktor.io/gateway/
 
 Walkthrough of the main Conduktor Gateway features
 
-[![asciicast](https://asciinema.org/a/iXP9HjYYWf44FcqY1Ufl9D743.svg)](https://asciinema.org/a/iXP9HjYYWf44FcqY1Ufl9D743)
+[![asciicast](https://asciinema.org/a/5bisYVuCakRDaJPbV5DoVe2ax.svg)](https://asciinema.org/a/5bisYVuCakRDaJPbV5DoVe2ax)
 
 # Conduktor Gateway Demos
 
