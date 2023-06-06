@@ -1,5 +1,5 @@
 config:
-  '':
+  main:
     bootstrap.servers: kafka1_m:9092
   cluster1:
     bootstrap.servers: kafka1_s1:19092

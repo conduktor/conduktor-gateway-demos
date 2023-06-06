@@ -48,7 +48,9 @@ Note:  You might see the warning message `! conduktor-proxy The requested image'
 If you do see this, it is likely that the conduktor-proxy container has still started successfully.  Run `docker ps` and confirm you see a docker container running with the name ` conduktor-proxy`. You can also check the logs for this container using `docker logs -f <container id>`, looking for the messages `Proxy HTTP server started on port 8888`.
 
 ### Step 4: Create topics
-Create a topic on each of the backing kafka clusters, connecting to each individual Kafka cluster directly and creating topics using the Kafka console tools.  The `europe_cars` topic is created on the cluster with hostname `kafka1_m`, which is running on port 9092, and `us_cars` is created on cluster with hostname `kafka1_s1`.
+Create a topic on each of the backing kafka clusters, connecting to each individual Kafka cluster directly and creating topics using the Kafka console tools.  Both topics here are called `cars` but they don't have to have the same name.
+
+In the next steps, we'll set the gateway topic `eu_cars` to route to the kafka1_m cluster's `cars` topic and the gateway topic `us_cars` to route to the kafka1_s1 cluster's `cars` topic.
 
 ```bash
 docker-compose exec kafka-client \
@@ -63,12 +65,12 @@ docker-compose exec kafka-client \
   kafka-topics \
     --bootstrap-server kafka1_s1:19092 \
     --create --if-not-exists \
-    --topic cars1
+    --topic cars
 ```
 
-Register these topics and the associated cluster id with Conduktor Gateway.  These commands make a `topic Mapping` which is the mapping that defines the routing from the topic the client applications calling the Gateway specify though to the name of the topic on the Kafka cluster that this topic has been configured to route to.  This example routes the topic `eu_cars`, as seen by the client application, on to the `cars` topic on the main (default) cluster, and the topic `us_cars` to the `cars` topic on the secondary cluster (`cluster1`).
+Next, register these topics and the associated cluster id with Conduktor Gateway.  These commands make a `topic Mapping` which is the mapping that defines the routing from the topic the client applications calling the Gateway specify though to the name of the topic on the Kafka cluster that this topic has been configured to route to.  This example routes the topic `eu_cars`, as seen by the client application, on to the `cars` topic on the main (default) cluster, and the topic `us_cars` to the `cars` topic on the secondary cluster (`cluster1`).
 
-First, eu_cars:
+First, `eu_cars`:
 
 ```bash
 docker-compose exec kafka-client curl \
@@ -76,7 +78,7 @@ docker-compose exec kafka-client curl \
 -H "content-type:application/json" \
 -H "authorization:Basic bm9uZTpub25l" \
 'conduktor-proxy:8888/topicMappings/passThroughTenant/eu_cars' \
--d '{ "topicName":"cars", "isVirtual": true}'
+-d '{ "clusterId" : "main", "topicName":"cars", "isVirtual": true}'
 
 docker-compose exec kafka-client curl \
 -X POST \
@@ -85,7 +87,7 @@ docker-compose exec kafka-client curl \
 'conduktor-proxy:8888/topics/passThroughTenant' -d '{"name":"eu_cars"}'
 ```
 
-Next, us_cars:
+Then, `us_cars`:
 
 ```bash
 docker-compose exec kafka-client curl \
@@ -93,7 +95,7 @@ docker-compose exec kafka-client curl \
 -H "content-type:application/json" \
 -H "authorization:Basic bm9uZTpub25l" \
 'conduktor-proxy:8888/topicMappings/passThroughTenant/us_cars' \
--d '{ "clusterId" : "cluster1", "topicName":"cars1", "isVirtual": "true"}'
+-d '{ "clusterId" : "cluster1", "topicName":"cars", "isVirtual": "true"}'
 
 docker-compose exec kafka-client curl \
 -X POST \
@@ -102,7 +104,7 @@ docker-compose exec kafka-client curl \
 'conduktor-proxy:8888/topics/passThroughTenant' -d '{"name":"us_cars"}'
 ```
 
-You can see the mappings you just defined.  Note that [multi-tenancy](https://github.com/conduktor/conduktor-proxy-demos/tree/chris/merge-cluster-demo/multi-tenant) is baked in to the Conduktor Gateway, and here the default `passThroughTenant` is used:
+You can see the mappings you just defined with the following command.  Note that [multi-tenancy](https://github.com/conduktor/conduktor-proxy-demos/tree/chris/merge-cluster-demo/multi-tenant) is baked in to the Conduktor Gateway, and here the default `passThroughTenant` is used:
 
 ```bash
 docker-compose exec kafka-client curl  -H "content-type:application/json" -H "authorization:Basic bm9uZTpub25l" \
@@ -157,13 +159,14 @@ docker-compose exec kafka-client \
     --from-beginning \
     --max-messages 1 
 ```
+
 You should see the message:
+
 ```text
 us_car_record
 ```
 
 To show that the messages were routed correctly on the backing Kafka clusters, consume directly from these clusters, not going via the Gateway:
-
 
 ```bash
 docker-compose exec kafka-client \
@@ -175,6 +178,7 @@ docker-compose exec kafka-client \
 ```
 
 You should see the message:
+
 ```text
 eu_car_record
 ```
@@ -183,11 +187,13 @@ eu_car_record
 docker-compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1_s1:19092 \
-    --topic cars1 \
+    --topic cars \
     --from-beginning \
     --max-messages 1 
 ```
+
 You should see the message:
+
 ```text
 us_car_record
 ```
@@ -205,7 +211,7 @@ docker-compose exec kafka-client \
     --max-messages 2 
 ```
 
-You should see the combined messages from both topics being displayed.
+You should see the combined messages from both topics being displayed:
 
 ```text
 eu_car_record
