@@ -147,7 +147,7 @@ services:
           memory: 512M
 
   conduktor-proxy:
-    image: ghcr.io/conduktor/conduktor-proxy:em10 # I'll update once the fix is pushed to dockerpub
+    image: ghcr.io/conduktor/conduktor-proxy:em11 # I'll update once the fix is pushed to dockerpub
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:
@@ -175,7 +175,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4000M
+          memory: 2000M
 
   kafka-client:
     image: confluentinc/cp-kafka:latest

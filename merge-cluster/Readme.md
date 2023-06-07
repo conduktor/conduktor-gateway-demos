@@ -47,7 +47,7 @@ Note:  You might see the warning message `! conduktor-proxy The requested image'
 
 If you do see this, it is likely that the conduktor-proxy container has still started successfully.  Run `docker ps` and confirm you see a docker container running with the name ` conduktor-proxy`. You can also check the logs for this container using `docker logs -f <container id>`, looking for the messages `Proxy HTTP server started on port 8888`.
 
-### Step 4: Create topics
+### Step 3: Create topics
 Create a topic on each of the backing kafka clusters, connecting to each individual Kafka cluster directly and creating topics using the Kafka console tools.  Both topics here are called `cars` but they don't have to have the same name.
 
 In the next steps, we'll set the gateway topic `eu_cars` to route to the kafka1_m cluster's `cars` topic and the gateway topic `us_cars` to route to the kafka1_s1 cluster's `cars` topic.
@@ -112,7 +112,7 @@ docker-compose exec kafka-client curl  -H "content-type:application/json" -H "au
 ```
 
 
-### Step 5: Produce data to the topic
+### Step 4: Produce data to the topic
 
 Let's produce a simple record to the `eu_cars` topic and the `us_cars` topic going via the Gateway, consume these messages, and then see how the messages are routed to the right backing cluster:
 
@@ -132,7 +132,7 @@ echo 'us_car_record' | docker-compose exec -T kafka-client \
         --topic us_cars
 ```
 
-### Step 6: Consume to verify
+### Step 5: Consume to verify
 
 Next, consume via Gateway to see that the messages have been sent successfully, and are received on the correct topic:
 
@@ -198,7 +198,7 @@ You should see the message:
 us_car_record
 ```
 
-### Combine topics from different clusters in a single consumer
+### Step 6: Combine topics from different clusters in a single consumer
 
 A Kafka consumer can read from multiple topics, and this feature works with merge clusters, enabling you to simply and easily combine reads from multiple clusters in a single application
 
@@ -218,7 +218,7 @@ eu_car_record
 us_car_record
 ```
 
-### End the demo
+### Step 7: End the demo
 
 To end the demo and clean up the running containers bring the docker environment down:
 
