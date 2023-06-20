@@ -43,7 +43,8 @@ clusters:
     properties: |
       security.protocol=SASL_PLAINTEXT
       sasl.mechanism=PLAIN
-      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="london" password="${PARIS_TOKEN}";
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="paris" password="${PARIS_TOKEN}";
     labels: { }
 
 license:
+
