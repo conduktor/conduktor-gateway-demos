@@ -47,7 +47,7 @@ echo "Environment started"
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic name `londonTopic` in cluster `London` and `parisTopic` in cluster `Paris`
+We create topics using the Kafka console tools, the below creates a topic name `londonTopic` in cluster `London` and `parisTopic` in cluster `Paris`.
 
 ```bash
 docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy:6969 --command-config /clientConfig/london.properties --create --topic londonTopic
@@ -63,7 +63,7 @@ docker-compose exec kafka-client kafka-topics --bootstrap-server conduktor-proxy
 
 ### Step 5: Produce data to the topics
 
-You can produce with the console tools as follows:
+You can produce with the CLI tools as follows:
 
 ```bash
 echo testMessageLondon | docker-compose exec -T kafka-client kafka-console-producer --bootstrap-server conduktor-proxy:6969 --producer.config /clientConfig/london.properties --topic londonTopic
@@ -81,9 +81,9 @@ docker-compose exec kafka-client kafka-console-consumer --bootstrap-server condu
 
 ### Step 7: Applying Multi Tenancy to existing topics
 
-During migration to Conduktor Gateway you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Gateway allows this via administration APIs. In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Gateway
+During migration to Conduktor Gateway you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Gateway allows this via administration APIs. In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Gateway.
 
-Let's start by creating some pre-exiting topics and adding data
+Let's start by creating some pre-exiting topics and adding data.
 
 ```bash
 docker-compose exec kafka-client kafka-topics --bootstrap-server kafka1:9092 --create --topic existingLondonTopic
