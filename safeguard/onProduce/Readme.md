@@ -74,7 +74,6 @@ Conduktor Proxy provides a REST API used to configure the safeguard feature.
 # Configure safeguard
 docker-compose exec kafka-client curl \
     -u superUser:superUser \
-    -vvv \
     --request POST "conduktor-proxy:8888/tenant/someTenant/feature/guard-produce" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -83,7 +82,8 @@ docker-compose exec kafka-client curl \
                     "recordHeaders": {
                       "type": "REQUIRED",
                       "filter": "ALL_MATCH"
-                    }
+                    },
+                    "compressions": ["ZSTD"]
                   },
                   "direction": "REQUEST",
                   "apiKeys": "PRODUCE"
@@ -114,14 +114,15 @@ org.apache.kafka.common.errors.PolicyViolationException: Request parameters do n
 
 ```bash
 # produce valid messages
-echo "h1:v1\tkey\tvalue" | docker-compose exec -T kafka-client \
+echo "headerKey:headerValue\tkey\tvalue" | docker-compose exec -T kafka-client \
     kafka-console-producer \
     --bootstrap-server conduktor-proxy:6969 \
     --producer.config /clientConfig/proxy.properties \
     --topic safeguardTopic \
     --property parse.key=true \
     --property parse.headers=true \
-    --request-required-acks=1
+    --request-required-acks=1 \
+    --compression-codec zstd
 ```
 
 Consume message
