@@ -83,7 +83,8 @@ docker-compose exec kafka-client curl \
                     "recordHeaders": {
                       "type": "REQUIRED",
                       "filter": "ALL_MATCH"
-                    }
+                    },
+                    "compressions": ["ZSTD"]
                   },
                   "direction": "REQUEST",
                   "apiKeys": "PRODUCE"
@@ -121,7 +122,8 @@ echo "h1:v1\tkey\tvalue" | docker-compose exec -T kafka-client \
     --topic safeguardTopic \
     --property parse.key=true \
     --property parse.headers=true \
-    --request-required-acks=1
+    --request-required-acks=1 \
+    --compression-codec zstd
 ```
 
 Consume message

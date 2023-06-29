@@ -147,7 +147,7 @@ services:
           memory: 512M
 
   conduktor-proxy:
-    image: ghcr.io/conduktor/conduktor-proxy:em11 # I'll update once the fix is pushed to dockerpub
+    image: ghcr.io/conduktor/conduktor-proxy:latest
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:
