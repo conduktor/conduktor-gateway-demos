@@ -4,7 +4,7 @@ In this demo, we will impose rules to ensure that every message coming to kafka 
 
 ### Video
 
-[![asciicast](https://asciinema.org/a/QOreVnTmGxdo6eMPDeXtUqIxx.svg)](https://asciinema.org/a/QOreVnTmGxdo6eMPDeXtUqIxx)
+[![asciicast](https://asciinema.org/a/fMNLNHMDkIMLTPH8hlXjvI4RW.svg)](https://asciinema.org/a/fMNLNHMDkIMLTPH8hlXjvI4RW)
 
 ## Running the demo
 
@@ -134,7 +134,8 @@ docker-compose exec kafka-client \
     --topic safeguardTopic \
     --from-beginning \
     --property print.key=true \
-    --property print.headers=true
+    --property print.headers=true \
+    --max-messages 1
 ```
 ### Step 8: Log into the platform
 
