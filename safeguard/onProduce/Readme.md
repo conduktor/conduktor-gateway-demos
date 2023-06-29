@@ -106,8 +106,8 @@ echo 'value' | docker-compose exec -T kafka-client \
 You should see an output similar to the following:
 
 ```bash
-ERROR Error when sending message to topic safeguardTopic with key: null, value: 5 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)                                                                                         
-org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Headers are required, offset=0. Invalid value for 'acks': -1. Valid value is one of the values: 0, 1
+[2023-06-29 08:38:59,508] ERROR Error when sending message to topic safeguardTopic with key: null, value: 5 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Headers are required, offset=0. Invalid value for 'acks': -1. Valid value is one of the values: 0, 1. Invalid value for 'compressions': none. Valid value is one of the values: ZSTD
 ```
 
 ### Step 7: Produce a valid message
