@@ -79,8 +79,8 @@ The command below will instruct Conduktor Gateway to encrypt the `password` and 
 ```bash
 docker-compose exec kafka-client curl \
     -u "superUser:superUser" \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/encryption" \
+    --silent \
+    --request POST "conduktor-proxy:8888/tenant/proxy/feature/encryption" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
@@ -113,7 +113,7 @@ Next we configure Conduktor Gateway to decrypt the fields when fetching data
 ```bash
 docker-compose exec kafka-client curl \
     -u "superUser:superUser" \
-    -vvv \
+    --silent \
     --request POST "conduktor-proxy:8888/tenant/someTenant/feature/decryption" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -182,7 +182,7 @@ docker-compose exec schema-registry \
     --consumer.config /clientConfig/proxy.properties \
     --topic encryptedTopic \
     --from-beginning \
-    --max-messages 1 | jq .
+    --max-messages 1 | jq
 ```
 
 You should see the encrypted fields have been decrypted on read as below:
@@ -207,7 +207,7 @@ docker-compose exec schema-registry \
     --bootstrap-server kafka1:9092 \
     --topic someTenantencryptedTopic \
     --from-beginning \
-    --max-messages 1 | jq .
+    --max-messages 1 | jq
 ```
 
 You should see an output similar to the below:
@@ -260,3 +260,97 @@ Navigate to `Console` and select the `cdk-gateway` cluster from the top right. Y
 Navigate to `Console` and select the `gateway-backing-cluster` cluster from the cluster selector in the top right. You should now see the `someTenantencryptedTopic` topic (ignore the tenant prefix for now) and clicking on it will show you an encrypted version of the produced message.
 
 ![create a topic](images/through_backing_cluster.png "View Encrypted Messages")
+
+### Step 14: Performance impact
+
+[![asciicast](https://asciinema.org/a/IDVSYFYL2xjAQSN2cPhZ7Hfih.svg)](https://asciinema.org/a/IDVSYFYL2xjAQSN2cPhZ7Hfih)
+
+Create a performance topic
+```sh
+docker-compose exec kafka-client \
+    kafka-topics \
+        --bootstrap-server conduktor-proxy:6969 \
+        --command-config /clientConfig/proxy.properties \
+        --create --if-not-exists \
+        --topic encryption_performance
+```
+
+Let's apply the encryption on this topic
+
+```bash
+docker-compose exec kafka-client curl \
+    --silent \
+    --user "superUser:superUser" \
+    --request POST "conduktor-proxy:8888/tenant/proxy/feature/encryption" \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "config": { 
+            "topic": "encryption_performance",
+            "fields": [ { 
+                "fieldName": "password",
+                "keySecretId": "secret-key-password",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
+                }
+            },
+            { 
+                "fieldName": "visa",
+                "keySecretId": "secret-key-visaNumber",
+                "algorithm": { 
+                    "type": "TINK/AES_GCM",
+                    "kms": "TINK/KMS_INMEM" 
+                } 
+            }] 
+        },
+        "direction": "REQUEST",
+        "apiKeys": "PRODUCE"
+    }'
+```
+
+Let's create a large `customers.json` file with 1 000 000 entries
+
+```sh
+printf '{"name":"london","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}\n%.0s' {1..1000000} > customers.json
+
+echo number of lines: `wc -l customers.json | awk '{print $1}'`
+
+echo file size: `du -sh customers.json | awk '{print $1}'`
+```
+
+Compute the duration of sending 'customers.json' in gateway with encryption with `kafka-console-producer`
+
+```sh
+time docker compose exec -T kafka-client \
+    kafka-console-producer  \
+        --bootstrap-server conduktor-proxy:6969 \
+        --producer.config /clientConfig/proxy.properties \
+        --topic encryption_performance < customers.json
+```
+
+Verify that we have encrypted messages
+
+```sh
+docker-compose exec kafka-client \
+    kafka-console-consumer \
+        --bootstrap-server conduktor-proxy:6969 \
+        --consumer.config /clientConfig/proxy.properties \
+        --topic encryption_performance \
+        --from-beginning \
+        --max-messages 20 | jq
+```
+
+Let's do the same with `kafka-producer-perf-test`
+
+```sh
+docker compose cp customers.json kafka-client:/home/appuser
+
+docker compose exec kafka-client \
+    kafka-producer-perf-test \
+        --topic encryption_performance \
+        --throughput -1 \
+        --num-records 1000000 \
+        --producer-props bootstrap.servers=conduktor-proxy:6969 \
+        --producer.config /clientConfig/proxy.properties \
+        --payload-file customers.json
+```

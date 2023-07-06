@@ -12,7 +12,7 @@ docker-compose exec kafka-client \
 docker-compose exec kafka-client curl \
     -u "superUser:superUser" \
     --silent \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/encryption" \
+    --request POST "conduktor-proxy:8888/tenant/proxy/feature/encryption" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": { 
