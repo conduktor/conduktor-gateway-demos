@@ -72,7 +72,7 @@ services:
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
 
   conduktor-proxy:
-    image: conduktor/conduktor-proxy:1.8.2.7-amd64
+    image: ghcr.io/conduktor/conduktor-proxy:2.0.0.1
     hostname: conduktor-proxy
     container_name: conduktor-proxy
     depends_on:
@@ -88,9 +88,8 @@ services:
       USER_POOL_TYPE: JWT
       USER_POOL_SECRET_KEY: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
       PROXY_HOST: conduktor-proxy
-      SCHEMA_REGISTRY_HOST: http://schema-registry:8081
       INTERCEPTOR_CONFIG_LOCATION: "~"
-      ADMIN_API_USERS: "[{username: superUser, password: superUser}]"
+      ADMIN_API_USERS: "[{username: superUser, password: superUser, admin: true}]"
       JAVA_TOOL_OPTIONS: -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1
       DOWNSTREAM_THREAD: 10
 

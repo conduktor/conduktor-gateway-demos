@@ -91,21 +91,18 @@ The command below will instruct Conduktor Gateway to inject failures for some Pr
 docker-compose exec kafka-client curl \
     -u superUser:superUser \
     -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/broken-broker" \
+    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/broken-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.BrokenBrokerChaosPlugin",
+        "priority": 100,
         "config": {
-	        "brokerIds": [],
-	        "duration": 6000,
-	        "durationUnit": "MILLISECONDS",
-	        "quietPeriod": 20000,
-	        "quietPeriodUnit": "MILLISECONDS",
-	        "minLatencyToAddInMilliseconds": 6000,
-	        "maxLatencyToAddInMilliseconds": 7000,
-	        "errors": ["REQUEST_TIMED_OUT", "BROKER_NOT_AVAILABLE", "OFFSET_OUT_OF_RANGE", "NOT_ENOUGH_REPLICAS", "INVALID_REQUIRED_ACKS"]
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+            "rateInPercent": 5,
+            "errorMap": {
+                "FETCH": "UNKNOWN_SERVER_ERROR",
+                "PRODUCE": "CORRUPT_MESSAGE"
+            }
+        }
     }'
 ```
 ### Step 5: Inject some chaos
@@ -124,16 +121,13 @@ docker-compose exec kafka-client kafka-producer-perf-test \
 This should produce output similar to this:
 
 ```bash
-[2022-11-16 17:00:42,193] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 5 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-16 17:00:42,474] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-6 records sent, 0.8 records/sec (0.00 MB/sec), 1198.5 ms avg latency, 6632.0 ms max latency.
-org.apache.kafka.common.errors.InvalidRequiredAcksException: Produce request specified an invalid value for required acks.
-[2022-11-16 17:00:42,491] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-16 17:00:42,492] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 9 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-100 records sent, 9.999000 records/sec (0.00 MB/sec), 2454.80 ms avg latency, 6852.00 ms max latency, 2046 ms 50th, 6560 ms 95th, 6852 ms 99th, 6852 ms 99.9th.
+52 records sent, 10.3 records/sec (0.00 MB/sec), 35.9 ms avg latency, 730.0 ms max latency.
+[2023-07-12 12:12:11,213] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 64 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+[2023-07-12 12:12:12,109] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 74 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+100 records sent, 10.014020 records/sec (0.00 MB/sec), 24.94 ms avg latency, 730.00 ms max latency, 8 ms 50th, 108 ms 95th, 730 ms 99th, 730 ms 99.9th.
 ```
 
-Note the `NOT_ENOUGH_REPLICAS` errors.
+Note the `CORRUPT_MESSAGE` errors.
 
 ### Step 6: Reset
 
@@ -143,7 +137,15 @@ To stop chaos injection run the below:
 docker-compose exec kafka-client curl \
     -u superUser:superUser \
     -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/broken-broker/apiKeys/PRODUCE/direction/REQUEST"
+    --request DELETE "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/broken-broker"
+```
+
+and list the interceptors for tenant proxy:
+
+```bash
+docker-compose exec kafka-client curl \
+    --user "superUser:superUser" \
+    conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
 ```
 
 ### Step 7: Run with no Chaos
@@ -185,18 +187,16 @@ docker-compose exec kafka-client \
 docker-compose exec kafka-client curl \
     -u superUser:superUser \
     -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/duplicate-resource" \
+    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/duplicate-resource" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
-          "topics": ["conduktorTopicDuplicate"], 
-          "duration": 1, 
-          "rateInPercent": 100, 
-          "quietPeriod": 1, 
-          "timeUnit": "MINUTES" 
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+        "pluginClass": "io.conduktor.gateway.interceptor.DuplicateResourcesChaosPlugin",
+        "priority": 100,
+        "config": {
+            "topic": "conduktorTopicDuplicate",
+            "rateInPercent": 100,
+            "target": "PRODUCE"
+        }
     }'
 ```
 ### Step 9: Inject some chaos
