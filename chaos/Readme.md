@@ -207,8 +207,7 @@ docker-compose exec kafka-client curl \
         "priority": 100,
         "config": {
             "topic": "conduktorTopicDuplicate",
-            "rateInPercent": 100,
-            "target": "PRODUCE"
+            "rateInPercent": 100
         }
     }'
 ```
@@ -269,24 +268,19 @@ docker-compose exec kafka-client curl \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
+The command below will create a `simulate leader election errors` interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/leader-election" \
+    -u admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/leader-election" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
+        "priority": 100,
         "config": {
-          "rateInPercent": 100,
-          "duration":6000, 
-          "quietPeriod":20000,
-          "timeUnit":"MILLISECONDS",
-          "errors":["LEADER_NOT_AVAILABLE","NOT_LEADER_OR_FOLLOWER","BROKER_NOT_AVAILABLE"]
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+          "rateInPercent": 50
+        }
     }'
 ```
 ### Step 12: Inject some chaos
@@ -295,7 +289,7 @@ Let's produce some records to our created topic.
 
 ```bash
 docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
+  --producer.config /clientConfig/gateway.properties \
   --record-size 100 \
   --throughput 10 \
   --num-records 10 \
@@ -312,7 +306,7 @@ This should produce output similar to this:
 10 records sent, 1.531159 records/sec (0.00 MB/sec), 6010.20 ms avg latency, 6511.00 ms max latency, 6118 ms 50th, 6511 ms 95th, 6511 ms 99th, 6511 ms 99.9th.
 ```
 
-Note the exceptions indicating that the current leader has changed.
+Note both the different error types, and the exceptions indicating that the current leader has changed.
 
 ### Step 13: Reset
 
@@ -320,9 +314,15 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/leader-election/apiKeys/PRODUCE/direction/REQUEST"
+    -u admin:conduktor \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/leader-election"
+```
+and confirm the removal of the interceptor from the tenant `myChaosTenant`;
+
+```bash
+docker-compose exec kafka-client curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
 
 ### <a name="randomBytes"></a> Step 14: Simulate Message Corruption
