@@ -40,15 +40,25 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Step 3: Create topics
+Let's start by creating a user against our new tenant, if you're not familiar with tenants and user then you can either follow the jwt_auth demo, or run the below command and paste the token that is returned into the `password` field of the `gateway.properties` file, in the `clientConfig`` directory.
+
+```bash
+docker compose exec kafka-client \
+    curl \
+        --user admin:conduktor \
+        --header "content-type:application/json" \
+        --request POST conduktor-gateway:8888/admin/auth/v1/tenants/myChaosTenant \
+        --data-raw '{"lifeTimeSeconds":7776000}'
+```
 
 We create topics using the Kafka console tools, the below creates a topic named `conduktorTopic`
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
@@ -59,7 +69,7 @@ docker-compose exec kafka-client \
 List the created topic
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
@@ -82,15 +92,15 @@ Conduktor Gateway provides a number of different ways to inject Chaos into your 
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
+The command below will create a broken broker interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     -u admin:conduktor \
-    --request POST "conduktor-proxy:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "pluginClass": "io.conduktor.gateway.interceptor.BrokenBrokerChaosPlugin",
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin",
         "priority": 100,
         "config": {
             "rateInPercent": 5,
@@ -101,9 +111,18 @@ docker-compose exec kafka-client curl \
         }
     }'
 ```
+
+We can confirm the interceptor exists on the tenant;
+```bash
+docker compose exec kafka-client curl \
+    -u "admin:conduktor" \
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors" \
+    --header 'Content-Type: application/json'
+```
 ### Step 5: Inject some chaos
 
 Let's produce some records to our created topic and observe some errors being injected by Conduktor Gateway.
+Remember this will go to the myChaosTenant where the topic conduktorTopic lives from our gateway.properties file's password.
 
 ```bash
 docker-compose exec kafka-client kafka-producer-perf-test \
@@ -117,13 +136,13 @@ docker-compose exec kafka-client kafka-producer-perf-test \
 This should produce output similar to this:
 
 ```bash
-52 records sent, 10.3 records/sec (0.00 MB/sec), 35.9 ms avg latency, 730.0 ms max latency.
 [2023-07-12 12:12:11,213] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 64 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
 [2023-07-12 12:12:12,109] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 74 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+...
 100 records sent, 10.014020 records/sec (0.00 MB/sec), 24.94 ms avg latency, 730.00 ms max latency, 8 ms 50th, 108 ms 95th, 730 ms 99th, 730 ms 99.9th.
 ```
 
-Note the `CORRUPT_MESSAGE` errors.
+Note the `CORRUPT_MESSAGE` errors, your results will vary each run so don't pay too much attention to any variation in latency figures.
 
 ### Step 6: Reset
 
