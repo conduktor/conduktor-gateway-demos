@@ -76,6 +76,10 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
       SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+    healthcheck:
+      test: nc -zv schema-registry 8081 || exit 1
+      interval: 5s
+      retries: 25
 
   conduktor-gateway:
     image: ghcr.io/conduktor/conduktor-proxy:2.0.0.5
