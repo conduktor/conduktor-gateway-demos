@@ -39,10 +39,7 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka1 kafka2 kafka-client schema-registry
-sleep 10
-docker-compose up -d conduktor-proxy
-sleep 5
+docker compose up -d 
 echo "Environment started"
 ```
 
@@ -88,11 +85,11 @@ In addition to these we need the following information:
 Now that we have these credentials we can create a new token:
 
 ```bash
-docker-compose exec kafka-client  bash -c 'curl \
-    -u superUser:superUser \
-    -vvv \
-    -H content-type:application/json \
-    --request POST conduktor-proxy:8888/admin/auth/v1beta1/tenants/someTenant \
+docker compose exec kafka-client  \
+  bash -c 'curl \
+    --user "admin:conduktor" \
+    --header "content-type:application/json" \
+    --request POST conduktor-gateway:8888/admin/auth/v1/tenants/someTenant/username/sa \
     --data-raw \{\"lifeTimeSeconds\":7776000\}'
 ```
 
@@ -110,8 +107,8 @@ The token should form the password field of a client configuration that uses SAS
 have created a template ready to receive this token as below:
 
 ```bash
-docker-compose exec kafka-client cat \
-    /clientConfig/proxy.properties
+docker compose exec kafka-client \
+  cat /clientConfig/proxy.properties
 ```
 
 produces:
@@ -156,14 +153,16 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 Let's create a topic, produce and consume some data with the new configuration:
 
 ```bash
-docker-compose exec kafka-client kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /tmp/jwt.properties \
+docker-compose exec kafka-client \
+  kafka-topics \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/proxy.properties \
     --create \
     --topic tenantTopic
-docker-compose exec kafka-client kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /tmp/jwt.properties \
+docker-compose exec kafka-client \
+  kafka-topics \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/proxy.properties \
     --list
 ```
 
