@@ -80,32 +80,44 @@ The command below will instruct Conduktor Gateway to encrypt the `password` and 
 docker-compose exec kafka-client curl \
     -u "superUser:superUser" \
     --silent \
-    --request POST "conduktor-proxy:8888/tenant/proxy/feature/encryption" \
+    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/encrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
+        "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+        "priority": 100,
+        "config": {
             "topic": "encryptedTopic",
-            "fields": [ { 
+            "schemaRegistryConfig": {
+                "host": "http://schema-registry:8081"
+            },
+            "fields": [ {
                 "fieldName": "password",
-                "keySecretId": "secret-key-password",
+                "keySecretId": "password-secret",
                 "algorithm": { 
-                    "type": "TINK/AES_GCM",
-                    "kms": "TINK/KMS_INMEM" 
+                    "type": "AES_GCM",
+                    "kms": "IN_MEMORY"
                 }
             },
-            { 
+            {
                 "fieldName": "visa",
-                "keySecretId": "secret-key-visaNumber",
-                "algorithm": { 
-                    "type": "TINK/AES_GCM",
-                    "kms": "TINK/KMS_INMEM" 
-                } 
-            }] 
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
-    }'
+                "keySecretId": "visa-scret",
+                "algorithm": {
+                    "type": "AES_GCM",
+                    "kms": "IN_MEMORY"
+                }
+            }]
+        }
+    }' 
 ```
+
+and list the interceptors for tenant proxy:
+
+```bash
+docker-compose exec kafka-client curl \
+    --user "superUser:superUser" \
+    conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
+```
+
 ### Step 6: Configure Decryption
 
 Next we configure Conduktor Gateway to decrypt the fields when fetching data
@@ -114,33 +126,27 @@ Next we configure Conduktor Gateway to decrypt the fields when fetching data
 docker-compose exec kafka-client curl \
     -u "superUser:superUser" \
     --silent \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/decryption" \
+    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/decrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
+        "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+        "priority": 100,
+        "config": {
             "topic": "encryptedTopic",
-            "fields": [ { 
-                "fieldName": "password",
-                "keySecretId": "secret-key-password",
-                "algorithm": { 
-                    "type": "TINK/AES_GCM",
-                    "kms": "TINK/KMS_INMEM" 
-                }
-            },
-            { 
-                "fieldName": "visa",
-                "keySecretId": "secret-key-visaNumber",
-                "algorithm": { 
-                    "type": "TINK/AES_GCM",
-                    "kms": "TINK/KMS_INMEM" 
-                } 
-            }] 
-        },
-        "direction": "RESPONSE",
-        "apiKeys": "FETCH"
+            "schemaRegistryConfig": {
+                "host": "http://schema-registry:8081"
+            }
+        }
     }'
 ```
 
+and list the interceptors for tenant proxy:
+
+```bash
+docker-compose exec kafka-client curl \
+    --user "superUser:superUser" \
+    conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
+```
 
 ### Step 7: Produce data to the topic
 
@@ -205,7 +211,7 @@ To confirm the fields are encrypted in Kafka we can consume directly from the un
 docker-compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic someTenantencryptedTopic \
+    --topic proxyencryptedTopic \
     --from-beginning \
     --max-messages 1 | jq
 ```
@@ -281,30 +287,30 @@ Let's apply the encryption on this topic
 docker-compose exec kafka-client curl \
     --silent \
     --user "superUser:superUser" \
-    --request POST "conduktor-proxy:8888/tenant/proxy/feature/encryption" \
+    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/performanceEncrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
+        "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+        "priority": 100,
+        "config": {
             "topic": "encryption_performance",
             "fields": [ { 
                 "fieldName": "password",
-                "keySecretId": "secret-key-password",
+                "keySecretId": "password-secret",
                 "algorithm": { 
-                    "type": "TINK/AES_GCM",
-                    "kms": "TINK/KMS_INMEM" 
+                    "type": "AES_GCM",
+                    "kms": "IN_MEMORY"
                 }
             },
             { 
                 "fieldName": "visa",
-                "keySecretId": "secret-key-visaNumber",
+                "keySecretId": "visa-secret",
                 "algorithm": { 
-                    "type": "TINK/AES_GCM",
-                    "kms": "TINK/KMS_INMEM" 
+                    "type": "AES_GCM",
+                    "kms": "IN_MEMORY"
                 } 
-            }] 
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+            }]
+        }
     }'
 ```
 
