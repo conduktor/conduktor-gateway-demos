@@ -8,13 +8,13 @@ Conduktor Gateway comes to the rescue, simulating common Kafka disruptions witho
 
 In this demo we will inject the following disruptions with Conduktor Gateway and observe the result:
 
-* Broken Broker - Inject intermittent errors in client connections to brokers
+* Simulate Broken Brokers - Inject intermittent errors in client connections to brokers
 * Duplication - Simulate request duplication
-* Leader Election - Simulate leader elections on the underlying Kafka cluster
-* Random Bytes - Add random bytes to message data
-* Slow Broker - Introduce intermittent latency in broker communication
-* Slow Topic - Introduce latency for specific topics
-* Invalid Schema Id - Simulate broker responses as if the schema provided in a message was invalid.
+* Simulate Leader Election Errors - Simulate leader elections on the underlying Kafka cluster
+* Simulate message corruption - Add random bytes to message data
+* Simulate Slow Broker - Introduce intermittent latency in broker communication
+* Slow Producers & Consumers - Introduce latency for specific topics
+* Simulate Invalid Schema Id - Simulate broker responses as if the schema provided in a message was invalid
 
 ### Architecture diagram
 ![architecture diagram](images/chaos.png "chaos")
@@ -32,6 +32,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Zookeeper Server
 * A 2 node Kafka cluster
 * A single Conduktor Gateway container
+* A single Schema Registry
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
 ### Step 2: Start the environment
@@ -39,11 +40,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka1 kafka-client kafka2 schema-registry
-sleep 10
-docker-compose up -d conduktor-proxy
-sleep 5
-echo "Environment started"
+docker-compose up -d
 ```
 
 ### Step 3: Create topics
@@ -53,8 +50,8 @@ We create topics using the Kafka console tools, the below creates a topic named 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic conduktorTopic
 ```
@@ -64,8 +61,8 @@ List the created topic
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --list
 ```
 
@@ -73,15 +70,15 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway provides a number of different ways to inject Chaos into your data flows:
 
-* [Broken Broker](#brokenBroker)
-* [Duplicate Writes](#duplicateWrites)
-* [Leader Election](#leaderElection)
-* [Random Bytes Injections](#randomBytes)
-* [Slow Broker](#slowBroker)
-* [Slow Topic](#slowTopic)
-* [Invalid Schema Id Injection](#invalidSchema)
+* [Simulate Broken Brokers](#brokenBroker)
+* [Duplicate Message on Produce](#duplicateWrites)
+* [Simulate Leader Election Errors](#leaderElection)
+* [Simulate Message Corruption](#randomBytes)
+* [Simulate Slow Broker](#slowBroker)
+* [Simulate Slow Producers & Consumers](#slowTopic)
+* [Simulate Invalid Schema Id](#invalidSchema)
 
-### <a name="brokenBroker"></a> Step 4: Broken Broker
+### <a name="brokenBroker"></a> Step 4: Simulate Broken Brokers
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
@@ -89,9 +86,8 @@ The command below will instruct Conduktor Gateway to inject failures for some Pr
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/broken-broker" \
+    -u admin:conduktor \
+    --request POST "conduktor-proxy:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.BrokenBrokerChaosPlugin",
@@ -111,7 +107,7 @@ Let's produce some records to our created topic and observe some errors being in
 
 ```bash
 docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
+  --producer.config /clientConfig/gateway.properties \
   --record-size 100 \
   --throughput 10 \
   --num-records 100 \
@@ -135,17 +131,16 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/broken-broker"
+    -u admin:conduktor \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker"
 ```
 
 and list the interceptors for tenant proxy:
 
 ```bash
 docker-compose exec kafka-client curl \
-    --user "superUser:superUser" \
-    conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
 
 ### Step 7: Run with no Chaos
@@ -154,7 +149,7 @@ To verify, let's run the produce test again to confirm there are no errors
 
 ```bash
 docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
+  --producer.config /clientConfig/gateway.properties \
   --record-size 100 \
   --throughput 10 \
   --num-records 100 \
@@ -168,7 +163,7 @@ This should produce output similar to the following:
 100 records sent, 10.001000 records/sec (0.00 MB/sec), 10.69 ms avg latency, 388.00 ms max latency, 5 ms 50th, 43 ms 95th, 388 ms 99th, 388 ms 99.9th.
 ```
 
-### <a name="duplicateWrites"></a> Step 8: Duplicate Writes
+### <a name="duplicateWrites"></a> Step 8: Duplicate Message on Produce
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
@@ -247,7 +242,7 @@ docker-compose exec kafka-client curl \
     --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/duplicate-resource/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
-### <a name="leaderElection"></a> Step 11: Leader Election
+### <a name="leaderElection"></a> Step 11: Simulate Leader Election Errors
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
@@ -307,7 +302,7 @@ docker-compose exec kafka-client curl \
     --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/leader-election/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
-### <a name="randomBytes"></a> Step 14: Random Bytes
+### <a name="randomBytes"></a> Step 14: Simulate Message Corruption
 
 First let's create a topic to operate on.
 
@@ -389,7 +384,7 @@ docker-compose exec kafka-client curl \
     --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/random-bytes/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
-### <a name="slowBroker"></a> Step 17: Slow Broker
+### <a name="slowBroker"></a> Step 17: Simulate Slow Broker
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
@@ -452,7 +447,7 @@ docker-compose exec kafka-client curl \
     --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/slow-broker/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
-### <a name="slowTopic"></a> Step 20: Slow Topic
+### <a name="slowTopic"></a> Step 20: Simulate Slow Producers & Consumers
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
@@ -524,7 +519,7 @@ docker-compose exec kafka-client curl \
     --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/slow-topic/apiKeys/PRODUCE/direction/REQUEST"
 ```
 
-### <a name="invalidSchema"></a> Step 23: Invalid Schema
+### <a name="invalidSchema"></a> Step 23: Simulate Invalid Schema Id
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
