@@ -29,7 +29,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Step 3: Configuring the environment
@@ -39,7 +39,7 @@ This step is for reference only, the demo is pre-configured in `docker-compose.y
 Conduktor Gateway manages user access in a "user pool".
 You may wish to further configure the pool when in production, in this case we require a secret that is used to encrypt any tokens generated, which can be provided by setting the appropriate environment variable. For more information on this or any other part of the configuration details, checkout the [docs site](https://docs.conduktor.io/).
 
-You'll also see the token generation endpoint and multi-tenancy have been enabled throught their respective environment variables.
+You'll also see that passthrough is set to false as we're turning on multi-tenancy.
 
 ### Step 4: Generating a token
 
@@ -59,7 +59,7 @@ In our example below let's create a user against `tenantId:someTenant` and `user
 Now that we have these credentials and know which tenant & user we wish to interact with, we can create a new token:
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
     bash -c 'curl \
         --user admin:conduktor \
         --header "content-type:application/json" \
@@ -81,7 +81,7 @@ This token should form the password field of a generic Kafka client configuratio
 have created a template ready to receive this token as below. Let's take a quick look at the current provided file, with the below command or open in your IDE:
 
 ```bash
-docker-compose exec kafka-client cat \
+docker compose exec kafka-client cat \
     /clientConfig/proxy.properties
 ```
 
@@ -98,7 +98,7 @@ Let's add our JWT, that we just generated from our CURL to the admin API, as the
 Verify your saved changes look similar to the below:
 
 ```bash
-docker-compose exec kafka-client cat \
+docker compose exec kafka-client cat \
     /clientConfig/proxy.properties
 ```
 
@@ -113,7 +113,7 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 Let's create a topic, produce and consume some data with the new configuration:
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
     kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -122,7 +122,7 @@ docker-compose exec kafka-client \
 ```
 Observe the created topic in the topic list.
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
     kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/proxy.properties \
@@ -132,7 +132,7 @@ docker-compose exec kafka-client \
 
 Produce a test message.
 ```bash
-echo testMessage | docker-compose exec -T kafka-client \
+echo testMessage | docker compose exec -T kafka-client \
     kafka-console-producer \
     --bootstrap-server conduktor-gateway:6969 \
     --producer.config /clientConfig/proxy.properties \
@@ -142,7 +142,7 @@ echo testMessage | docker-compose exec -T kafka-client \
 
 Consume the message.
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
     kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/proxy.properties \
