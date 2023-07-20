@@ -95,7 +95,7 @@ Let's take a quick look at the current provided file, with the below command or 
 
 ```bash
 docker compose exec kafka-client \
-  cat /clientConfig/proxy.properties
+  cat /clientConfig/gateway.properties
 ```
 
 should return something similar to:
@@ -112,7 +112,7 @@ Verify your saved changes look similar to the below:
 
 ```bash
 docker compose exec kafka-client \
-  cat /clientConfig/proxy.properties
+  cat /clientConfig/gateway.properties
 ```
 
 ```properties
@@ -129,7 +129,7 @@ Let's create a topic, produce and consume some data with the new configuration:
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --command-config /clientConfig/gateway.properties \
     --create \
     --topic tenantTopic
 ```
@@ -138,7 +138,7 @@ Observe the created topic in the topic list.
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --command-config /clientConfig/gateway.properties \
     --list
 ```
   
@@ -148,7 +148,7 @@ Produce a test message.
 echo testMessage | docker compose exec -T kafka-client \
   kafka-console-producer \
     --bootstrap-server conduktor-gateway:6969 \
-    --producer.config /clientConfig/proxy.properties \
+    --producer.config /clientConfig/gateway.properties \
     --topic tenantTopic
 ```
   
@@ -158,7 +158,7 @@ Consume the message.
 docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
-    --consumer.config /clientConfig/proxy.properties \
+    --consumer.config /clientConfig/gateway.properties \
     --topic tenantTopic \
     --from-beginning
 ```
