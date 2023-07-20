@@ -483,8 +483,7 @@ docker-compose exec kafka-client curl \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to simulate slow responses from the brokers. It differs from the above in that it will operate only on a set of topics rather than all traffic.
-The command below will create a `simulate slow broker` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to simulate slow responses from brokers.
+The command below will create a `simulate slow producers and consumers` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all trafic.
 
 ```bash
 docker-compose exec kafka-client \
@@ -557,41 +556,40 @@ docker-compose exec kafka-client curl \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to inject Schema Ids into messages. This simulates a situation where clients cannot deserialize messages with the schema information provided.
+The command below will create a `simulate invalid schema Id` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation wehre clients cannot deserialize messages with the schema information provided.
 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic conduktorTopicSchema
 ```
-
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/invalid-schema" \
+    -u admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/invalid-schema" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
-          "topics": ["conduktorTopicSchema"], 
-          "fakeSchemaId": 999 
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateInvalidSchemaIdPlugin",
+        "priority": 100,
+        "config": {
+          "topic": "conduktorTopicSchema",
+          "invalidSchemaId": 999,
+          "target": "PRODUCE"
+        }
     }'
-```
+  ```
 ### Step 24: Inject some chaos
 
 Let's produce a record to our created topic.
 
 ```bash
 docker-compose exec schema-registry bash -c "cat /clientConfig/payload.json | kafka-json-schema-console-producer \
-    --bootstrap-server conduktor-proxy:6969 \
+    --bootstrap-server conduktor-gateway:6969 \
     --topic conduktorTopicSchema  \
-    --producer.config /clientConfig/proxy.properties \
+    --producer.config /clientConfig/gateway.properties \
     --property value.schema='{ 
         \"title\": \"someSchema\", 
         \"type\": \"object\", 
