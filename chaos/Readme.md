@@ -327,35 +327,34 @@ docker-compose exec kafka-client curl \
 
 ### <a name="randomBytes"></a> Step 14: Simulate Message Corruption
 
-First let's create a topic to operate on.
+First let's create a new topic to operate on.
 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
-    --topic conduktorTopicRandom
+    --topic conduktorTopicRandomBytes
 ```
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to append random bytes to messages produced.
+The command below will create a `simulate leader election errors` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/random-bytes" \
+    -u admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/random-bytes" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.ProduceSimulateMessageCorruptionPlugin",
+        "priority": 100,
         "config": { 
-          "topics": ["conduktorTopicRandom"], 
-          "nbMessages": 1, 
-          "sizeInBytes": 10 
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+          "topic": "conduktorTopicRandomBytes",  
+          "sizeInBytes": 10,
+          "rateInPercent": 100
+        }
     }'
 ```
 ### Step 15: Inject some chaos
@@ -363,22 +362,22 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
+docker compose exec kafka-client kafka-producer-perf-test \
+  --producer.config /clientConfig/gateway.properties \
   --record-size 100 \
   --throughput 10 \
   --num-records 10 \
-  --topic conduktorTopicRandom
+  --topic conduktorTopicRandomBytes
 ```
 
 And see the appended bytes in the records:
 
 ```bash
-docker-compose exec kafka-client kafka-console-consumer \
-  --bootstrap-server conduktor-proxy:6969 \
-  --consumer.config /clientConfig/proxy.properties \
+docker compose exec kafka-client kafka-console-consumer \
+  --bootstrap-server conduktor-gateway:6969 \
+  --consumer.config /clientConfig/gateway.properties \
   --from-beginning \
-  --topic conduktorTopicRandom
+  --topic conduktorTopicRandomBytes
 ```
 
 This should produce output similar to this:
@@ -402,9 +401,8 @@ To stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/random-bytes/apiKeys/PRODUCE/direction/REQUEST"
+    -u admin:conduktor \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/random-bytes"
 ```
 
 ### <a name="slowBroker"></a> Step 17: Simulate Slow Broker
