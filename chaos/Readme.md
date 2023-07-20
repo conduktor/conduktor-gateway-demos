@@ -154,7 +154,7 @@ docker-compose exec kafka-client curl \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker"
 ```
 
-and list the interceptors for tenant proxy:
+and confirm by listing the interceptors for the tenant:
 
 ```bash
 docker-compose exec kafka-client curl \
@@ -186,25 +186,24 @@ This should produce output similar to the following:
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to inject duplicate records on produce requests.
+The command below will create a duplicate message on produce interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to inject duplicate records on produce requests.
 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic conduktorTopicDuplicate
 ```
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/duplicate-resource" \
+    -u admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/duplicate-resource" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "pluginClass": "io.conduktor.gateway.interceptor.DuplicateResourcesChaosPlugin",
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.DuplicateResourcesPlugin",
         "priority": 100,
         "config": {
             "topic": "conduktorTopicDuplicate",
@@ -219,7 +218,7 @@ Let's produce some records to our created topic.
 
 ```bash
 docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
+  --producer.config /clientConfig/gateway.properties \
   --record-size 100 \
   --throughput 10 \
   --num-records 10 \
@@ -230,8 +229,8 @@ And see the duplicated records:
 
 ```bash
 docker-compose exec kafka-client kafka-console-consumer \
-  --bootstrap-server conduktor-proxy:6969 \
-  --consumer.config /clientConfig/proxy.properties \
+  --bootstrap-server conduktor-gateway:6969 \
+  --consumer.config /clientConfig/gateway.properties \
   --from-beginning \
   --topic conduktorTopicDuplicate
 ```
@@ -252,15 +251,20 @@ Note the duplicated messages.
 
 ### Step 10: Reset
 
-To stop chaos injection run the below:
+To remove this duplicate message on produce interceptors run a similar call as when we added it, but a DELETE.
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/duplicate-resource/apiKeys/PRODUCE/direction/REQUEST"
+    -u admin:conduktor \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/duplicate-resource"
 ```
+and confirm the removal of the interceptor from the tenant `myChaosTenant`;
 
+```bash
+docker-compose exec kafka-client curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
+```
 ### <a name="leaderElection"></a> Step 11: Simulate Leader Election Errors
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
