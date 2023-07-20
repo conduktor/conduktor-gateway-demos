@@ -556,7 +556,7 @@ docker-compose exec kafka-client curl \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate invalid schema Id` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation wehre clients cannot deserialize messages with the schema information provided.
+The command below will create a `simulate invalid schema Id` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
 
 ```bash
 docker-compose exec kafka-client \
@@ -577,7 +577,7 @@ docker-compose exec kafka-client curl \
         "config": {
           "topic": "conduktorTopicSchema",
           "invalidSchemaId": 999,
-          "target": "PRODUCE"
+          "target": "CONSUME"
         }
     }'
   ```
@@ -605,9 +605,9 @@ And consume them with a schema aware consumer.
 
 ```bash
 docker-compose exec schema-registry kafka-json-schema-console-consumer \
-    --bootstrap-server conduktor-proxy:6969 \
+    --bootstrap-server conduktor-gateway:6969 \
     --topic conduktorTopicSchema \
-    --consumer.config /clientConfig/proxy.properties \
+    --consumer.config /clientConfig/gateway.properties \
     --from-beginning 
 ```
 
@@ -641,13 +641,12 @@ Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientEx
 
 ### Step 25: Reset
 
-To stop chaos injection run the below:
+To remove the interceptor and stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/invalid-schema/apiKeys/PRODUCE/direction/REQUEST"
+    -u admin:conduktor \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/invalid-schema"
 ```
 
 and confirm the removal of the interceptor from the tenant `myChaosTenant`;
@@ -659,3 +658,6 @@ docker-compose exec kafka-client curl \
 ```
 
 # Conclusion
+In this demo we have simulated several highly chaotic scenarios that applications need to handle, in a controlled manner. Be that latency, message quality, infrastructure issues or human error, all can be simulated.  
+
+These are a sample of the types of situations that can be simulated, if you have others or more detailed scenarios you'd want to simualte then [get in touch](https://www.conduktor.io/contact/demo), we'd love to speak with you. 
