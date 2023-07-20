@@ -39,7 +39,7 @@ This step is for reference only, the demo is pre-configured in `docker-compose.y
 Conduktor Gateway manages user access in a "user pool".
 You may wish to further configure the pool when in production, in this case we require a secret that is used to encrypt any tokens generated, which can be provided by setting the appropriate environment variable. For more information on this or any other part of the configuration details, checkout the [docs site](https://docs.conduktor.io/).
 
-You'll also see the token generation endpoint and multi-tenancy have been enabled throught their respective environment variables.
+You'll also see that passthrough is set to false as we're turning on multi-tenancy.
 
 ### Step 4: Generating a token
 
