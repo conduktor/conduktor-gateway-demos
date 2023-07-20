@@ -60,11 +60,11 @@ Now that we have these credentials and know which tenant & user we wish to inter
 
 ```bash
 docker compose exec kafka-client \
-    bash -c 'curl \
+    curl \
         --user admin:conduktor \
         --header "content-type:application/json" \
         --request POST conduktor-gateway:8888/admin/auth/v1/tenants/someTenant/username/someUser \
-        --data-raw \{\"lifeTimeSeconds\":7776000\}'
+        --data-raw '{"lifeTimeSeconds":7776000}'
 ```
 
 This should return a JWT, an output similar to this:
@@ -81,16 +81,16 @@ This token should form the password field of a generic Kafka client configuratio
 have created a template ready to receive this token as below. Let's take a quick look at the current provided file, with the below command or open in your IDE:
 
 ```bash
-docker compose exec kafka-client cat \
-    /clientConfig/proxy.properties
+docker compose exec kafka-client \
+  cat /clientConfig/proxy.properties
 ```
 
 should return something similar to:
 
-```bash
+```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="test@conduktor.io" password="JWT_PLACEHOLDER";
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUser" password="JWT_PLACEHOLDER";
 ```
 
 Let's add our JWT, that we just generated from our CURL to the admin API, as the password value. Paste your token into the password field being careful about the "" marks.
@@ -98,14 +98,14 @@ Let's add our JWT, that we just generated from our CURL to the admin API, as the
 Verify your saved changes look similar to the below:
 
 ```bash
-docker compose exec kafka-client cat \
-    /clientConfig/proxy.properties
+docker compose exec kafka-client \
+  cat /clientConfig/proxy.properties
 ```
 
-```bash
+```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="test@conduktor.io" password="eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM";
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUser" password="eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM";
 ```
 
 ### Step 5: Using the token
@@ -114,7 +114,7 @@ Let's create a topic, produce and consume some data with the new configuration:
 
 ```bash
 docker compose exec kafka-client \
-    kafka-topics \
+  kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/proxy.properties \
     --create \
@@ -123,7 +123,7 @@ docker compose exec kafka-client \
 Observe the created topic in the topic list.
 ```bash
 docker compose exec kafka-client \
-    kafka-topics \
+  kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/proxy.properties \
     --list
@@ -133,7 +133,7 @@ docker compose exec kafka-client \
 Produce a test message.
 ```bash
 echo testMessage | docker compose exec -T kafka-client \
-    kafka-console-producer \
+  kafka-console-producer \
     --bootstrap-server conduktor-gateway:6969 \
     --producer.config /clientConfig/proxy.properties \
     --topic tenantTopic
@@ -143,7 +143,7 @@ echo testMessage | docker compose exec -T kafka-client \
 Consume the message.
 ```bash
 docker compose exec kafka-client \
-    kafka-console-consumer \
+  kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/proxy.properties \
     --topic tenantTopic \
@@ -152,6 +152,7 @@ docker compose exec kafka-client \
 
 
 ## Conclusion
+
 We have run through the idea of users being created against virtual clusters (tenants), how this simple environment looks and how we might expand it for a production setup.
 That we can create a user as an administrator against the Admin API and get a token back.
 That this token should be used as a password for clients connecting to this virtual cluster (tenant).
