@@ -13,7 +13,7 @@ underlying "testTenant_topic"
 
 ### Step 1: Review the environment
 
-As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+As can be seen from `docker compose.yaml` the demo environment consists of the following:
 
 * A single Zookeeper Server
 * A 2 node Kafka cluster
