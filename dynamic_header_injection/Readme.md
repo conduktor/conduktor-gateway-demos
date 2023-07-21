@@ -27,15 +27,15 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Zookeeper Server
 * A 2 node Kafka cluster
 * A single Conduktor Gateway container
-* A Conduktor Platform container
+* A Conduktor Console container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-### Step 2: Review the platform configuration
+### Step 2: Review the Console configuration
 
-`platform-config.yaml` defines 2 clusters:
+`platform-config.yaml` defines configurations for connecting to 2 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* Proxy - a connection through Conduktor Gateway to the underlying Kafka
+* Gateway - a connection to Conduktor Gatewa, which sits as a proxy infront of the underlying Kafka
 
 Note: Gateway and backing Kafka can use different security schemes. 
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
@@ -45,11 +45,7 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka1 kafka2 kafka-client
-sleep 10
-docker-compose up -d conduktor-proxy
-sleep 5
-echo "Environment started"
+docker compose up -d
 ```
 
 ### Step 4: Create topics
