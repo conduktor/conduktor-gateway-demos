@@ -43,17 +43,19 @@ Start the environment with
 docker compose up -d
 ```
 
-### Step 3: Create topics
-Let's start by creating a user against our new tenant, if you're not familiar with tenants and user then you can either follow the jwt_auth demo, or run the below command and paste the token that is returned into the `password` field of the `gateway.properties` file, in the `clientConfig`` directory.
+We already create a multi-tenant user  defined in `clientConfig/gateway.properties`
 
 ```bash
-docker compose exec kafka-client \
-    curl \
-        --user admin:conduktor \
-        --header "content-type:application/json" \
-        --request POST conduktor-gateway:8888/admin/auth/v1/tenants/myChaosTenant \
-        --data-raw '{"lifeTimeSeconds":7776000}'
+cat clientConfig/gateway.properties
 ```
+
+What's inside the password
+
+```bash
+grep password "clientConfig/gateway.properties" \
+  | awk '{print $4}' | cut -d "=" -f 2 | cut -d ";" -f 1 | cut -d '"' -f 2 \
+  | jq -R 'gsub("-";"+") | gsub("_";"/") | split(".") | .[1] | @base64d | fromjson'
+ ```
 
 We create topics using the Kafka console tools, the below creates a topic named `conduktorTopic`
 
@@ -96,7 +98,7 @@ The command below will create a broken broker interceptor against the tenant `my
 
 ```bash
 docker compose exec kafka-client curl \
-    -u admin:conduktor \
+    --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -114,8 +116,9 @@ docker compose exec kafka-client curl \
 
 We can confirm the interceptor exists on the tenant;
 ```bash
-docker compose exec kafka-client curl \
-    -u "admin:conduktor" \
+docker compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors" \
     --header 'Content-Type: application/json'
 ```
@@ -125,12 +128,13 @@ Let's produce some records to our created topic and observe some errors being in
 Remember this will go to the myChaosTenant where the topic conduktorTopic lives from our gateway.properties file's password.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/gateway.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 100 \
-  --topic conduktorTopic
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 100 \
+      --topic conduktorTopic
 ```
 
 This should produce output similar to this:
@@ -149,15 +153,17 @@ Note the `CORRUPT_MESSAGE` errors, your results will vary each run so don't pay 
 To stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker"
 ```
 
 and confirm by listing the interceptors for the tenant:
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
@@ -167,12 +173,13 @@ docker-compose exec kafka-client curl \
 To verify, let's run the produce test again to confirm there are no errors
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/gateway.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 100 \
-  --topic conduktorTopic
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 100 \
+      --topic conduktorTopic
 ```
 
 This should produce output similar to the following:
@@ -198,8 +205,9 @@ docker-compose exec kafka-client \
 ```
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/duplicate-resource" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -216,22 +224,24 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/gateway.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopicDuplicate
+docker-compose exec \
+  kafka-client kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 10 \
+      --topic conduktorTopicDuplicate
 ```
 
 And see the duplicated records:
 
 ```bash
-docker-compose exec kafka-client kafka-console-consumer \
-  --bootstrap-server conduktor-gateway:6969 \
-  --consumer.config /clientConfig/gateway.properties \
-  --from-beginning \
-  --topic conduktorTopicDuplicate
+docker-compose exec kafka-client \
+  kafka-console-consumer \
+      --bootstrap-server conduktor-gateway:6969 \
+      --consumer.config /clientConfig/gateway.properties \
+      --from-beginning \
+      --topic conduktorTopicDuplicate
 ```
 
 This should produce output similar to this:
@@ -253,14 +263,16 @@ Note the duplicated messages.
 To remove this duplicate message on produce interceptors run a similar call as when we added it, but a DELETE.
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/duplicate-resource"
 ```
 and confirm the removal of the interceptor from the tenant `myChaosTenant`;
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
@@ -271,8 +283,9 @@ Conduktor Gateway exposes a REST API to configure the chaos features.
 The command below will create a `simulate leader election errors` interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/leader-election" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -288,12 +301,13 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/gateway.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopic
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 10 \
+      --topic conduktorTopic
 ```
 
 This should produce output similar to this:
@@ -313,14 +327,16 @@ Note both the different error types, and the exceptions indicating that the curr
 To stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/leader-election"
 ```
 and confirm the removal of the interceptor from the tenant `myChaosTenant`;
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
@@ -343,8 +359,9 @@ Conduktor Gateway exposes a REST API to configure the chaos features.
 The command below will create a `simulate message corruption` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/random-bytes" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -362,22 +379,25 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/gateway.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopicRandomBytes
+docker compose exec kafka-client \
+  kafka-producer-perf-test \
+    --producer.config /clientConfig/gateway.properties \
+    --record-size 100 \
+    --throughput 10 \
+    --num-records 10 \
+    --topic conduktorTopicRandomBytes
 ```
 
 And see the appended bytes in the records:
 
 ```bash
-docker compose exec kafka-client kafka-console-consumer \
-  --bootstrap-server conduktor-gateway:6969 \
-  --consumer.config /clientConfig/gateway.properties \
-  --from-beginning \
-  --topic conduktorTopicRandomBytes
+docker compose exec kafka-client \
+  kafka-console-consumer \
+      --bootstrap-server conduktor-gateway:6969 \
+      --consumer.config /clientConfig/gateway.properties \
+      --from-beginning \
+      --topic conduktorTopicRandomBytes \
+      --max-messages 10
 ```
 
 This should produce output similar to this:
@@ -401,15 +421,17 @@ A similar plugin is available for simulating message corrpution on the consumer 
 To stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/random-bytes"
 ```
 
 and confirm the removal of the interceptor from the tenant `myChaosTenant`;
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
@@ -421,8 +443,9 @@ Conduktor Gateway exposes a REST API to configure the chaos features.
 The command below will create a `simulate slow broker` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to simulate slow responses from brokers.
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -440,12 +463,13 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/gateway.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopic
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+    --producer.config /clientConfig/gateway.properties \
+    --record-size 100 \
+    --throughput 10 \
+    --num-records 10 \
+    --topic conduktorTopic
 ```
 
 This should produce output similar to this:
@@ -467,15 +491,17 @@ You may also get some additional errors depending what version you are running w
 To remove the interceptor and stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-broker"
 ```
 
 and confirm the removal of the interceptor from the tenant `myChaosTenant`;
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
@@ -495,8 +521,9 @@ docker-compose exec kafka-client \
 ```
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-topic" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -514,12 +541,13 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/gateway.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopicSlow
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 10 \
+      --topic conduktorTopicSlow
 ```
 
 This should produce output similar to this:
@@ -540,15 +568,17 @@ Note the very high latency numbers indicating slow responses.
 To stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-topic"
 ```
 
 and confirm the removal of the interceptor from the tenant `myChaosTenant`;
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
@@ -567,8 +597,9 @@ docker-compose exec kafka-client \
     --topic conduktorTopicSchema
 ```
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/invalid-schema" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -586,25 +617,27 @@ docker-compose exec kafka-client curl \
 Let's produce a record to our created topic.
 
 ```bash
-docker-compose exec schema-registry bash -c "cat /clientConfig/payload.json | kafka-json-schema-console-producer \
+cat clientConfig/payload.json | docker compose exec -T schema-registry \
+  kafka-json-schema-console-producer \
     --bootstrap-server conduktor-gateway:6969 \
     --topic conduktorTopicSchema  \
     --producer.config /clientConfig/gateway.properties \
     --property value.schema='{ 
-        \"title\": \"someSchema\", 
-        \"type\": \"object\", 
-        \"properties\": { 
-          \"some-valid\": { 
-            \"type\": \"string\" 
+        "title": "someSchema", 
+        "type": "object", 
+        "properties": { 
+          "some-valid": { 
+            "type": "string" 
           }
         }
-      }'"
+      }'
 ```
 
 And consume them with a schema aware consumer.
 
 ```bash
-docker-compose exec schema-registry kafka-json-schema-console-consumer \
+docker-compose exec schema-registry \
+  kafka-json-schema-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --topic conduktorTopicSchema \
     --consumer.config /clientConfig/gateway.properties \
@@ -644,15 +677,17 @@ Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientEx
 To remove the interceptor and stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/invalid-schema"
 ```
 
 and confirm the removal of the interceptor from the tenant `myChaosTenant`;
 
 ```bash
-docker-compose exec kafka-client curl \
+docker-compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
 ```
