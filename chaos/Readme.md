@@ -43,19 +43,11 @@ Start the environment with
 docker compose up -d
 ```
 
-We already create a multi-tenant user  defined in `clientConfig/gateway.properties`
+We have already created a multi-tenant user which is provided in the definition of `clientConfig/gateway.properties` which we will use to interact with Gateway throughout this demo.
 
 ```bash
 cat clientConfig/gateway.properties
 ```
-
-What's inside the password
-
-```bash
-grep password "clientConfig/gateway.properties" \
-  | awk '{print $4}' | cut -d "=" -f 2 | cut -d ";" -f 1 | cut -d '"' -f 2 \
-  | jq -R 'gsub("-";"+") | gsub("_";"/") | split(".") | .[1] | @base64d | fromjson'
- ```
 
 We create topics using the Kafka console tools, the below creates a topic named `conduktorTopic`
 
