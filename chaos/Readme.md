@@ -19,10 +19,6 @@ In this demo we will inject the following disruptions with Conduktor Gateway and
 ### Architecture diagram
 ![architecture diagram](images/chaos.png "chaos")
 
-### Video
-
-[![asciicast](https://asciinema.org/a/YdyxC0HDIR6b7MhNTUhgTj6DE.svg)](https://asciinema.org/a/YdyxC0HDIR6b7MhNTUhgTj6DE)
-
 ## Running the demo: Setup
 
 ### Step 1: Review the environment
@@ -142,7 +138,7 @@ Note the `CORRUPT_MESSAGE` errors, your results will vary each run so don't pay 
 
 ### Step 6: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client \
@@ -151,7 +147,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker"
 ```
 
-and confirm by listing the interceptors for the tenant:
+and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -252,7 +248,7 @@ Note the duplicated messages.
 
 ### Step 10: Reset
 
-To remove this duplicate message on produce interceptors run a similar call as when we added it, but a DELETE.
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client \
@@ -260,7 +256,7 @@ docker-compose exec kafka-client \
     --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/duplicate-resource"
 ```
-and confirm the removal of the interceptor from the tenant `myChaosTenant`;
+and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -316,7 +312,7 @@ Note both the different error types, and the exceptions indicating that the curr
 
 ### Step 13: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client \
@@ -324,7 +320,7 @@ docker-compose exec kafka-client \
     --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/leader-election"
 ```
-and confirm the removal of the interceptor from the tenant `myChaosTenant`;
+and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -480,7 +476,7 @@ You may also get some additional errors depending what version you are running w
 
 ### Step 19: Reset
 
-To remove the interceptor and stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client \
@@ -489,7 +485,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-broker"
 ```
 
-and confirm the removal of the interceptor from the tenant `myChaosTenant`;
+and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -557,7 +553,7 @@ Note the very high latency numbers indicating slow responses.
 
 ### Step 22: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client \
@@ -566,7 +562,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-topic"
 ```
 
-and confirm the removal of the interceptor from the tenant `myChaosTenant`;
+and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -666,7 +662,7 @@ Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientEx
 
 ### Step 25: Reset
 
-To remove the interceptor and stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
 docker-compose exec kafka-client \
@@ -675,7 +671,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/invalid-schema"
 ```
 
-and confirm the removal of the interceptor from the tenant `myChaosTenant`;
+and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
