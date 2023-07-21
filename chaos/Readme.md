@@ -179,10 +179,7 @@ This should produce output similar to the following:
 
 ### <a name="duplicateWrites"></a> Step 8: Duplicate Message on Produce
 
-Conduktor Gateway exposes a REST API to configure the chaos features.
-
-The command below will create a duplicate message on produce interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to inject duplicate records on produce requests.
-
+First let's create a new topic to operate on.
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
@@ -191,6 +188,10 @@ docker-compose exec kafka-client \
     --create --if-not-exists \
     --topic conduktorTopicDuplicate
 ```
+Conduktor Gateway exposes a REST API to configure the chaos features.
+
+The command below will create a duplicate message on produce interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to inject duplicate records on produce requests.
+
 
 ```bash
 docker-compose exec kafka-client \
@@ -572,9 +573,7 @@ docker-compose exec kafka-client \
 ```
 ### <a name="invalidSchema"></a> Step 23: Simulate Invalid Schema Id
 
-Conduktor Gateway exposes a REST API to configure the chaos features.
-
-The command below will create a `simulate invalid schema Id` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
+First let's create a new topic to operate on.
 
 ```bash
 docker-compose exec kafka-client \
@@ -584,6 +583,10 @@ docker-compose exec kafka-client \
     --create --if-not-exists \
     --topic conduktorTopicSchema
 ```
+
+Conduktor Gateway exposes a REST API to configure the chaos features.
+
+The command below will create a `simulate invalid schema Id` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
 ```bash
 docker-compose exec kafka-client \
   curl \
