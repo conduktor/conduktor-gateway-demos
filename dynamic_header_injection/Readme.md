@@ -1,8 +1,8 @@
-# Conduktor Gateway Inject/Remove Header Demo
+# Conduktor Gateway Dynamic Header Injection Demo
 
-## What is Conduktor Gateway Inject/Remove Header?
+## What is Conduktor Gateway Dynamic Header Injection
 
-Conduktor Gateway's inject/remove header feature inject or remove headers of the messages as they are produced through the Gateway.
+With the dynamic header injection interceptor added, Conduktor Gatewaty can inject or remove headers of the messages as they pass through the Gateway.
 
 ### Architecture diagram
 ![architecture diagram](images/inject-remove-headers.png "inject-remove-headers")
@@ -13,7 +13,7 @@ Conduktor Gateway's inject/remove header feature inject or remove headers of the
 
 ## Running the demo
 
-Conduktor Gateway provides a number of different ways to inject/remove headers into your data:
+Conduktor Gateway provides a number of different ways to inject/remove headers:
 
 * [Inject Header](#injectHeader)
 * [Remove Header With Key Pattern Only](#removeHeaderKeyPatternOnly)
@@ -35,7 +35,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 `platform-config.yaml` defines configurations for connecting to 2 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* Gateway - a connection to Conduktor Gatewa, which sits as a proxy infront of the underlying Kafka
+* Gateway - a connection to Conduktor Gateway, which sits as a proxy infront of the underlying Kafka
 
 Note: Gateway and backing Kafka can use different security schemes. 
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
@@ -55,29 +55,29 @@ We create a base set of topics using the Kafka console tools:
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic injectHeaderTopic
 
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderKeyPatternTopic
 
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderValuePatternTopic
 
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderKeyValuePatternTopic
 ```
@@ -86,8 +86,8 @@ List the created topics
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --list
 ```
 
@@ -126,8 +126,8 @@ Let's produce a simple record to the `injectHeaderTopic` topic.
 ```bash
 echo 'inject_header' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic injectHeaderTopic
 ```
 
@@ -138,8 +138,8 @@ Let's consume from our `injectHeaderTopic`.
 ```bash
 docker-compose exec kafka-client \
   kafka-console-consumer \
-    --bootstrap-server conduktor-proxy:6969 \
-    --consumer.config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
     --topic injectHeaderTopic \
     --from-beginning \
     --max-messages 1 \
@@ -202,8 +202,8 @@ Let's produce a simple record to the `removeHeaderKeyPatternTopic` topic.
 ```bash
 echo 'k0:v0,k1:v1^key_pattern' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic removeHeaderKeyPatternTopic \
         --property parse.key=false \
         --property parse.headers=true \
@@ -219,8 +219,8 @@ Let's consume from our `removeHeaderKeyPatternTopic`.
 ```bash
 docker-compose exec kafka-client \
   kafka-console-consumer \
-    --bootstrap-server conduktor-proxy:6969 \
-    --consumer.config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
     --topic removeHeaderKeyPatternTopic \
     --from-beginning \
     --max-messages 1 \
@@ -283,8 +283,8 @@ Let's produce a simple record to the `removeHeaderValuePatternTopic` topic.
 ```bash
 echo 'k0:value0,k1:someValue^value_pattern' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic removeHeaderValuePatternTopic \
         --property parse.key=false \
         --property parse.headers=true \
@@ -300,8 +300,8 @@ Let's consume from our `removeHeaderValuePatternTopic`.
 ```bash
 docker-compose exec kafka-client \
   kafka-console-consumer \
-    --bootstrap-server conduktor-proxy:6969 \
-    --consumer.config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
     --topic removeHeaderValuePatternTopic \
     --from-beginning \
     --max-messages 1 \
@@ -365,8 +365,8 @@ Let's produce a simple record to the `removeHeaderKeyValuePatternTopic` topic.
 ```bash
 echo 'k0:v0,k1:v1^key_value_pattern' | docker-compose exec -T kafka-client \
     kafka-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic removeHeaderKeyValuePatternTopic \
         --property parse.key=false \
         --property parse.headers=true \
@@ -382,8 +382,8 @@ Let's consume from our `removeHeaderKeyValuePatternTopic`.
 ```bash
 docker-compose exec kafka-client \
   kafka-console-consumer \
-    --bootstrap-server conduktor-proxy:6969 \
-    --consumer.config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
     --topic removeHeaderKeyValuePatternTopic \
     --from-beginning \
     --max-messages 1 \
