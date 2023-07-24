@@ -7,10 +7,6 @@ With the dynamic header injection interceptor added, Conduktor Gatewaty can inje
 ### Architecture diagram
 ![architecture diagram](images/inject-remove-headers.png "inject-remove-headers")
 
-### Video
-
-[![asciicast](https://asciinema.org/a/4oGSTAsrntPIvxLaRl1vkD9Bb.svg)](https://asciinema.org/a/4oGSTAsrntPIvxLaRl1vkD9Bb)
-
 ## Running the demo
 
 Conduktor Gateway provides a number of different ways to inject/remove headers:
@@ -50,7 +46,7 @@ docker compose up -d
 
 ### Step 4: Create topics
 
-We create a base set of topics using the Kafka console tools:
+We create a base set of topics using the Kafka CLI tools;
 
 ```bash
 docker-compose exec kafka-client \
@@ -93,31 +89,60 @@ docker-compose exec kafka-client \
 
 ### <a name="injectHeader"></a> Step 5: Inject Header
 
-The same REST API can be used to configure the inject header feature. 
+Use the Admin API to add the inject header interceptor. 
 
-The command below will instruct Conduktor Gateway to inject headers with value user ip, tenant and Gateway ip in records on topic `injectHeaderTopic`. 
+The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, tenant and Gateway ip in records on the topic `injectHeaderTopic`. 
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
+    -u admin:conduktor \
     -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/inject-header" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/injectHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.DynamicHeaderInjectionPlugin",
+        "priority": 100,
         "config": {
             "topic": "injectHeaderTopic",
-            "keys": {
+            "headers": {
               "X-RAW_KEY": "a value",
               "X-USER_IP": "{{userIp}}",
               "X-TENANT": "{{tenant}}",
-              "X-USER_IP_PROXY_IP_TENANT": "{{userIp}} to {{proxyIp}} of {{tenant}}"
+              "X-USER_IP_GATEWAY_IP_TENANT": "{{userIp}} to {{gatewayIp}} of {{tenant}}"
             }
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+        }
     }'
 ```
+Confirm the interceptor exists;
+```bash
+docker compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors" \
+    --header 'Content-Type: application/json'
+```
 
+```json
+{
+  "interceptors": [
+    {
+      "name": "injectHeader",
+      "pluginClass": "io.conduktor.gateway.interceptor.DynamicHeaderInjectionPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "topic": "injectHeaderTopic",
+        "headers": {
+          "X-RAW_KEY": "a value",
+          "X-USER_IP": "{{userIp}}",
+          "X-TENANT": "{{tenant}}",
+          "X-USER_IP_GATEWAY_IP_TENANT": "{{userIp}} to {{gatewayIp}} of {{tenant}}"
+        }
+      }
+    }
+  ]
+```
 
 ### Step 6: Produce data to the topic
 
@@ -149,7 +174,7 @@ docker-compose exec kafka-client \
 You should see the message with headers as below
 
 ```
-X-RAW_KEY:a value,X-USER_IP:172.19.0.3,X-TENANT:someTenant,X-USER_IP_PROXY_IP_TENANT:172.19.0.3 to 172.19.0.6 of 1-someTenant   inject_header
+X-RAW_KEY:a value,X-USER_IP:172.19.0.3,X-TENANT:someTenant,X-USER_IP_GATEWAY_IP_TENANT:172.19.0.3 to 172.19.0.6 of 1-someTenant   inject_header
 ```
 
 ### Step 8: Confirm inject headers at rest
@@ -169,7 +194,7 @@ docker-compose exec kafka-client \
 You should see an output similar to the below:
 
 ```
-X-RAW_KEY:a value,X-USER_IP:172.19.0.2,X-TENANT:someTenant,X-USER_IP_PROXY_IP_TENANT:172.19.0.2 to 172.19.0.6 of someTenant      inject_header
+X-RAW_KEY:a value,X-USER_IP:172.19.0.2,X-TENANT:someTenant,X-USER_IP_GATEWAY_IP_TENANT:172.19.0.2 to 172.19.0.6 of someTenant      inject_header
 ```
 
 ### <a name="removeHeaderKeyPatternOnly"></a> Step 9: Remove Header With Key Pattern Only
