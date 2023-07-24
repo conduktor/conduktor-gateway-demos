@@ -268,23 +268,21 @@ k1:v1      key_pattern
 
 ### <a name="removeHeaderValuePatternOnly"></a> Step 13: Remove Header With Value Pattern Only
 
-The same REST API can be used to configure the remove header with value pattern only feature.
+The same REST API can be used to configure the remove header with value pattern interceptor.
 
 The command below will instruct Conduktor Gateway to remove headers which value matches the pattern `value.*'` in records on topic `removeHeaderValuePatternTopic`.
 
 ```bash
 docker compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/remove-header" \
+    -u admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/removeHeaderWithValue" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
+        "priority": 100,
         "config": {
-            "topic": "removeHeaderValuePatternTopic",
-            "valuePattern": "value.*"
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+            "headerKeyRegex": "value.*"
+          }
     }'
 ```
 
