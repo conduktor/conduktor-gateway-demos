@@ -1,8 +1,6 @@
-# Conduktor Gateway Dynamic Header Injection Demo
+# Conduktor Gateway Dynamic Header Injection & Removal Demo
 
-## What is Conduktor Gateway Dynamic Header Injection
-
-With the dynamic header injection interceptor added, Conduktor Gatewaty can inject or remove headers of the messages as they pass through the Gateway.
+There are multiple interceptors available for manipulating headers, either injection or regex based removal. This demo will run you through some of these use cases step-by-step.
 
 ### Architecture diagram
 ![architecture diagram](images/inject-remove-headers.png "inject-remove-headers")
@@ -49,28 +47,28 @@ docker compose up -d
 We create a base set of topics using the Kafka CLI tools;
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic injectHeaderTopic
 
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderKeyPatternTopic
 
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderValuePatternTopic
 
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
@@ -80,7 +78,7 @@ docker-compose exec kafka-client \
 List the created topics
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
@@ -94,9 +92,8 @@ Use the Admin API to add the inject header interceptor.
 The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, tenant and Gateway ip in records on the topic `injectHeaderTopic`. 
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     -u admin:conduktor \
-    -vvv \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/injectHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -107,8 +104,8 @@ docker-compose exec kafka-client curl \
             "headers": {
               "X-RAW_KEY": "a value",
               "X-USER_IP": "{{userIp}}",
-              "X-TENANT": "{{tenant}}",
-              "X-USER_IP_GATEWAY_IP_TENANT": "{{userIp}} to {{gatewayIp}} of {{tenant}}"
+              "X-USERNAME": "{{user}}",
+              "X-USER_IP_GATEWAY_IP_USERNAME": "{{userIp}} to {{gatewayIp}} of {{user}}"
             }
         }
     }'
@@ -118,7 +115,7 @@ Confirm the interceptor exists;
 docker compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request GET "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors" \
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors" \
     --header 'Content-Type: application/json'
 ```
 
@@ -136,12 +133,13 @@ docker compose exec kafka-client \
         "headers": {
           "X-RAW_KEY": "a value",
           "X-USER_IP": "{{userIp}}",
-          "X-TENANT": "{{tenant}}",
-          "X-USER_IP_GATEWAY_IP_TENANT": "{{userIp}} to {{gatewayIp}} of {{tenant}}"
+          "X-USERNAME": "{{user}}",
+          "X-USER_IP_GATEWAY_IP_USERNAME": "{{userIp}} to {{gatewayIp}} of {{user}}"
         }
       }
     }
   ]
+}
 ```
 
 ### Step 6: Produce data to the topic
@@ -149,7 +147,7 @@ docker compose exec kafka-client \
 Let's produce a simple record to the `injectHeaderTopic` topic.
 
 ```bash
-echo 'inject_header' | docker-compose exec -T kafka-client \
+echo 'inject_header' | docker compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
@@ -161,7 +159,7 @@ echo 'inject_header' | docker-compose exec -T kafka-client \
 Let's consume from our `injectHeaderTopic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
@@ -171,18 +169,17 @@ docker-compose exec kafka-client \
     --property print.headers=true
 ```
 
-You should see the message with headers as below
-
+You should see the message with headers as below;
 ```
-X-RAW_KEY:a value,X-USER_IP:172.19.0.3,X-TENANT:someTenant,X-USER_IP_GATEWAY_IP_TENANT:172.19.0.3 to 172.19.0.6 of 1-someTenant   inject_header
+X-RAW_KEY:a value,X-USERNAME:someUser,X-USER_IP:172.21.0.3,X-USER_IP_GATEWAY_IP_USERNAME:172.21.0.3 to 172.21.0.6 of someUser	inject_header
 ```
 
-### Step 8: Confirm inject headers at rest
+### Step 8: Confirm injected headers at rest
 
 To confirm the message headers are injected in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic someTenantinjectHeaderTopic \
@@ -191,31 +188,22 @@ docker-compose exec kafka-client \
     --property print.headers=true
 ```
 
-You should see an output similar to the below:
+### <a name="removeHeaderKeyPatternOnly"></a> Step 9: Remove Headers With Only a Specifc Key Pattern
 
-```
-X-RAW_KEY:a value,X-USER_IP:172.19.0.2,X-TENANT:someTenant,X-USER_IP_GATEWAY_IP_TENANT:172.19.0.2 to 172.19.0.6 of someTenant      inject_header
-```
-
-### <a name="removeHeaderKeyPatternOnly"></a> Step 9: Remove Header With Key Pattern Only
-
-The same REST API can be used to configure the remove header with key pattern only feature.
-
-The command below will instruct Conduktor Gateway to remove headers which key matches the pattern `k0.*'` in records on topic `removeHeaderKeyPatternTopic`.
+Let's create another interceptor against our user for the remove header with key pattern only e.g. to remove headers which key matches the pattern `k0.*'` in records on the topic `removeHeaderKeyPatternTopic`.
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/remove-header" \
+
+docker compose exec kafka-client curl \
+    -u admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/removeHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
+        "priority": 100,
         "config": {
-            "topic": "removeHeaderKeyPatternTopic",
-            "keyPattern": "k0.*"
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+            "headerKeyRegex": "k0.*"
+          }
     }'
 ```
 
@@ -225,7 +213,7 @@ docker-compose exec kafka-client curl \
 Let's produce a simple record to the `removeHeaderKeyPatternTopic` topic.
 
 ```bash
-echo 'k0:v0,k1:v1^key_pattern' | docker-compose exec -T kafka-client \
+echo 'k0:v0,k1:v1^key_pattern' | docker compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
@@ -242,7 +230,7 @@ echo 'k0:v0,k1:v1^key_pattern' | docker-compose exec -T kafka-client \
 Let's consume from our `removeHeaderKeyPatternTopic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
@@ -258,12 +246,12 @@ You should see the message with headers as below
 k1:v1   key_pattern
 ```
 
-### Step 12: Confirm remove headers with key pattern at rest
+### Step 12: Confirm headers removed with the matching key pattern, at rest
 
 To confirm the message headers are removed in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic someTenantremoveHeaderKeyPatternTopic \
@@ -285,7 +273,7 @@ The same REST API can be used to configure the remove header with value pattern 
 The command below will instruct Conduktor Gateway to remove headers which value matches the pattern `value.*'` in records on topic `removeHeaderValuePatternTopic`.
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     -u superUser:superUser \
     -vvv \
     --request POST "conduktor-proxy:8888/tenant/someTenant/feature/remove-header" \
@@ -306,7 +294,7 @@ docker-compose exec kafka-client curl \
 Let's produce a simple record to the `removeHeaderValuePatternTopic` topic.
 
 ```bash
-echo 'k0:value0,k1:someValue^value_pattern' | docker-compose exec -T kafka-client \
+echo 'k0:value0,k1:someValue^value_pattern' | docker compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
@@ -323,7 +311,7 @@ echo 'k0:value0,k1:someValue^value_pattern' | docker-compose exec -T kafka-clien
 Let's consume from our `removeHeaderValuePatternTopic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
@@ -344,7 +332,7 @@ k1:someValue   value_pattern
 To confirm the message headers are removed in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic someTenantremoveHeaderValuePatternTopic \
@@ -366,7 +354,7 @@ The same REST API can be used to configure the remove header with both key and v
 The command below will instruct Conduktor Gateway to remove headers which key matches the pattern `k0.*'` and value matches the pattern `v0.*`  in records on topic `removeHeaderKeyValuePatternTopic`.
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     -u superUser:superUser \
     -vvv \
     --request POST "conduktor-proxy:8888/tenant/someTenant/feature/remove-header" \
@@ -388,7 +376,7 @@ docker-compose exec kafka-client curl \
 Let's produce a simple record to the `removeHeaderKeyValuePatternTopic` topic.
 
 ```bash
-echo 'k0:v0,k1:v1^key_value_pattern' | docker-compose exec -T kafka-client \
+echo 'k0:v0,k1:v1^key_value_pattern' | docker compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
@@ -405,7 +393,7 @@ echo 'k0:v0,k1:v1^key_value_pattern' | docker-compose exec -T kafka-client \
 Let's consume from our `removeHeaderKeyValuePatternTopic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
@@ -426,7 +414,7 @@ k1:v1   key_value_pattern
 To confirm the message headers are removed in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic someTenantremoveHeaderKeyValuePatternTopic \
@@ -454,7 +442,7 @@ license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 the start the Conduktor Platform container:
 
 ```bash
-docker-compose up -d conduktor-platform
+docker compose up -d conduktor-platform
 ```
 
 From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
