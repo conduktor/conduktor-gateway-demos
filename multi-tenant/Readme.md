@@ -85,11 +85,12 @@ docker compose exec kafka-client kafka-console-consumer --bootstrap-server condu
 
 `WARN [Consumer clientId=console-consumer, groupId=console-consumer-68780] Error while fetching metadata with correlation id 921 : {parisTopic=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)`
 
-### Step 7: Applying Multi-tenancy to existing topics
+### Step 7: Applying Multi-tenancy to existing topics (topic mapping)
 
-During migration to Conduktor Gateway you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Gateway allows this via the administration APIs. In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Gateway.
+During migration to Conduktor Gateway you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Gateway allows this via the administration APIs. For more detail on the APIs check the Conduktor docs site.
+In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Gateway.
 
-Let's start by creating some pre-exiting topics and adding data.
+Let's start by creating some pre-exiting topics on the backing Kafka cluster and adding data to them.
 
 ```bash
 docker compose exec kafka-client kafka-topics --bootstrap-server kafka1:9092 --create --topic existingLondonTopic
@@ -104,39 +105,77 @@ We'll create the following mappings:
 * tenant: `London` can see `existingLondonTopic` and `existingSharedTopic`
 * tenant: `Paris` can see only `existingSharedTopic`
 
-First we create a topic mapping for each topic. These map a topic name for the tenant (`existingLondonTopic`/`existingSharedTopic` url param ) to a topic name in the Kafka cluster (`topicName` in the request body). These names do not have to match but they match here for clarity.
+First we create a topic mapping for each topic. These map a topic name for the tenant to a topic name in the backing Kafka cluster. These names do not have to match but they match here for clarity.  
+&nbsp;  
+
+First let's add the mapping of the topic name for the London virtual cluster and place in the url parameter,`.../existingLondonTopic`, to the topic name in the backing cluster which is what we place in the payload `"physicalTopicName": "existingLondonTopic"`.
 
 ```bash
-docker compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topicMappings/london/existingLondonTopic -d '{ "topicName":"existingLondonTopic" }'
-docker compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topicMappings/london/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
-docker compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topicMappings/paris/existingSharedTopic -d '{ "topicName":"existingSharedTopic" }'
+docker compose exec kafka-client \
+ curl \
+    --user admin:conduktor \
+    -X POST conduktor-gateway:8888/admin/multitenancy/v1/tenants/london/topics/existingLondonTopic \
+    --header 'Content-Type: application/json' \
+    --data-raw '{ 
+        "physicalTopicName": "existingLondonTopic",
+        "readOnly": false,
+        "concentrated": false
+        }'
 ```
 
-Next we must add the topics to each tenant.
-
+and again to add the mapping existingSharedTopic into the London virtual cluster.
 ```bash
-docker compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topics/london -d '{ "name":"existingLondonTopic" }'
-docker compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topics/london -d '{ "name":"existingSharedTopic" }'
-docker compose exec kafka-client curl -u superUser:superUser -vvv -X POST conduktor-proxy:8888/topics/paris -d '{ "name":"existingSharedTopic" }' 
+docker compose exec kafka-client \
+ curl \
+    --user admin:conduktor \
+    -X POST conduktor-gateway:8888/admin/multitenancy/v1/tenants/london/topics/existingSharedTopic \
+    --header 'Content-Type: application/json' \
+    --data-raw '{ 
+        "physicalTopicName": "existingSharedTopic",
+        "readOnly": false,
+        "concentrated": false
+        }'
 ```
 
-Note: the url params `london`/`paris` represent the London/Paris tenants in these APIs. 
+and finally to add the mapping existingSharedTopic also into the Paris virtual cluster.
+```bash
+docker compose exec kafka-client \
+ curl \
+    --user admin:conduktor \
+    -X POST conduktor-gateway:8888/admin/multitenancy/v1/tenants/paris/topics/existingSharedTopic \
+    --header 'Content-Type: application/json' \
+    --data-raw '{ 
+        "physicalTopicName": "existingSharedTopic",
+        "readOnly": false,
+        "concentrated": false
+        }'
+```
+&nbsp;  
 
-### Step 9: List topics as the different tenants
+
+### Step 9: List the topics from the different tenants
 
 ```bash
 docker compose exec kafka-client kafka-topics --bootstrap-server conduktor-gateway:6969 --command-config /clientConfig/london.properties --list
-docker compose exec kafka-client kafka-topics --bootstrap-server conduktor-gateway:6969 --command-config /clientConfig/paris.properties --list
 ```
 
-You should see that the Paris tenant can only see `existingSharedTopic` whereas London can see `existingSharedTopic` and `existingLondonTopic` 
+```bash
+docker compose exec kafka-client kafka-topics --bootstrap-server conduktor-gateway:6969 --command-config /clientConfig/paris.properties --list
+```
+You should see that the Paris tenant can only see `existingSharedTopic` whereas London can see `existingSharedTopic` and `existingLondonTopic`.
 
 ### Step 10: Consume from the topics
 
 ```bash
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic existingLondonTopic --from-beginning
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic existingSharedTopic --from-beginning
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/paris.properties --topic existingSharedTopic --from-beginning
+docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic existingLondonTopic --from-beginning --max-messages 1
+```
+
+```bash
+docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic existingSharedTopic --from-beginning --max-messages 1
+```
+
+```bash
+docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/paris.properties --topic existingSharedTopic --from-beginning --max-messages 1
 ```
 
 On `existingSharedTopic` the same messages are available to both tenants.
