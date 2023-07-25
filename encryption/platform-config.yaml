@@ -7,7 +7,7 @@ admin:
 
 clusters:
   - id: default
-    name: gateway-backing-cluster
+    name: kafka-backing-cluster
     color: "#0013E7"
     ignoreUntrustedCertificate: false
     bootstrapServers: "kafka1:9092"
@@ -17,7 +17,7 @@ clusters:
       ignoreUntrustedCertificate: false
       properties:
     labels: {}
-  - id: proxy
+  - id: cdk-gateway
     name: cdk-gateway
     color: "#A020F0"
     ignoreUntrustedCertificate: false
