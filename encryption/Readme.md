@@ -41,7 +41,7 @@ docker compose up -d
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `encryptedTopic`
+To start let's create a topic named `encryptedTopic`.
 
 ```bash
 docker compose exec kafka-client \
@@ -52,7 +52,7 @@ docker compose exec kafka-client \
     --topic encryptedTopic
 ```
 
-List the created topic
+and confirm creation with a list call
 
 ```bash
 docker compose exec kafka-client \
@@ -64,15 +64,15 @@ docker compose exec kafka-client \
 
 ### Step 5: Configure encryption
 
-The same REST API can be used to configure the encryption feature. 
+Now let's create an encryption interceptor via the Admin API.
 
-The command below will instruct Conduktor Gateway to encrypt the `password` and `visa` fields in records on topic `encryptedTopic`. 
+The configuration of this interceptor will encrypt the `password` and `visa` fields in records on our topic `encryptedTopic`. 
 
 ```bash
 docker compose exec kafka-client curl \
-    -u "superUser:superUser" \
+    -u "admin:conduktor" \
     --silent \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/encrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/encrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
@@ -102,23 +102,23 @@ docker compose exec kafka-client curl \
     }' 
 ```
 
-and list the interceptors for tenant proxy:
+and confirm succesful creation by listing the interceptors for tenant `someTenant`:
 
 ```bash
 docker compose exec kafka-client curl \
-    --user "superUser:superUser" \
-    conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors
 ```
 
 ### Step 6: Configure Decryption
 
-Next we configure Conduktor Gateway to decrypt the fields when fetching data
+Next we configure Conduktor Gateway to decrypt the fields when fetching the data.
 
 ```bash
 docker compose exec kafka-client curl \
-    -u "superUser:superUser" \
+    -u "admin:conduktor" \
     --silent \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/decrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/decrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
@@ -136,8 +136,8 @@ and list the interceptors for tenant proxy:
 
 ```bash
 docker compose exec kafka-client curl \
-    --user "superUser:superUser" \
-    conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors | jq
 ```
 
 ### Step 7: Produce data to the topic
@@ -197,13 +197,13 @@ You should see the encrypted fields have been decrypted on read as below:
 
 ### Step 9: Confirm encryption at rest
 
-To confirm the fields are encrypted in Kafka we can consume directly from the underlying Kafka cluster.
+To confirm the fields are encrypted in Kafka we can consume directly from the underlying Kafka cluster, rather than from Gateway as we did previously.
 
 ```bash
 docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic proxyencryptedTopic \
+    --topic someTenantencryptedTopic \
     --from-beginning \
     --max-messages 1 | jq
 ```
@@ -278,7 +278,7 @@ Let's apply the encryption on this topic
 ```bash
 docker compose exec kafka-client curl \
     --silent \
-    --user "superUser:superUser" \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/performanceEncrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
