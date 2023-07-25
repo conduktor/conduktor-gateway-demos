@@ -19,6 +19,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
 ### Step 2: Review the platform configuration
+For the later part of our demo we discuss how our Conduktor Console was connected to Gateway.
 
 `platform-config.yaml` defines 3 clusters:
 
