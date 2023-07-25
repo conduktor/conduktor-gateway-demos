@@ -21,7 +21,7 @@ clusters:
     name: cdk-gateway
     color: "#A020F0"
     ignoreUntrustedCertificate: false
-    bootstrapServers: "conduktor-proxy:6969"
+    bootstrapServers: "conduktor-gateway:6969"
     schemaRegistry:
       url: "http://schema-registry:8081"
       ignoreUntrustedCertificate: false

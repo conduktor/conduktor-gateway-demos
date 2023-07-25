@@ -115,6 +115,7 @@ services:
       ORGANISATION_NAME: "conduktor"
       ADMIN_EMAIL: "bob@conduktor.io"
       ADMIN_PSW: "admin"
+      # LICENSE_KEY:
       PROXY_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoxLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.Eb94MxCyesPeVdQmm0EDBGvhwcx8j-ST-mvmdAId_j0
     healthcheck:
       test: curl -f http://localhost:8080/platform/api/modules/health/live || exit 1
