@@ -202,6 +202,7 @@ docker compose exec kafka-client curl \
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
         "priority": 100,
         "config": {
+            "topic": "removeHeaderKeyPatternTopic",
             "headerKeyRegex": "k0.*"
           }
     }'
@@ -281,6 +282,7 @@ docker compose exec kafka-client curl \
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
         "priority": 100,
         "config": {
+            "topic": "removeHeaderValuePatternTopic",
             "headerKeyRegex": "value.*"
           }
     }'
@@ -347,9 +349,28 @@ k1:someValue   value_pattern
 
 ### <a name="removeHeaderKeyValuePattern"></a> Step 17: Remove Header With Both Key And Value Pattern
 
-The same REST API can be used to configure the remove header with both key and value pattern feature.
+The same REST API can be used to configure the remove header with both key and value pattern interceptors.
 
 The command below will instruct Conduktor Gateway to remove headers which key matches the pattern `k0.*'` and value matches the pattern `v0.*`  in records on topic `removeHeaderKeyValuePatternTopic`.
+
+```bash
+???
+docker compose exec kafka-client curl \
+    -u admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/removeHeaderWithKeyAndValue" \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
+        "priority": 100,
+        "config": {
+            "topic":"removeHeaderKeyValuePatternTopic",
+            "headerKeyRegex": {
+              "value
+            }"value.*"
+          }
+    }'
+
+```
 
 ```bash
 docker compose exec kafka-client curl \
