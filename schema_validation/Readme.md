@@ -32,11 +32,7 @@ This means that schemas created by Kafka clients will not be valid in Gateway, e
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka-client kafka2 kafka1 client-schema-registry schema-registry
-sleep 10
-docker-compose up -d conduktor-proxy
-sleep 5
-echo "Environment started"
+docker-compose up -d
 ```
 
 ### Step 3: Create topics
@@ -46,8 +42,8 @@ We create topics using the Kafka console tools, the below creates a topic named 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic srTopic
 ```
@@ -57,8 +53,8 @@ List the created topic
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --list
 ```
 
@@ -70,9 +66,9 @@ The command below will instruct Conduktor Gateway to validate that the records o
 
 ```bash
 docker-compose exec kafka-client curl \
-    -u superUser:superUser \
+    -u admin:conduktor \
     -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/guard-produce" \
+    --request POST "conduktor-gateway:8888/tenant/someTenant/feature/guard-produce" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": {
@@ -80,9 +76,7 @@ docker-compose exec kafka-client curl \
                 "type": "REQUIRED",
                 "checkDeserialization": true
             }
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+        }
     }'
 ```
 
@@ -99,8 +93,8 @@ echo '{
     "address": "Conduktor Towers, London" 
 }' | jq -c | docker-compose exec -T schema-registry \
     kafka-json-schema-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic srTopic \
         --property schema.registry.url=http://client-schema-registry:8082 \
         --property value.schema='{ 
@@ -228,8 +222,8 @@ echo '{
     "address": "Conduktor Towers, London" 
 }' | jq -c | docker-compose exec -T schema-registry \
     kafka-json-schema-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic srTopic \
         --property schema.registry.url=http://client-schema-registry:8082 \
         --property value.schema='{ 
