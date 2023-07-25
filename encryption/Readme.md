@@ -9,10 +9,6 @@ These fields are stored on disk encrypted but can easily be read by clients read
 ### Architecture diagram
 ![architecture diagram](images/encryption.png "encryption")
 
-### Video
-
-[![asciicast](https://asciinema.org/a/7vzzV57noPXyzL8KPnp1UrP48.svg)](https://asciinema.org/a/7vzzV57noPXyzL8KPnp1UrP48)
-
 ## Running the demo
 
 ### Step 1: Review the environment
@@ -22,15 +18,15 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Zookeeper Server
 * A 2 node Kafka cluster
 * A single Conduktor Gateway container
-* A Conduktor Platform container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
+* A Conduktor Platform container
 
 ### Step 2: Review the platform configuration
 
 `platform-config.yaml` defines 2 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* Proxy - a connection through Conduktor Gateway to the underlying Kafka
+* Gateway - a connection through Conduktor Gateway to the underlying Kafka
 
 Note: Gateway and backing Kafka can use different security schemes. 
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
@@ -40,11 +36,7 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka1 kafka2 kafka-client schema-registry
-sleep 10
-docker-compose up -d conduktor-proxy
-sleep 5
-echo "Environment started"
+docker compose up -d
 ```
 
 ### Step 4: Create topics
@@ -52,10 +44,10 @@ echo "Environment started"
 We create topics using the Kafka console tools, the below creates a topic named `encryptedTopic`
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic encryptedTopic
 ```
@@ -63,10 +55,10 @@ docker-compose exec kafka-client \
 List the created topic
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --list
 ```
 
@@ -77,10 +69,10 @@ The same REST API can be used to configure the encryption feature.
 The command below will instruct Conduktor Gateway to encrypt the `password` and `visa` fields in records on topic `encryptedTopic`. 
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     -u "superUser:superUser" \
     --silent \
-    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/encrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/encrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
@@ -113,9 +105,9 @@ docker-compose exec kafka-client curl \
 and list the interceptors for tenant proxy:
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     --user "superUser:superUser" \
-    conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
 ```
 
 ### Step 6: Configure Decryption
@@ -123,10 +115,10 @@ docker-compose exec kafka-client curl \
 Next we configure Conduktor Gateway to decrypt the fields when fetching data
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     -u "superUser:superUser" \
     --silent \
-    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/decrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/decrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
@@ -143,9 +135,9 @@ docker-compose exec kafka-client curl \
 and list the interceptors for tenant proxy:
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     --user "superUser:superUser" \
-    conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors
 ```
 
 ### Step 7: Produce data to the topic
@@ -159,10 +151,10 @@ echo '{
     "password": "password1",
     "visa": "visa123456",
     "address": "Conduktor Towers, London" 
-}' | jq -c | docker-compose exec -T schema-registry \
+}' | jq -c | docker compose exec -T schema-registry \
     kafka-json-schema-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic encryptedTopic \
         --property value.schema='{ 
             "title": "User",
@@ -182,10 +174,10 @@ echo '{
 Let's consume from our `encryptedTopic`.
 
 ```bash
-docker-compose exec schema-registry \
+docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
-    --bootstrap-server conduktor-proxy:6969 \
-    --consumer.config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
     --topic encryptedTopic \
     --from-beginning \
     --max-messages 1 | jq
@@ -208,7 +200,7 @@ You should see the encrypted fields have been decrypted on read as below:
 To confirm the fields are encrypted in Kafka we can consume directly from the underlying Kafka cluster.
 
 ```bash
-docker-compose exec schema-registry \
+docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic proxyencryptedTopic \
@@ -241,7 +233,7 @@ license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 the start the Conduktor Platform container:
 
 ```bash
-docker-compose up -d conduktor-platform
+docker compose up -d conduktor-platform
 ```
 
 From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
@@ -273,10 +265,10 @@ Navigate to `Console` and select the `gateway-backing-cluster` cluster from the 
 
 Create a performance topic
 ```sh
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
     kafka-topics \
-        --bootstrap-server conduktor-proxy:6969 \
-        --command-config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --command-config /clientConfig/gateway.properties \
         --create --if-not-exists \
         --topic encryption_performance
 ```
@@ -284,10 +276,10 @@ docker-compose exec kafka-client \
 Let's apply the encryption on this topic
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
     --silent \
     --user "superUser:superUser" \
-    --request POST "conduktor-proxy:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/performanceEncrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1beta1/tenants/proxy/interceptors/performanceEncrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
@@ -329,18 +321,18 @@ Compute the duration of sending 'customers.json' in gateway with encryption with
 ```sh
 time docker compose exec -T kafka-client \
     kafka-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic encryption_performance < customers.json
 ```
 
 Verify that we have encrypted messages
 
 ```sh
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
     kafka-console-consumer \
-        --bootstrap-server conduktor-proxy:6969 \
-        --consumer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --consumer.config /clientConfig/gateway.properties \
         --topic encryption_performance \
         --from-beginning \
         --max-messages 20 | jq
@@ -356,7 +348,7 @@ docker compose exec kafka-client \
         --topic encryption_performance \
         --throughput -1 \
         --num-records 1000000 \
-        --producer-props bootstrap.servers=conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --producer-props bootstrap.servers=conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --payload-file customers.json
 ```
