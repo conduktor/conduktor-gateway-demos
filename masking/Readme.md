@@ -2,14 +2,11 @@
 
 ## What is Conduktor Gateway Data Masking?
 
-Conduktor Gateway's data masking feature masks sensitive fields within messages as they are consumed through the Gateway.
+Conduktor Gateway's data masking feature masks sensitive fields within messages as they are consumed through the Gateway. Unlike encryption, once masked data is forever changed. To see our encryption offering checkout the encryption demo!
 
 ### Architecture diagram
 ![architecture diagram](images/masking.png "masking")
 
-### Video
-
-[![asciicast](https://asciinema.org/a/TifQJzrUBufiun4QktEUgEt0I.svg)](https://asciinema.org/a/TifQJzrUBufiun4QktEUgEt0I)
 
 ## Running the demo
 
@@ -20,17 +17,17 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Zookeeper Server
 * A 2 node Kafka cluster
 * A single Conduktor Gateway container
-* A Conduktor Platform container
+* A Conduktor Console container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-### Step 2: Review the platform configuration
+### Step 2: Review the Console configuration
 
 `platform-config.yaml` defines 2 clusters:
 
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
-* Proxy - a connection through Conduktor Gateway to the underlying Kafka
+* Gateway - a connection to Conduktor Gateway
 
-Note: Proxy and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes. 
 In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -38,25 +35,18 @@ In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 Start the environment with
 
 ```bash
-
-# setup our environment 
-docker-compose up -d zookeeper kafka1 kafka2 kafka-client schema-registry
-sleep 10
-docker-compose up -d conduktor-proxy
-sleep 5
-echo "Environment started"
+docker compose up -d
 ```
 
 ### Step 4: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `maskedTopic`
+Let's creates a topic named `maskedTopic`
 
 ```bash
-# Create a topic
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic maskedTopic
 ```
@@ -65,10 +55,10 @@ List the created topic
 
 ```bash
 # Check it has been created
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --list
 ```
 
@@ -80,10 +70,10 @@ The command below will instruct Conduktor Proxy to mask the `password` and `visa
 
 ```bash
 # Mask configuration
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
+docker compose exec kafka-client curl \
+    -u admin:conduktor \
     -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/data-masking" \
+    --request POST "conduktor-gateway:8888/tenant/someTenant/feature/data-masking" \
     --header 'Content-Type: application/json' \
     --data-raw '{
                   "config": {
@@ -128,10 +118,10 @@ echo '{
     "password": "password1",
     "visa": "visa123456",
     "address": "Conduktor Towers, London" 
-}' | jq -c | docker-compose exec -T schema-registry \
+}' | jq -c | docker compose exec -T schema-registry \
     kafka-json-schema-console-producer  \
-        --bootstrap-server conduktor-proxy:6969 \
-        --producer.config /clientConfig/proxy.properties \
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
         --topic maskedTopic \
         --property value.schema='{ 
             "title": "User",
@@ -152,10 +142,10 @@ Let's consume from our `maskedTopic`.
 
 ```bash
 # And consume through the proxy, it's masked
-docker-compose exec schema-registry \
+docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
-    --bootstrap-server conduktor-proxy:6969 \
-    --consumer.config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
     --topic maskedTopic \
     --from-beginning \
     --max-messages 1 | jq .
@@ -179,7 +169,7 @@ Let's consume directly from the underlying Kafka cluster.
 
 ```bash
 # And consume through the underlying cluster
-docker-compose exec schema-registry \
+docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
     --topic someTenantmaskedTopic \
@@ -200,7 +190,7 @@ license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 the start the Conduktor Platform container:
 
 ```bash
-docker-compose up -d conduktor-platform
+docker compose up -d conduktor-platform
 ```
 
 From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
