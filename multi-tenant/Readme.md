@@ -16,7 +16,6 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Zookeeper Server
 * A 2 node Kafka cluster
 * A single Conduktor Gateway container
-* A Conduktor Console container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
 ### Step 2: Review the platform configuration
