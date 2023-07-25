@@ -7,7 +7,6 @@ Conduktor Gateway's data masking feature masks sensitive fields within messages 
 ### Architecture diagram
 ![architecture diagram](images/masking.png "masking")
 
-
 ## Running the demo
 
 ### Step 1: Review the environment
@@ -64,25 +63,24 @@ docker compose exec kafka-client \
 
 ### Step 5: Configure masking
 
-The same REST API can be used to configure the masking feature. 
+The same REST API can be used to create the masking interceptor. 
 
-The command below will instruct Conduktor Proxy to mask the `password` and `visa` fields in records. 
-
+The command below will add a masking interceptor, configured to mask the `password` and `visa` fields in records.
+admin/interceptors/v1/tenants/userTenant2/interceptors/myInterceptor1
 ```bash
-# Mask configuration
 docker compose exec kafka-client curl \
-    -u admin:conduktor \
-    -vvv \
-    --request POST "conduktor-gateway:8888/tenant/someTenant/feature/data-masking" \
+    --user admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/masker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+                  "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
+                  "priority": 100,
                   "config": {
                     "policies": [
                       {
                         "name": "Mask password",
                         "rule": {
-                          "type": "MASK_ALL",
-                          "maskingString": "********"
+                          "type": "MASK_ALL"
                         },
                         "fields": [
                           "password"
@@ -93,16 +91,14 @@ docker compose exec kafka-client curl \
                         "rule": {
                           "type": "MASK_LAST_N",
                           "maskingChar": "X",
-                          "count": 4
+                          "numberOfChars": 4
                         },
                         "fields": [
                           "visa"
                         ]
                       }
                     ]
-                  },
-                  "direction": "RESPONSE",
-                  "apiKeys": "FETCH"
+                  }
                 }'
 ```
 
