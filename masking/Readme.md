@@ -2,7 +2,7 @@
 
 ## What is Conduktor Gateway Data Masking?
 
-Conduktor Gateway's data masking feature masks sensitive fields within messages as they are consumed through the Gateway. Unlike encryption, once masked data is forever changed. To see our encryption offering checkout the encryption demo!
+Conduktor Gateway's data masking feature masks sensitive fields within messages as they are consumed through the Gateway.
 
 ### Architecture diagram
 ![architecture diagram](images/masking.png "masking")
@@ -107,7 +107,6 @@ docker compose exec kafka-client curl \
 Let's produce a simple record to the masked topic.
 
 ```bash
-# So we can produce...
 echo '{ 
     "name": "conduktor",
     "username": "test@conduktor.io",
@@ -137,9 +136,9 @@ echo '{
 Let's consume from our `maskedTopic`.
 
 ```bash
-# And consume through the proxy, it's masked
+# And consume through the Gateway, it's masked
 docker compose exec schema-registry \
-  kafka-json-schema-console-consumer \
+   kafka-json-schema-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
     --topic maskedTopic \
@@ -173,41 +172,32 @@ docker compose exec schema-registry \
     --max-messages 1 | jq .
 ```
 
-### Step 9: Log into the platform
+### Step 9: Visualise the workflow
 
-> The remaining steps in this demo require a Conduktor Platform license. For more information on this [Arrange a technical demo](https://www.conduktor.io/contact/demo)
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 
-Once you have a license key, place it in `platform-config.yaml` under the key: `license` e.g.:
-
-```yaml
-license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
-```
-
-the start the Conduktor Platform container:
-
-```bash
-docker compose up -d conduktor-platform
-```
-
-From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
-
-Username: bob@conduktor.io
-Password: admin
-
-### Step 10: View the clusters in Conduktor Platform
+### Step 10: View the clusters in Conduktor Console
 
 From Conduktor Platform navigate to Admin -> Clusters, you should see 2 clusters as below:
 
 ![clusters](images/clusters.png "Clusters")
 
-### Step 11: View the masked messages in Conduktor Platform
+### Step 11: View the masked messages in Conduktor Console
 
-Navigate to `Console` and select the `Proxy` cluster from the top right. You should now see the `maskedTopic` topic and clicking on it will show you a masked version of the produced message.
+Navigate to `Console` and select the `Gateway` cluster from the top right. You should now see the `maskedTopic` topic and clicking on it will show you a masked version of the produced message.
 
 ![create a topic](images/through_proxy.png "View Masked Messages")
 
-### Step 12: View the messages in Conduktor Platform
+### Step 12: View the messages in Conduktor Console
 
-Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `1-1maskedTopic` topic (ignore the 1-1 prefix for now) and clicking on it will show you the produced message.
+Navigate to `Console` and select the `Kafka Backing Cluster` cluster from the top right. You should now see the `someTenantmaskedTopic` topic (ignore the tenant name prefix for now) and clicking on it will show you the produced message.
 
 ![create a topic](images/through_backing_cluster.png "View Messages")
+
+# Conclusion
+We have reviewed adding a masking interceptor to our topic and seen how it is masked for those it's meant to be. We have also peeked at the underlying kafka cluster to see the data still unmasked.
+
+If you found this interesting you may also like the encryption demos.
+
+This of course is but one of the many features availble from the Gateway, for further questions on how Gateway can help take your Kafka experience to the next level [contact us](https://www.conduktor.io/contact/).
