@@ -2,14 +2,10 @@
 
 ## What is Conduktor Gateway Schema Validation?
 
-Conduktor Gateway's Schema Validation feature detects messages that have invalid schema information and rejects them. 
+Conduktor Gateway's Schema Validation detects messages that have invalid schema information and rejects them. 
 
 ### Architecture diagram
 ![architecture diagram](images/schema-validation.png "schema validation")
-
-### Video
-
-[![asciicast](https://asciinema.org/a/sxVe031UekMiV533iSkDgFBG8.svg)](https://asciinema.org/a/sxVe031UekMiV533iSkDgFBG8)
 
 ## Running the demo
 
@@ -23,7 +19,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Conduktor Gateway container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-Note that there are 2 Schema registries. client-schema-registry will be used to produce new messages through kafka clients. schema-registry is attached to Conduktor Gateway.
+Note that there are 2 Schema registries. Client-schema-registry will be used to produce new messages through kafka clients. Schema-registry is attached to Conduktor Gateway.
 
 This means that schemas created by Kafka clients will not be valid in Gateway, enabling the test scenario.
 
@@ -32,26 +28,26 @@ This means that schemas created by Kafka clients will not be valid in Gateway, e
 Start the environment with
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Step 3: Create topics
 
-We create topics using the Kafka console tools, the below creates a topic named `srTopic`
+Let's create a topic using the Kafka console tools, the below creates a topic named `sr-topic`.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
-    --topic srTopic
+    --topic sr-topic
 ```
 
 List the created topic
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
@@ -60,23 +56,23 @@ docker-compose exec kafka-client \
 
 ### Step 4: Configure Schema validation
 
-Conduktor Gateway provides a REST API that can be used to configure the schema validation feature. 
+Conduktor Gateway provides a REST API that can be used to configure the schema validation interceptor. 
 
-The command below will instruct Conduktor Gateway to validate that the records on topic `srTopic` refer to a schema that exists in the schema registry referred to by the Gateway. 
+The command below will create an interceptor for validating that the records on topic `sr-topic` refer to a schema that exists in the schema registry referred to by the Gateway. 
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u admin:conduktor \
-    -vvv \
-    --request POST "conduktor-gateway:8888/tenant/someTenant/feature/guard-produce" \
+docker compose exec kafka-client \
+  curl \
+    --user admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/sr-required" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.safeguard.TopicRequiredSchemaIdPolicyPlugin",
+        "priority": 100,
         "config": {
-            "schemaId" : {
-                "type": "REQUIRED",
-                "checkDeserialization": true
+            "topic": "sr-topic",
+            "schemaIdRequired": true
             }
-        }
     }'
 ```
 
@@ -91,11 +87,11 @@ echo '{
     "password": "password1",
     "visa": "visa123456",
     "address": "Conduktor Towers, London" 
-}' | jq -c | docker-compose exec -T schema-registry \
+}' | jq -c | docker compose exec -T schema-registry \
     kafka-json-schema-console-producer  \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
-        --topic srTopic \
+        --topic sr-topic \
         --property schema.registry.url=http://client-schema-registry:8082 \
         --property value.schema='{ 
             "title": "User",
@@ -113,7 +109,7 @@ echo '{
 You should see something similar to the following produced:
 
 ```bash
-[2022-12-12 21:49:51,205] ERROR Error when sending message to topic srTopic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+[2022-12-12 21:49:51,205] ERROR Error when sending message to topic sr-topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
 org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
 ```
 
@@ -124,14 +120,14 @@ To see why this happens let's query the 2 schema registries for the subject we a
 First if we look at the client Schema Registry (i.e. the one used by the producer) we see a schema present.
 
 ```bash
-docker-compose exec kafka-client curl http://client-schema-registry:8082/subjects/srTopic-value/versions/1 | jq
+docker compose exec kafka-client curl http://client-schema-registry:8082/subjects/sr-topic-value/versions/1 | jq
 ```
 
 produces:
 
 ```bash
 {
-  "subject": "srTopic-value",
+  "subject": "sr-topic-value",
   "version": 1,
   "id": 1,
   "schemaType": "JSON",
@@ -142,7 +138,7 @@ produces:
 If we run the same queries against the Schema Registry associated with Conduktor Gateway we do not see the schema
 
 ```bash
-docker-compose exec kafka-client curl http://schema-registry:8081/subjects/srTopic-value/versions/1 | jq
+docker compose exec kafka-client curl http://schema-registry:8081/subjects/sr-topic-value/versions/1 | jq
 ```
 
 produces:
@@ -150,7 +146,7 @@ produces:
 ```bash
 {
   "error_code": 40401,
-  "message": "Subject 'srTopic-value' not found."
+  "message": "Subject 'sr-topic-value' not found."
 }
 ```
 
@@ -161,26 +157,26 @@ Because the subject is not available in this Schema Registry it is rejected by t
 Now let's add a schema with the correct Id but incorrect content to the Gateway cluster
 
 ```bash
-docker-compose exec kafka-client curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+docker compose exec kafka-client curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" \
   --data '{"compatibility": "NONE"}' \
   http://schema-registry:8081/config
 ```
 
 ```bash
-docker-compose exec kafka-client curl \
+docker compose exec kafka-client curl \
   -X POST \
   -H "Content-Type: application/vnd.schemaregistry.v1+json" \
   -d '{
 	"schemaType": "JSON",
 	"schema": "{\"type\":\"object\",\"properties\": {\"name\":{\"type\":\"integer\"}},\"additionalProperties\": false}"
   }' \
-  http://schema-registry:8081/subjects/srTopic-value/versions     
+  http://schema-registry:8081/subjects/sr-topic-value/versions     
 ```
 
 We have now created the situation where client and Gateway see different schemas for id 1
 
 ```bash
-docker-compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+docker compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
   http://schema-registry:8081/schemas/ids/1 | jq
 ```
 
@@ -196,7 +192,7 @@ produces:
 and
 
 ```bash
-docker-compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+docker compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
   http://client-schema-registry:8082/schemas/ids/1 | jq
 ```
 
@@ -220,11 +216,11 @@ echo '{
     "password": "password1",
     "visa": "visa123456",
     "address": "Conduktor Towers, London" 
-}' | jq -c | docker-compose exec -T schema-registry \
+}' | jq -c | docker compose exec -T schema-registry \
     kafka-json-schema-console-producer  \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
-        --topic srTopic \
+        --topic sr-topic \
         --property schema.registry.url=http://client-schema-registry:8082 \
         --property value.schema='{ 
             "title": "User",
@@ -242,6 +238,6 @@ echo '{
 You should once again see an error like this:
 
 ```bash
-[2022-12-12 21:51:59,888] ERROR Error when sending message to topic srTopic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+[2022-12-12 21:51:59,888] ERROR Error when sending message to topic sr-topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
 org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
 ```
