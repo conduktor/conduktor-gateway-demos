@@ -46,7 +46,7 @@ docker compose exec kafka-client kafka-topics --bootstrap-server conduktor-gatew
 docker compose exec kafka-client kafka-topics --bootstrap-server conduktor-gateway:6969 --command-config /clientConfig/paris.properties --create --topic parisTopic
 ```
 
-List all topics from both clusters to see that, although they are hosted on the same underlying cluster, the topics are isolated from eachother:
+List all topics from both virutal clusters to see that, although they are hosted on the same underlying cluster, the topics are isolated from eachother:
 
 ```bash
 docker compose exec kafka-client kafka-topics --bootstrap-server conduktor-gateway:6969 --command-config /clientConfig/london.properties --list
@@ -64,16 +64,30 @@ echo testMessageParis | docker compose exec -T kafka-client kafka-console-produc
 
 ### Step 6: Consume from the topics
 
-And consume the messages produced above. Note that the message `testMessageLondon` will never be consumed by a `Paris` cluster client due to cluster isolation. 
+And consume the messages produced above. 
 
 ```bash
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic londonTopic --from-beginning
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/paris.properties --topic parisTopic --from-beginning
+docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic londonTopic --from-beginning --max-messages 1
 ```
 
-### Step 7: Applying Multi Tenancy to existing topics
+```bash
+docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/paris.properties --topic parisTopic --from-beginning --max-messages 1
+```
 
-During migration to Conduktor Gateway you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Gateway allows this via administration APIs. In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Gateway.
+You could see how the message `testMessageLondon` cannot be consumed from the `Paris` virtual cluster client due to cluster isolation. It is not aware of this topic in a different "cluster".
+
+You could see this from running the below command, you would get the `{parisTopic=UNKNOWN_TOPIC_OR_PARTITION}` error untill timeout . The command is show that trying to find the parisTopic from perspective of London (using the london.properties client) is not possible.
+
+WARNING lots of output don't run unless you really want to! You will get 5 minutes of the retry message if using default parameters.
+```bash
+docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic parisTopic --from-beginning --max-messages 1
+```
+
+`WARN [Consumer clientId=console-consumer, groupId=console-consumer-68780] Error while fetching metadata with correlation id 921 : {parisTopic=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)`
+
+### Step 7: Applying Multi-tenancy to existing topics
+
+During migration to Conduktor Gateway you may want to make up a tenant population from existing topics in your Kafka cluster. Conduktor Gateway allows this via the administration APIs. In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Gateway.
 
 Let's start by creating some pre-exiting topics and adding data.
 
