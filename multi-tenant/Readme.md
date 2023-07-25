@@ -181,46 +181,28 @@ docker compose exec kafka-client kafka-console-consumer --bootstrap-server condu
 On `existingSharedTopic` the same messages are available to both tenants.
 
 
-### Step 11: Log into the platform
+### Step 11: Visualise what we've been doing
 
-> The remaining steps in this demo require a Conduktor Platform license. For more information on this [Arrange a technical demo](https://www.conduktor.io/contact/demo)
+A lot of what we demo'd you've had to use your CLI but checking out the changes can also be done visually with tools such as [Conduktor Console](https://www.conduktor.io/).
 
-Once you have a license key, place it in `platform-config.yaml` under the key: `license` e.g.:
+We won't demo all the steps of Console today but show a quick view on what we have done and how quickly it could be done visually.
 
-```yaml
-license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
-```
 
-the start the Conduktor Platform container:
+#### Step 12: View the clusters
 
-```bash
-docker compose up -d conduktor-platform
-```
-
-From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
-
-Username: bob@conduktor.io
-Password: admin
-
-### Step 12: View the clusters
-
-From Conduktor Platform navigate to Admin -> Clusters, you should see 3 clusters as below:
+From what we did today you can see our 3 clusters as below:
 
 ![clusters](images/clusters.png "Clusters")
 
-### Step 13: Create Topics with Conduktor Platform
-
-To create topics through Conduktor Platform, navigate to `Console`, select the correct cluster from the top right, and click `Create Topic`
+We can create topics with a click of `Create Topic`.
 
 ![create a topic](images/create_topic.png "Create Topic")
 
-Create a topic in cluster `London` named `londonTopic` and one in `Paris` named `parisTopic`
+Creating a topic in our virtual cluster `London` named `londonTopic` and one in `Paris` named `parisTopic`.
 
-Switch back and forth between the `London` and `Paris` clusters and you will see that they only show the topics relevant to their clusters. 
+Switching back and forth between the `London` and `Paris` clusters and you would see that they only show the topics relevant to their clusters. 
 
-### Step 14: Produce with Conduktor Platform
-
-Let's produce some messages to the newly created topics. Go to `Console`, click on the topic you want to produce to, and select the produce tab.
+We produced some messages to the newly created topics.
 
 ![produce to a topic](images/produce1.png "Produce")
 
@@ -228,8 +210,14 @@ Now we select a Value format of `String` and click `Generate Once` to create a a
 
 ![produce to a topic](images/produce2.png "Produce")
 
-### Step 15: Consumer with Conduktor Platform
 
-To view produced messages, select the `Consume` tab in Conduktor Platform
+To consume messages, select the `Consume` tab in Conduktor Platform
 
-![consume from a topic](images/consume.png "Consume")
+![consume from a topic](images/consume.png "Consume").
+
+# Conclusion
+
+Today we ran through the idea of multi-tenany to create virtual clusters available for clients without the cost and time of needing additional backing Kafka clusters.
+We looked at how these are isolated, how to set them up from new and how they're compatible mapping to existing topics.
+
+To hear more about how multi-tenancy can work for you [get in touch](https://www.conduktor.io/contact/sales/), we'd love to hear from you!
