@@ -74,7 +74,7 @@ docker compose exec kafka-client \
 
 ### Step 5: Produce data to the underlying topic
 
-Now we will produce 2 records to the underlying topic
+Now we will produce 2 records to the underlying topic, our mock car data for allCarsTopic, a red and blue car.
 
 ```bash
 echo '{ 
