@@ -1,6 +1,6 @@
-# Alter topic config policy
+# Alter broker config policy
 
-In this demo, we will impose limits on topic configuration changes to ensure that any configuration changed in the cluster adhere to the configured specification.
+In this demo, we will impose limits on broker configuration changes to ensure that any configuration changed in the cluster adhere to the configured specification.
 
 ## Running the demo
 
@@ -58,38 +58,29 @@ docker compose exec kafka-client \
     --list
 ```
 
-### Step 4: Configure safeguard
+### Step 4: Add the interceptor
 
-Conduktor gateway provides a REST API used to configure the safeguard feature.
+Conduktor gateway provides a REST API used to add interceptors.
+
 
 ```bash
-# Configure safeguard
-docker compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-gateway:8888/tenant/someTenant/feature/guard-alter-configs" \
+# Add alter topic config policy
+docker-compose exec kafka-client \
+curl \
+    --user "admin:conduktor" \
+    --request POST conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/guard-alter-configs \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
-            "minRetentionMs": 10,
-            "maxRetentionMs": 100,
-            "minRetentionBytes": 10,
-            "maxRetentionBytes": 100,
-            "minSegmentMs": 10,
-            "maxSegmentMs": 100,
-            "minSegmentBytes": 10,
-            "maxSegmentBytes": 100,
-            "minSegmentJitterMs": 10,
-            "maxSegmentJitterMs": 100,
+        "pluginClass": "io.conduktor.gateway.interceptor.safeguard.AlterBrokerConfigPolicyPlugin",
+        "priority": 100,
+        "config": {
             "minLogRetentionBytes": 10,
             "maxLogRetentionBytes": 100,
             "minLogRetentionMs": 10,
             "maxLogRetentionMs": 100,
             "minLogSegmentBytes": 10,
             "maxLogSegmentBytes": 100
-        },
-        "direction": "REQUEST",
-        "apiKeys": "ALTER_CONFIGS"
+        }
     }'
 ```
 
