@@ -6,7 +6,7 @@ Conduktor Gateway's virtual topics allow you to create a "virtual" copy of an ex
 have interceptors applied to it without affecting the original topic. 
 
 For instance, I may have a topic 'cars' that contains information on cars of all colors, and an application that is only 
-interested in Blue cars. To satisfy this requirement I can create a virtual topic 'blueCars' and apply a filter to this 
+interested in Red cars. To satisfy this requirement I can create a virtual topic 'redCars' and apply a filter to this 
 topic so that only blue car data is available.
 
 ## Running the demo
@@ -37,52 +37,39 @@ docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server kafka1:9092 \
     --create --if-not-exists \
-    --topic sourceTopic \
+    --topic carsTopic \
     --replication-factor 1 \
     --partitions 1
 ```
-
-Next we create the virtual topic. This is a 2 step process, first we must create a template for the topic that defines 
-the underlying topic it will source it's data from and then use this template to create the topic. 
+### Step 4: Create the virtual topic template interceptor, and the virtual topic
+Next we create the virtual topic. This is a 2 step process, first we must create a template for the virtual topic that defines 
+the underlying topic it will source it's data from, and then use this template to create the virtual topic. 
 
 ```bash
+# Create the template in Gateway
 docker compose exec kafka-client curl \
-    -vvv \
-    -u "superUser:superUser" \
-    --request POST "conduktor-gateway:8888/topicMappings/someTenant/virtualTopic" \
+    -u "admin:conduktor" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/redCarVirtualTopicTemplate" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "topicName": "sourceTopic",
-        "isVirtual": true
+        "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
+        "priority": 100,
+        "config": {
+            "virtualTopic": "redCarVirtualTopic",
+            "statement": "SELECT type, price as price FROM cars WHERE color = 'red'"
+        }
     }'
+
+# Create the virtual topic
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create \
-    --topic virtualTopic \
+    --topic red-cars \
+    --if-not-exists \
     --replication-factor 1 \
     --partitions 1
-```
-
-### Step 4: Configure filtering
-
-In this demo we will filter personnel records for a single name. To do this we apply a SQL like filter to the virtual 
-topic via Conduktor Gateway's interceptor features. 
- 
-```bash
-docker compose exec kafka-client curl \
-    -u "superUser:superUser" \
-    -vvv \
-    --request POST "conduktor-gateway:8888/tenant/someTenant/feature/sql-filter" \
-    --header 'Content-Type: application/json' \
-    --data-raw '{
-        "config": { 
-            "statement": "SELECT '"'"'$.name'"'"' as givenName, '"'"'$.age'"'"' as yearsSinceBirth FROM virtualTopic WHERE '"'"'$.name'"'"' = '"'"'Tom'"'"'"
-        },
-        "direction": "RESPONSE",
-        "apiKeys": "FETCH"
-    }'
 ```
 
 ### Step 5: Produce data to the underlying topic
@@ -91,15 +78,17 @@ Now we will produce 2 records to the underlying topic
 
 ```bash
 echo '{ 
-    "name": "Tom",
-    "age": 38 
+    "type": "Sports",
+    "price": 75,
+    "color": "blue" 
 }' | jq -c | docker compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server kafka1:9092 \
         --topic sourceTopic
 echo '{ 
-    "name": "Mitch",
-    "age": 21 
+    "type": "SUV",
+    "price": 55,
+    "color": "red" 
 }' | jq -c | docker compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server kafka1:9092 \
@@ -118,21 +107,21 @@ docker compose exec kafka-client \
 
 ### Step 6: Consume from the topic
 
-Let's consume from our virtual topic `virtualTopic`.
+Let's consume from our virtual topic `red-cars`.
 
 ```bash
 docker compose exec kafka-client \
     kafka-console-consumer  \
         --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/gateway.properties \
-        --topic virtualTopic \
+        --topic red-cars \
         --from-beginning  
 ```
 
 You should see only one message consumed with the format changed according to our SQL statement's projection.
 
 ```json
-{"originalName":"Tom","yearsSinceBirth":38}
+{"type":"SUV","color":"red"}
 
 ```
 
