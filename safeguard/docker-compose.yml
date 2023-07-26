@@ -96,7 +96,7 @@ services:
       kafka2:
         condition: service_healthy
 
-  conduktor-platform:
+  conduktor-console:
     image: conduktor/conduktor-platform:1.14.0
     hostname: conduktor-console
     container_name: conduktor-console
