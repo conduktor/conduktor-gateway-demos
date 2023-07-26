@@ -112,3 +112,6 @@ Clicking the `Create Topic` button and filling out invalid topic details once mo
 Will produce the error in topic creation as before:
 
 ![create a topic](images/invalid_topic.png "Attempt to create an invalid topic")
+
+# Conclusion
+We have reviewed an important part of any Kafka setup, safeguarding from the creation of crazy topics. This gives central teams the tools they need to enable self-serve capability project teams within the guardrails they want to put in place.
