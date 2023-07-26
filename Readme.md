@@ -1,3 +1,4 @@
+Leave me open for now, preserving v1.8 compatible demos.
 # Conduktor Gateway
 
 Enhance your Kafka Experience without changing your applications
