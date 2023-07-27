@@ -136,18 +136,6 @@ This should produce output similar to this:
 
 Note the `CORRUPT_MESSAGE` errors, your results will vary each run so don't pay too much attention to any variation in latency figures.
 
-
-and on Consume we should see the unknown server error as we defined in our interceptor setup; `"FETCH": "UNKNOWN_SERVER_ERROR"`.
-
-```bash
-docker-compose exec kafka-client \
-  kafka-console-consumer \
-      --bootstrap-server conduktor-gateway:6969 \
-      --consumer.config /clientConfig/gateway.properties \
-      --from-beginning \
-      --topic conduktorTopic
-```
-
 ### Step 6: Reset
 
 To delete the interceptor and stop chaos injection run the below:
