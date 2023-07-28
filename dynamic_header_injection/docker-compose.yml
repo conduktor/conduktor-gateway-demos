@@ -59,7 +59,7 @@ services:
       retries: 25
 
   conduktor-gateway:
-    image: ghcr.io/conduktor/conduktor-proxy:2.0.0.5
+    image: ghcr.io/conduktor/conduktor-proxy:latest
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
