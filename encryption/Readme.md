@@ -70,8 +70,8 @@ The configuration of this interceptor will encrypt the `password` and `visa` fie
 
 ```bash
 docker compose exec kafka-client curl \
-    -u "admin:conduktor" \
     --silent \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/encrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -105,7 +105,8 @@ docker compose exec kafka-client curl \
 and confirm succesful creation by listing the interceptors for tenant `someTenant`:
 
 ```bash
-docker compose exec kafka-client curl \
+docker compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors
 ```
@@ -116,8 +117,8 @@ Next we configure Conduktor Gateway to decrypt the fields when fetching the data
 
 ```bash
 docker compose exec kafka-client curl \
-    -u "admin:conduktor" \
     --silent \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/decrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -135,7 +136,8 @@ docker compose exec kafka-client curl \
 and list the interceptors for tenant proxy:
 
 ```bash
-docker compose exec kafka-client curl \
+docker compose exec kafka-client \
+  curl \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors | jq
 ```
@@ -256,13 +258,14 @@ docker compose exec kafka-client \
         --bootstrap-server conduktor-gateway:6969 \
         --command-config /clientConfig/gateway.properties \
         --create --if-not-exists \
-        --topic encryption_performance
+        --topic encryption-performance
 ```
 
 Let's apply the encryption on this topic
 
 ```bash
-docker compose exec kafka-client curl \
+docker compose exec kafka-client \
+  curl \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/performanceEncrypt" \
@@ -271,7 +274,7 @@ docker compose exec kafka-client curl \
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
         "priority": 100,
         "config": {
-            "topic": "encryption_performance",
+            "topic": "encryption-performance",
             "fields": [ { 
                 "fieldName": "password",
                 "keySecretId": "password-secret",
@@ -295,46 +298,17 @@ docker compose exec kafka-client curl \
 Let's create a large `customers.json` file with 1 000 000 entries
 
 ```sh
-printf '{"name":"london","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}\n%.0s' {1..1000000} > customers.json
 
-echo number of lines: `wc -l customers.json | awk '{print $1}'`
+echo '{"name":"london","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}' > customers.json
 
-echo file size: `du -sh customers.json | awk '{print $1}'`
-```
-
-Compute the duration of sending 'customers.json' within Gateway with encryption by using the `kafka-console-producer`;
-
-```sh
-time docker compose exec -T kafka-client \
-    kafka-console-producer  \
-        --bootstrap-server conduktor-gateway:6969 \
-        --producer.config /clientConfig/gateway.properties \
-        --topic encryption_performance < customers.json
-```
-
-Verify that we have encrypted messages
-
-```sh
-docker compose exec kafka-client \
-    kafka-console-consumer \
-        --bootstrap-server conduktor-gateway:6969 \
-        --consumer.config /clientConfig/gateway.properties \
-        --topic encryption_performance \
-        --from-beginning \
-        --max-messages 20 | jq
-```
-
-Let's do the same with `kafka-producer-perf-test`
-
-```sh
 docker compose cp customers.json kafka-client:/home/appuser
 
 docker compose exec kafka-client \
     kafka-producer-perf-test \
-        --topic encryption_performance \
+        --topic encryption-performance \
         --throughput -1 \
         --num-records 1000000 \
-        --producer-props bootstrap.servers=conduktor-gateway:6969 \
+        --producer-props bootstrap.servers=conduktor-gateway:6969 linger.ms=100 \
         --producer.config /clientConfig/gateway.properties \
         --payload-file customers.json
 ```
