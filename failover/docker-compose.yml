@@ -1,0 +1,186 @@
+version: '3.7'
+services:
+  zookeeper_dr:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper_dr
+    container_name: zookeeper_dr
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  kafka1_dr:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka1_dr
+    container_name: kafka1_dr
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper_dr
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper_dr:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1_dr:9092
+      KAFKA_REPLICATION_FACTOR: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  kafka2_dr:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka2_dr
+    container_name: kafka2_dr
+    ports:
+      - "9093:9093"
+    depends_on:
+      - zookeeper_dr
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper_dr:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2_dr:9093
+      KAFKA_REPLICATION_FACTOR: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  zookeeper_prod:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper_prod
+    container_name: zookeeper_prod
+    ports:
+      - "12181:12181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 12181
+      ZOOKEEPER_TICK_TIME: 2000
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  kafka1_prod:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka1_prod
+    container_name: kafka1_prod
+    ports:
+      - "19092:19092"
+    depends_on:
+      - zookeeper_prod
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper_prod:12181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1_prod:19092
+      KAFKA_REPLICATION_FACTOR: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  kafka2_prod:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka2_prod
+    container_name: kafka2_prod
+    ports:
+      - "19093:19093"
+    depends_on:
+      - zookeeper_prod
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper_prod:12181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2_prod:19093
+      KAFKA_REPLICATION_FACTOR: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  conduktor-proxy:
+    image: conduktor/conduktor-proxy:1.8.0-amd64
+    hostname: conduktor-proxy
+    container_name: conduktor-proxy
+    depends_on:
+      - kafka1_dr
+      - kafka1_prod
+    ports:
+      - "6969:6969"
+      - "6970:6970"
+      - "9999:9999"
+    environment:
+      BACKEND_KAFKA_SELECTOR: 'file : { path: /clusterConfig/multi_clusters.yaml}'
+      FEATURE_FLAGS_MERGE_CLUSTER: true
+      ADMIN_API_USERS: '[{username: none, password: none}]'
+      AUTHENTICATION_AUTHENTICATOR_TYPE: NONE
+      INTERCEPTOR_CONFIG_LOCATION: '  '
+      USER_POOL_TYPE: JWT
+      USER_POOL_CLASSNAME: io.conduktor.proxy.service.userPool.JwtUserPoolService
+      USER_POOL_SECRET_KEY: secret
+      PROXY_HOST: conduktor-proxy
+      FEATURE_FLAGS_PASS_THROUGH: false
+      JAVA_TOOL_OPTIONS: -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1
+    volumes:
+      - type: bind
+        source: "./clusterConfig"
+        target: /clusterConfig
+        read_only: true
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  replicator:
+    image: confluentinc/cp-enterprise-replicator-executable:latest
+    container_name: replicator
+    hostname: replicator
+    environment:
+      CLUSTER_ID: replicator-prod-to-dr
+      REPLICATOR_LOG4J_ROOT_LOGLEVEL: INFO
+    volumes:
+      - type: bind
+        source: "./replicatorConfig"
+        target: /etc/replicator
+        read_only: false
+
