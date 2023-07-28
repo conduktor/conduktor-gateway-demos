@@ -92,8 +92,10 @@ Use the Admin API to add the inject header interceptor.
 The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, tenant and Gateway ip in records on the topic `injectHeaderTopic`. 
 
 ```bash
-docker compose exec kafka-client curl \
-    -u admin:conduktor \
+docker compose exec kafka-client \
+  curl \
+    --silent \
+    --user admin:conduktor \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/injectHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -194,8 +196,9 @@ Let's create another interceptor against our user for the remove header with key
 
 ```bash
 
-docker compose exec kafka-client curl \
-    -u admin:conduktor \
+docker compose exec kafka-client \
+  curl \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/removeHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
