@@ -93,7 +93,7 @@ docker compose exec kafka-client curl \
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin",
         "priority": 100,
         "config": {
-            "rateInPercent": 5,
+            "rateInPercent": 95,
             "errorMap": {
                 "FETCH": "UNKNOWN_SERVER_ERROR",
                 "PRODUCE": "CORRUPT_MESSAGE"
@@ -108,7 +108,7 @@ docker compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors" \
-    --header 'Content-Type: application/json'
+    --header 'Content-Type: application/json' | jq
 ```
 ### Step 5: Inject some chaos
 
@@ -131,7 +131,7 @@ This should produce output similar to this:
 [2023-07-12 12:12:11,213] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 64 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
 [2023-07-12 12:12:12,109] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 74 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
 ...
-100 records sent, 10.014020 records/sec (0.00 MB/sec), 24.94 ms avg latency, 730.00 ms max latency, 8 ms 50th, 108 ms 95th, 730 ms 99th, 730 ms 99.9th.
+100 records sent, 5.031447 records/sec (0.00 MB/sec), 14587.31 ms avg latency, 19299.00 ms max latency, 14557 ms 50th, 18895 ms 95th, 19299 ms 99th, 19299 ms 99.9th.
 ```
 
 Note the `CORRUPT_MESSAGE` errors, your results will vary each run so don't pay too much attention to any variation in latency figures.
