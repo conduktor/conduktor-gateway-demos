@@ -34,7 +34,7 @@ Note: Tenancy is determined by the SASL credentials configured for each cluster.
 Start the environment with
 
 ```bash
-docker compose up -d
+docker compose up --wait --detach
 ```
 
 ### Step 4: Create topics

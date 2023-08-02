@@ -36,7 +36,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker compose up -d
+docker compose up --wait --detach
 ```
 
 We have already created a multi-tenant user which is provided in the definition of `clientConfig/gateway.properties` which we will use to interact with Gateway throughout this demo.
@@ -94,7 +94,7 @@ docker compose exec kafka-client \
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin",
         "priority": 100,
         "config": {
-            "rateInPercent": 95,
+            "rateInPercent": 30,
             "errorMap": {
                 "FETCH": "UNKNOWN_SERVER_ERROR",
                 "PRODUCE": "CORRUPT_MESSAGE"
@@ -231,7 +231,8 @@ docker-compose exec kafka-client \
       --bootstrap-server conduktor-gateway:6969 \
       --consumer.config /clientConfig/gateway.properties \
       --from-beginning \
-      --topic conduktorTopicDuplicate
+      --topic conduktorTopicDuplicate \
+      --max-messages 20
 ```
 
 This should produce output similar to this:
@@ -282,6 +283,7 @@ docker-compose exec kafka-client \
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
         "priority": 100,
         "config": {
+          "topic": "conduktorTopic",
           "rateInPercent": 50
         }
     }'
@@ -520,12 +522,13 @@ docker-compose exec kafka-client \
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowProducersConsumersPlugin",
         "priority": 100,
         "config": {
+          "topic": "conduktorTopicSlow",
           "rateInPercent": 100,
           "minLatencyMs":100,
           "maxLatencyMs":1200
         }
     }'
-  ```
+```
 ### Step 21: Inject some chaos
 
 Let's produce some records to our created topic.

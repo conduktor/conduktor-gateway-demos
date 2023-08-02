@@ -29,7 +29,7 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up -d
+docker compose up --wait --detach
 ```
 
 ### Step 4: Configure safeguard
