@@ -69,7 +69,8 @@ Now let's create an encryption interceptor via the Admin API.
 The configuration of this interceptor will encrypt the `password` and `visa` fields in records on our topic `encryptedTopic`. 
 
 ```bash
-docker compose exec kafka-client curl \
+docker compose exec kafka-client \
+  curl \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/encrypt" \
@@ -116,7 +117,8 @@ docker compose exec kafka-client \
 Next we configure Conduktor Gateway to decrypt the fields when fetching the data.
 
 ```bash
-docker compose exec kafka-client curl \
+docker compose exec kafka-client \
+  curl \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/decrypt" \

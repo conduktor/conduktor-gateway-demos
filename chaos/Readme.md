@@ -85,7 +85,8 @@ Conduktor Gateway exposes a REST API to configure the chaos features.
 The command below will create a broken broker interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
 
 ```bash
-docker compose exec kafka-client curl \
+docker compose exec kafka-client \
+  curl \
     --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker" \
     --header 'Content-Type: application/json' \

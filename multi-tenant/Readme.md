@@ -156,7 +156,11 @@ docker compose exec kafka-client \
 ### Step 9: List the topics from the different tenants
 
 ```bash
-docker compose exec kafka-client kafka-topics --bootstrap-server conduktor-gateway:6969 --command-config /clientConfig/london.properties --list
+docker compose exec kafka-client \
+  kafka-topics \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/london.properties \
+    --list
 ```
 
 ```bash
@@ -167,15 +171,33 @@ You should see that the Paris tenant can only see `existingSharedTopic` whereas 
 ### Step 10: Consume from the topics
 
 ```bash
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic existingLondonTopic --from-beginning --max-messages 1
+docker compose exec kafka-client \
+  kafka-console-consumer \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/london.properties \
+    --topic existingLondonTopic \
+    --from-beginning \
+    --max-messages 1
 ```
 
 ```bash
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/london.properties --topic existingSharedTopic --from-beginning --max-messages 1
+docker compose exec kafka-client \
+  kafka-console-consumer \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/london.properties \
+    --topic existingSharedTopic \
+    --from-beginning \
+    --max-messages 1
 ```
 
 ```bash
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/paris.properties --topic existingSharedTopic --from-beginning --max-messages 1
+docker compose exec kafka-client \
+  kafka-console-consumer \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/paris.properties \
+    --topic existingSharedTopic \
+    --from-beginning \
+    --max-messages 1
 ```
 
 On `existingSharedTopic` the same messages are available to both tenants.

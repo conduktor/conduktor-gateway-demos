@@ -62,7 +62,8 @@ curl \
 Next we try to create a topic with a specification that does not match the above, too many partitions.
 
 ```bash
-docker compose exec kafka-client kafka-topics \
+docker compose exec kafka-client \
+  kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create \
@@ -81,7 +82,8 @@ Error while executing topic command : Request parameters do not satisfy the conf
 If we modify our command to meet the criteria the topic is created.
 
 ```bash
-docker compose exec kafka-client kafka-topics \
+docker compose exec kafka-client \
+  kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create \

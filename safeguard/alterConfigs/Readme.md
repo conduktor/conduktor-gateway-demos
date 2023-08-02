@@ -90,7 +90,8 @@ Next we try to alter configs of safeguardTopic with a specification that does no
 
 ```bash
 # Now, alter topic with invalid configs
-docker compose exec kafka-client kafka-configs \
+docker compose exec kafka-client \
+  kafka-configs \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --alter --topic safeguardTopic \
@@ -109,7 +110,8 @@ If we modify our command to meet the criteria the configuration is altered.
 
 ```bash
 # alter topic with valid configs
-docker compose exec kafka-client kafka-configs \
+docker compose exec kafka-client \
+  kafka-configs \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --alter \
@@ -119,7 +121,8 @@ docker compose exec kafka-client kafka-configs \
 
 ```bash
 # check configs has altered
-docker compose exec kafka-client kafka-configs \
+docker compose exec kafka-client \
+  kafka-configs \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --describe \
