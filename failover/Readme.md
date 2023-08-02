@@ -92,7 +92,7 @@ docker-compose exec kafka-client \
 
 ### Step 4: Produce and replicate
 
-Let's produce a messages into our topic. A client produces messages to Gateway, gateway passes them on to the prod cluster and a replicator copyies them to dr.
+Let's produce a messages into our topic. A client produces messages to Gateway, gateway passes them on to the prod cluster and a replicator copyis them to dr.
 
 ```bash
 for a in {1..5}; do echo "someRecord$a" | docker-compose exec -T kafka-client \
@@ -155,7 +155,7 @@ kafka-console-consumer  \
 A producer
 
 ```bash
-docker-compose exec -T kafka-client \
+docker-compose exec kafka-client \
 kafka-console-producer  \
 --bootstrap-server conduktor-proxy:6969 \
 --topic resilient_topic

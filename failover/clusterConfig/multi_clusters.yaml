@@ -1,5 +1,6 @@
 config:
   main:
     bootstrap.servers: kafka1_dr:9092
+    security.protocol: SASL_PLAINTEXT
   prod:
     bootstrap.servers: kafka1_prod:19092
