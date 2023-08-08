@@ -58,23 +58,14 @@ services:
     container_name: conduktor-gateway
     depends_on:
       - kafka1
-    ports:
-      - "6969:6969"
-      - "6970:6970"
-      - "9999:9999"
-      - "8888:8888"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
       GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      GATEWAY_USER_POOL_TYPE: JWT
       GATEWAY_USER_POOL_SECRET_KEY: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
       GATEWAY_HOST: conduktor-gateway
-      GATEWAY_INTERCEPTOR_CONFIG_LOCATION: "~"
       GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
       GATEWAY_FEATURE_FLAGS_INTERNAL_LOAD_BALANCING: false
-      GATEWAY_FEATURE_FLAGS_AUDIT: false
       GATEWAY_ADMIN_API_USERS: "[{username: superUser, password: superUser, admin: true}]"
-      JAVA_TOOL_OPTIONS: -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1
 
   kafka-client:
     image: confluentinc/cp-kafka:latest
