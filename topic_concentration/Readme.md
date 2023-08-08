@@ -6,8 +6,8 @@ Conduktor Proxy's topic concentration feature allows you to store multiple topic
 topic. To clients, it appears that there are multiple topics and these can be read from as normal but in the underlying 
 Kafka cluster there is a lot less resource requirement.
 
-For instance, I may see topics "times10_testTenant" and "times100_testTenant" in Gateway that are both stored on the 
-underlying "testTenant_topic"
+For instance, I may see topics "times10_concentrationTest" and "times100_concentrationTest" in Gateway that are both stored on the 
+underlying "concentrationTest_topic"
 
 ## Running the demo
 
@@ -25,16 +25,16 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker-compose up -d  zookeeper kafka-client kafka2 kafka1 schema-registry
+docker-compose up -d  zookeeper kafka-client kafka2 kafka1
 sleep 10
-docker-compose up -d conduktor-proxy
+docker-compose up -d conduktor-gateway
 sleep 5
 echo "Environment started" 
 ```
 
 ### Step 3: Create topics
 
-In this demo we will create a tenant that consists of a single unconcentrated topic from the source cluster and 2 
+In this demo we will create a cluster that consists of a single unconcentrated topic from the source cluster and 2 
 concentrated topics. Let's start by creating topics.
 
 The underlying source topic
@@ -49,40 +49,40 @@ docker-compose exec kafka-client \
     --partitions 1
 ```
 
-We don't need to create the topic that backs the concentrated topics, it will automatically be created when any client 
+We don't need to create the physical topic that backs the concentrated topics, it will automatically be created when any client 
 topic using it is. We only have to tell Gateway how to map client topics to concentrated topics. In this case, any 
-client topic ending "testTenant" will be concentrated to "testTenant_topic"
+client topic ending "concentrationTest" will be concentrated to "concentrationTest_topic"
 
 ```bash
 docker-compose exec kafka-client curl \
     -vvv \
     -u "superUser:superUser" \
-    --request POST 'conduktor-proxy:8888/topicMappings/someTenant/.*testTenant' \
+    --request POST 'conduktor-gateway:8888/admin/clusters/v1/cluster/someCluster/topics/.%2AconcentrationTest' \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "topicName": "testTenant_topic",
-        "isConcentrated": true
+        "physicalTopicName": "concentrationTest_topic",
+        "readOnly": false,
+        "concentrated": true
     }'
-
 ```
 
-Now let's create the client topics
+Now let's create the logical topics
 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
+    --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/proxy.properties \
     --create \
-    --topic times10_testTenant \
+    --topic times10_concentrationTest \
     --replication-factor 1 \
     --partitions 1
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
+    --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/proxy.properties \
     --create \
-    --topic times100_testTenant \
+    --topic times100_concentrationTest \
     --replication-factor 1 \
     --partitions 1
 ```
@@ -96,36 +96,30 @@ docker-compose exec kafka-client \
     --list
 ```
 
-From Gateway we also see 2 topics but these are the client topics.
+From Gateway we also see 2 topics but these are the logical topics.
 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
+    --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/proxy.properties \
     --list
 ```
 
-We need sourceTopic to be available to our tenant but currently it is not shown. To add it we need to create an 
+We need sourceTopic to be available to our cluster but currently it is not shown. To add it we need to create an 
 unconcentrated mapping that covers it
 
 ```bash
 docker-compose exec kafka-client curl \
     -vvv \
     -u "superUser:superUser" \
-    --request POST 'conduktor-proxy:8888/topicMappings/someTenant/sourceTopic' \
+    --request POST 'conduktor-gateway:8888/admin/clusters/v1/cluster/someCluster/topics/sourceTopic' \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "topicName": "sourceTopic"
+        "physicalTopicName": "sourceTopic",
+        "readOnly": false,
+        "concentrated": false
     }'
-docker-compose exec kafka-client \
-  kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
-    --create \
-    --topic sourceTopic \
-    --replication-factor 1 \
-    --partitions 1
 ```
 
 Now the Gateway listing shows sourceTopic too
@@ -133,7 +127,7 @@ Now the Gateway listing shows sourceTopic too
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
+    --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/proxy.properties \
     --list
 ```
@@ -149,7 +143,7 @@ seq 1 20 | jq -c | docker-compose exec -T kafka-client \
         --topic sourceTopic
 docker-compose exec kafka-client \
     kafka-console-consumer  \
-        --bootstrap-server conduktor-proxy:6969 \
+        --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/proxy.properties \
         --topic sourceTopic \
         --from-beginning 
@@ -158,13 +152,13 @@ docker-compose exec kafka-client \
 ### Step 5: Run our applications
 
 These applications run completely through Gateway and require no access to the underlying Kafka. One multiplies each 
-message in sourceTopic by 10 and emits the result to times10_testTenant and the other multiplies by 100 and emits the 
-result to times100_testTenant.
+message in sourceTopic by 10 and emits the result to times10_concentrationTest and the other multiplies by 100 and emits the 
+result to times100_concentrationTest.
 
 ```bash
 docker-compose exec kafka-client \
      kafka-console-consumer \
-        --bootstrap-server conduktor-proxy:6969 \
+        --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/proxy.properties \
         --topic sourceTopic \
          --from-beginning \
@@ -172,12 +166,12 @@ docker-compose exec kafka-client \
          | sed -e 's/$/0/' \
          | docker-compose exec -T kafka-client \
          kafka-console-producer \
-            --bootstrap-server conduktor-proxy:6969 \
+            --bootstrap-server conduktor-gateway:6969 \
             --producer.config /clientConfig/proxy.properties \
-            --topic times10_testTenant 
+            --topic times10_concentrationTest 
 docker-compose exec kafka-client \
      kafka-console-consumer \
-        --bootstrap-server conduktor-proxy:6969 \
+        --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/proxy.properties \
         --topic sourceTopic \
          --from-beginning \
@@ -185,9 +179,9 @@ docker-compose exec kafka-client \
          | sed -e 's/$/00/' \
          | docker-compose exec -T kafka-client \
          kafka-console-producer \
-            --bootstrap-server conduktor-proxy:6969 \
+            --bootstrap-server conduktor-gateway:6969 \
             --producer.config /clientConfig/proxy.properties \
-            --topic times100_testTenant 
+            --topic times100_concentrationTest 
 ```
 
 
@@ -198,15 +192,15 @@ We can query the data in the client topics to confirm
 ```bash
 docker-compose exec kafka-client \
     kafka-console-consumer  \
-        --bootstrap-server conduktor-proxy:6969 \
+        --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/proxy.properties \
-        --topic times10_testTenant \
+        --topic times10_concentrationTest \
         --from-beginning
 docker-compose exec kafka-client \
     kafka-console-consumer  \
-        --bootstrap-server conduktor-proxy:6969 \
+        --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/proxy.properties \
-        --topic times100_testTenant \
+        --topic times100_concentrationTest \
         --from-beginning
 ```
 
@@ -218,6 +212,6 @@ If we consume the concentrated topic we see both client topic's messages
 docker-compose exec kafka-client \
 kafka-console-consumer  \
 --bootstrap-server kafka1:9092 \
---topic testTenant_topic \
+--topic concentrationTest_topic \
 --from-beginning
 ```
