@@ -1,0 +1,35 @@
+organization:
+  name: "conduktor"
+
+admin:
+  email: "bob@conduktor.io"
+  password: "admin"
+
+clusters:
+  - id: default
+    name: gateway-backing-cluster
+    color: "#0013E7"
+    ignoreUntrustedCertificate: false
+    bootstrapServers: "kafka1:9092"
+    properties:
+    schemaRegistry:
+      url: "http://schema-registry:8081"
+      ignoreUntrustedCertificate: false
+      properties:
+    labels: {}
+  - id: proxy
+    name: cdk-gateway
+    color: "#A020F0"
+    ignoreUntrustedCertificate: false
+    bootstrapServers: "conduktor-proxy:6969"
+    schemaRegistry:
+      url: "http://schema-registry:8081"
+      ignoreUntrustedCertificate: false
+      properties:
+    properties: |
+      security.protocol=SASL_PLAINTEXT
+      sasl.mechanism=PLAIN
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someTenant" password="eyJhbGciOiJIUzI1NiJ9.eyJ0ZW5hbnQiOiJzb21lVGVuYW50IiwidXNlcm5hbWUiOiJzb21lVGVuYW50In0.uX7eT0IQfK9ZcK0L8j_zj35IJ90soDr3jGbV0CoNiL8";
+    labels: { }
+  
+license:
