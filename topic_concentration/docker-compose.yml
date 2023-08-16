@@ -53,7 +53,7 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
 
   conduktor-gateway:
-    image: ghcr.io/conduktor/conduktor-proxy:2.0.1.alpha
+    image: ghcr.io/conduktor/conduktor-proxy:2.0.1.tomDev
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     depends_on:
@@ -81,6 +81,82 @@ services:
     hostname: kafka-client
     container_name: kafka-client
     command: sleep infinity
+    volumes:
+      - type: bind
+        source: "./clientConfig"
+        target: /clientConfig
+        read_only: true
+
+
+  ksqldb-server:
+    image: confluentinc/cp-ksqldb-server:latest
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    ports:
+      - 8088:8088
+    environment:
+      KSQL_LOG4J_ROOT_LOGLEVEL: DEBUG
+
+      KSQL_KSQL_SERVICE_ID: "ksql-cluster"
+      KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 1
+      KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 1
+
+      # For Demo purposes: improve resource utilization and avoid timeouts
+      KSQL_KSQL_STREAMS_NUM_STREAM_THREADS: 1
+
+      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/clientConfig/log4j.properties"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_REPLICATION_FACTOR: 1
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: 'true'
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: 'true'
+
+      KSQL_PRODUCER_ENABLE_IDEMPOTENCE: 'true'
+
+      KSQL_BOOTSTRAP_SERVERS: conduktor-gateway:6969
+      KSQL_HOST_NAME: ksqldb-server
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+
+      # Enable OAuth for ksqlDB's embedded Kafka clients that access and manage consumer groups and topics
+      KSQL_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KSQL_SASL_MECHANISM: PLAIN
+      KSQL_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username="someCluster" \
+        password="eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6InNvbWVDbHVzdGVyIiwidGVuYW50Ijoic29tZUNsdXN0ZXIiLCJleHAiOjE3MDcwMzkyMjB9.0CUgn0OLOrfl6U6-rHgeuYBOy4qQnxo0zPn9o6N_GV-m95LBfPodSjU5-CkUzUU1sZf20hTAKtoPDaAQMUyPKQ";
+    volumes:
+      - type: bind
+        source: "./clientConfig"
+        target: /clientConfig
+        read_only: true
+
+  ksqldb-server-real:
+    image: confluentinc/cp-ksqldb-server:latest
+    hostname: ksqldb-server-real
+    container_name: ksqldb-server-real
+    environment:
+      KSQL_LOG4J_ROOT_LOGLEVEL: DEBUG
+
+      KSQL_KSQL_SERVICE_ID: "ksql-cluster-real"
+      KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 1
+      KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 1
+
+      # For Demo purposes: improve resource utilization and avoid timeouts
+      KSQL_KSQL_STREAMS_NUM_STREAM_THREADS: 1
+
+      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/clientConfig/log4j.properties"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_REPLICATION_FACTOR: 1
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: 'true'
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: 'true'
+
+      KSQL_PRODUCER_ENABLE_IDEMPOTENCE: 'true'
+
+      KSQL_BOOTSTRAP_SERVERS: kafka1:9092
+      KSQL_HOST_NAME: ksqldb-server-real
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+
+      # Enable OAuth for ksqlDB's embedded Kafka clients that access and manage consumer groups and topics
+      KSQL_SECURITY_PROTOCOL: PLAINTEXT
     volumes:
       - type: bind
         source: "./clientConfig"
