@@ -23,6 +23,8 @@ Walkthrough of the main Conduktor Gateway features
 * [Topic Concentration](topic_concentration/Readme.md) - Concentrated data from multiple topics into a single topic.
 * [JWT Authentication](jwt_auth/Readme.md) - Authenticate clients in a multi-tenant environment
 
+Note: Some of the demos might not be available for Gateway V2 upwards, in which case they can be found in the V1 folder.
+
 # Want more features?
 
 Checkout our marketplace
