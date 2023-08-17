@@ -19,7 +19,7 @@ Walkthrough of the main Conduktor Gateway features
 * [Masking](masking/Readme.md) - Hide important fields
 * [Headers Injection](inject-remove-header/Readme.md) - Add and remove headers 
 
-Note: Some of the demos might not be available for Gateway V2 upwards, in which case they can be found in the V1 folder.
+Note: Some of the demos might not be available for Gateway V2 upwards, in which case they can be found in the historical V1 branch.
 
 # Want more features?
 
