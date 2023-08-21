@@ -93,7 +93,7 @@ docker compose exec kafka-client curl \
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin",
         "priority": 100,
         "config": {
-            "rateInPercent": 5,
+            "rateInPercent": 95,
             "errorMap": {
                 "FETCH": "UNKNOWN_SERVER_ERROR",
                 "PRODUCE": "CORRUPT_MESSAGE"
