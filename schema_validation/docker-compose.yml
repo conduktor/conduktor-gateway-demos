@@ -85,7 +85,7 @@ services:
     container_name: client-schema-registry
 
   conduktor-gateway:
-    image: ghcr.io/conduktor/conduktor-proxy:2.0.0.5
+    image: conduktor/conduktor-gateway:2.0.1
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:

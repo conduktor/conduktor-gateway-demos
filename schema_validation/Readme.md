@@ -28,7 +28,7 @@ This means that schemas created by Kafka clients will not be valid in Gateway, e
 Start the environment with
 
 ```bash
-docker compose up -d
+docker compose up --wait --detach
 ```
 
 ### Step 3: Create topics
