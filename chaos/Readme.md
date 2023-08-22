@@ -299,7 +299,6 @@ docker-compose exec kafka-client \
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
         "priority": 100,
         "config": {
-          "topic": "conduktorTopic",
           "rateInPercent": 50
         }
     }'
