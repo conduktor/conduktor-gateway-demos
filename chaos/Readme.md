@@ -39,7 +39,7 @@ Start the environment with
 docker compose up --wait --detach
 ```
 
-We have already created a multi-tenant user which is provided in the definition of `clientConfig/gateway.properties` which we will use to interact with Gateway throughout this demo.
+We have already created a `username`, called `someUser`, for our virtual cluster which is provided in the definition of `clientConfig/gateway.properties` ,we will use this to interact with Gateway throughout this demo.
 
 ```bash
 cat clientConfig/gateway.properties
@@ -88,7 +88,7 @@ The command below will create a broken broker interceptor against the virtual cl
 docker compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/brokenBroker" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/broken-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin",
@@ -115,7 +115,9 @@ docker compose exec kafka-client \
 ### Step 5: Inject some chaos
 
 Let's produce some records to our created topic and observe some errors being injected by Conduktor Gateway.
-Remember this will go to the someCluster where the topic conduktorTopic lives from our gateway.properties file's password.
+Remember this will go to the virtual cluster `someCluster` where the topic conduktorTopic lives.
+
+This should produce warnings as we inteded.
 
 ```bash
 docker-compose exec kafka-client \
@@ -131,7 +133,7 @@ This should produce output similar to this:
 
 ```bash
 [2023-07-12 12:12:11,213] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 64 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
-[2023-07-12 12:12:12,109] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 74 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+[2023-07-12 12:12:12,109] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 74 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
 ...
 100 records sent, 5.031447 records/sec (0.00 MB/sec), 14587.31 ms avg latency, 19299.00 ms max latency, 14557 ms 50th, 18895 ms 95th, 19299 ms 99th, 19299 ms 99.9th.
 ```
@@ -146,7 +148,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/someCluster/interceptors/broken-broker"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/broken-broker"
 ```
 
 and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
