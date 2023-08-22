@@ -201,7 +201,7 @@ The command below will create a duplicate message on produce interceptor against
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1vcluster/someCluster/interceptors/duplicate-resource" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/duplicate-resource" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.DuplicateResourcesPlugin",
@@ -241,13 +241,26 @@ docker-compose exec kafka-client \
 This should produce output similar to this:
 
 ```bash
-CGJROBQTGLLMKEHLHFUVFZNXYLKVFCAZSWKKHXYLRJJRUZHSKJNAFEHNINWWKGWTMCQSIFNFNXREAHPKKHNEJLEMVSNTDGBNCZPJ
-OOJXKRJIVPUYNYFHBUTAPJHBTNHNKLYTIMMPKMSBHRPNZHHMMJQFCLDFZUFLYHEPRJEBHJLOXJOZSJHWOKZGZLKWJANKCUZRMUMM
-NRWCNDBIYEHZQRRNSDASJMXJAZVHGDIUPDXSGRNWDPVMXPYUCWGGCKOCWVXCGWSPZQLWLWKQDBDWUAKKVLITEVTSIWSHDZTEMYNH
 SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
 SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
 ONJVXZXZOZITKXJBOZWDJMCBOSYQQKCPRRDCZWMRLFXBLGQPRPGRNTAQOOSVXPKJPJLAVSQCCRXFRROLLHWHOHFGCFWPNDLMWCSS
 ONJVXZXZOZITKXJBOZWDJMCBOSYQQKCPRRDCZWMRLFXBLGQPRPGRNTAQOOSVXPKJPJLAVSQCCRXFRROLLHWHOHFGCFWPNDLMWCSS
+HWXQQYKALAAWCMXYLMZALGDESKKTEESEMPRHROVKUMPSXHELIDQEOOHOIHEGJOAZBVPUMCHSHGXZYXXQRUICRIJGQEBBWAXABQRI
+HWXQQYKALAAWCMXYLMZALGDESKKTEESEMPRHROVKUMPSXHELIDQEOOHOIHEGJOAZBVPUMCHSHGXZYXXQRUICRIJGQEBBWAXABQRI
+RUGZJUUVFYQOVCDEDXYFPRLGSGZXSNIAVODTJKSQWHNWVPSAMZKOUDTWHIORJSCZIQYPCZMBYWKDIKOKYNGWPXZWMKRDCMBXKFUI
+RUGZJUUVFYQOVCDEDXYFPRLGSGZXSNIAVODTJKSQWHNWVPSAMZKOUDTWHIORJSCZIQYPCZMBYWKDIKOKYNGWPXZWMKRDCMBXKFUI
+LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXBKAPWAPENUEZNWNWDCACD
+LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXBKAPWAPENUEZNWNWDCACD
+RLPIPHJQQKMOFDQSPKKNURFBORJLBPCBIWTSJNPRBNITTKJYWAHWGKZYNUSFISPIYPIOGAUPZDXHCFVGXGIVVCPFHIXAACZXZLFD
+RLPIPHJQQKMOFDQSPKKNURFBORJLBPCBIWTSJNPRBNITTKJYWAHWGKZYNUSFISPIYPIOGAUPZDXHCFVGXGIVVCPFHIXAACZXZLFD
+MOOSSNTKUPJQEIRRQAMUCTBLBSVPDDYOIHAOODZNJTVHDCIEGTAVMYZOCIVSKUNSMXEKBEWNZPRPWPUJABJXNQBOXSHOEGMJSNBU
+MOOSSNTKUPJQEIRRQAMUCTBLBSVPDDYOIHAOODZNJTVHDCIEGTAVMYZOCIVSKUNSMXEKBEWNZPRPWPUJABJXNQBOXSHOEGMJSNBU
+TGTIFVEQPSYBDXEXORPQDDODZGBELOISTRWXMEYWVVHGMJKWLJCCHPKAFRASZEYQZCVLFSLOWTLBMPPWPPFPQSAZPTULSTCDMODY
+TGTIFVEQPSYBDXEXORPQDDODZGBELOISTRWXMEYWVVHGMJKWLJCCHPKAFRASZEYQZCVLFSLOWTLBMPPWPPFPQSAZPTULSTCDMODY
+KZGSRFQTRFTGCNMNXQQIYVUQZHVNIPHZWVBSGOBYIFDNNXUTBBQUYNXOZCSICGRTZSSRHROJRGBHMHEQJRDLOQBEPTOBMYLMIGPP
+KZGSRFQTRFTGCNMNXQQIYVUQZHVNIPHZWVBSGOBYIFDNNXUTBBQUYNXOZCSICGRTZSSRHROJRGBHMHEQJRDLOQBEPTOBMYLMIGPP
+DPOLTEUVDGATCGYPQOGOYYESKEGBLOCBIYSLQEYGCCIPBXPNSPKDYTBEWDHBHWVDPLOVHJPNYGJUHKKHDASNFGZDAIWWQEPPBRJK
+DPOLTEUVDGATCGYPQOGOYYESKEGBLOCBIYSLQEYGCCIPBXPNSPKDYTBEWDHBHWVDPLOVHJPNYGJUHKKHDASNFGZDAIWWQEPPBRJK
 ```
 
 Note the duplicated messages.
@@ -260,7 +273,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/duplicate-resource"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/duplicate-resource"
 ```
 and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
@@ -280,7 +293,7 @@ The command below will create a `simulate leader election errors` interceptor ag
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/leader-election" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/leader-election" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
@@ -325,7 +338,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/leader-election"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/leader-election"
 ```
 and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
@@ -357,7 +370,7 @@ The command below will create a `simulate message corruption` interceptor agains
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/random-bytes" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/random-bytes" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.ProduceSimulateMessageCorruptionPlugin",
@@ -419,7 +432,7 @@ To stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/random-bytes"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/random-bytes"
 ```
 
 and confirm the removal of the interceptor from the virtual cluster `someCluster`;
@@ -441,7 +454,7 @@ The command below will create a `simulate slow broker` interceptor against the v
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-broker" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin",
@@ -489,7 +502,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-broker"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-broker"
 ```
 
 and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
@@ -519,7 +532,7 @@ docker-compose exec kafka-client \
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-topic" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-topic" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowProducersConsumersPlugin",
@@ -567,7 +580,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-topic"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-topic"
 ```
 
 and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
@@ -598,7 +611,7 @@ The command below will create a `simulate invalid schema Id` interceptor against
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/invalid-schema" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/invalid-schema" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateInvalidSchemaIdPlugin",
@@ -678,7 +691,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/invalid-schema"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/invalid-schema"
 ```
 
 and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
