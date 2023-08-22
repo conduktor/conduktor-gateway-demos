@@ -49,7 +49,7 @@ the underlying topic it will source it's data from, and then use this template t
 # Create the template in Gateway
 docker compose exec kafka-client curl \
     -u "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/redCarsVirtualTopicTemplate" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/redCarsVirtualTopicTemplate" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
