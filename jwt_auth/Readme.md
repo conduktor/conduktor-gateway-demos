@@ -4,7 +4,7 @@
 
 To unlock the full potential of Conduktor Gateway you'll want to make use of virtual clusters (VC), a.k.a multi-tenancy. 
 
-In order for this to work seamlessly with your clients the Gateway expects to receive extra information about the tenant (or virtual cluster) a connecting client represents  during authentication. 
+In order for this to work seamlessly with your clients the Gateway expects to receive extra information about the vcluster (or virtual cluster) a connecting client represents  during authentication. 
 
 This information is typically encoded into an encrypted JWT token that is created by a Gateway administrator. 
 
@@ -59,21 +59,21 @@ In this demo we will use the default values that are already set `ADMIN_API_USER
 
 In addition to the admin credentials for authorisation, we will need the following information to include in the API call:
 
-1. A tenant name - to determine which part of the cluster these credentials should access.
-2. A username - to determine who is interacting with the tenant. A user might have additional interceptors applied.
+1. A virtual cluster name - to determine which part of the cluster these credentials should access.
+2. A username - to determine who or which app is interacting with the virtual cluster. A username might have additional interceptors applied.
 
-![tenant-user](./images/tenant-user.png)
+![vcluster-user](./images/tenant-user-london.png)
 
-In our example below let's create a user against `tenantId:someTenant` and `username:someUser`.
+In our example below let's create a username against `vcluster:someCluster` and `username:someUsername`.
 
-Now that we have these credentials and know which tenant & user we wish to interact with, we can create a new token:
+Now that we have these credentials and know which vcluster & username we wish to interact with, we can create a new token:
 
 ```bash
 docker compose exec kafka-client \
     curl \
         --user admin:conduktor \
         --header "content-type:application/json" \
-        --request POST conduktor-gateway:8888/admin/auth/v1/tenants/someTenant/username/someUser \
+        --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/someCluster/username/someUsername \
         --data-raw '{"lifeTimeSeconds":7776000}'
 ```
 
@@ -103,10 +103,10 @@ should return something similar to:
 ```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUser" password="JWT_PLACEHOLDER";
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUsername" password="JWT_PLACEHOLDER";
 ```
 
-Let's add our JWT, that we just generated from our CURL to the admin API, as the password value. Paste your token into the password field being careful about the "" marks.
+Let's add our JWT, that we just generated from our CURL to the admin API, as the password value. Navigate and open the file `gateway.properties`, and paste your token into the password field being careful about the "" marks.
 
 Verify your saved changes look similar to the below:
 
@@ -118,7 +118,7 @@ docker compose exec kafka-client \
 ```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUser" password="eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM";
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUsername" password="eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM";
 ```
 
 ### Step 5: Using the token
@@ -131,7 +131,7 @@ docker compose exec kafka-client \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create \
-    --topic tenantTopic
+    --topic vclusterTopic
 ```
 Observe the created topic in the topic list.
 ```bash
@@ -144,12 +144,13 @@ docker compose exec kafka-client \
   
 
 Produce a test message.
+
 ```bash
 echo testMessage | docker compose exec -T kafka-client \
   kafka-console-producer \
     --bootstrap-server conduktor-gateway:6969 \
     --producer.config /clientConfig/gateway.properties \
-    --topic tenantTopic
+    --topic vclusterTopic
 ```
   
 
@@ -159,15 +160,15 @@ docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
-    --topic tenantTopic \
+    --topic vclusterTopic \
     --from-beginning
 ```
 
 
 ## Conclusion
 
-We have run through the idea of users being created against virtual clusters (tenants), how this simple environment looks and how we might expand it for a production setup.
+We have run through the idea of users being created against virtual clusters (vclusters), how this simple environment looks and how we might expand it for a production setup.
 
-That we can create a user as an administrator against the Admin API and get a token back.
+That we can create a username as an administrator against the Admin API and get a token back.
 
-That this token should be used as a password for clients connecting to this virtual cluster (tenant).
+That this token should be used as a password for clients connecting to this virtual cluster (vcluster).
