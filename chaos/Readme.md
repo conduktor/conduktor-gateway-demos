@@ -603,9 +603,10 @@ docker-compose exec kafka-client \
     --topic conduktorTopicSchema
 ```
 
-Conduktor Gateway exposes a REST API to configure the chaos features.
+Conduktor Gateway exposes a REST API to configure interceptors.
 
 The command below will create a `simulate invalid schema Id` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
+
 ```bash
 docker-compose exec kafka-client \
   curl \
