@@ -82,13 +82,13 @@ Conduktor Gateway provides a number of different ways to inject Chaos into your 
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a broken broker interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
+The command below will create a broken broker interceptor against the virtual cluster `someCluster`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
 
 ```bash
 docker compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/brokenBroker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin",
@@ -103,18 +103,19 @@ docker compose exec kafka-client \
     }'
 ```
 
-We can confirm the interceptor exists on the tenant;
+We can confirm the interceptor exists on the virtual cluster;
 ```bash
 docker compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request GET "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors" \
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors" \
     --header 'Content-Type: application/json' | jq
 ```
+
 ### Step 5: Inject some chaos
 
 Let's produce some records to our created topic and observe some errors being injected by Conduktor Gateway.
-Remember this will go to the myChaosTenant where the topic conduktorTopic lives from our gateway.properties file's password.
+Remember this will go to the someCluster where the topic conduktorTopic lives from our gateway.properties file's password.
 
 ```bash
 docker-compose exec kafka-client \
@@ -145,7 +146,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/broken-broker"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/someCluster/interceptors/broken-broker"
 ```
 
 and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
@@ -154,7 +155,7 @@ and confirm by listing the interceptors for the tenant, you expect an empty list
 docker-compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 
 ### Step 7: Run with no Chaos
@@ -191,14 +192,14 @@ docker-compose exec kafka-client \
 ```
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a duplicate message on produce interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to inject duplicate records on produce requests.
+The command below will create a duplicate message on produce interceptor against the tenant `someCluster`, instructing Conduktor Gateway to inject duplicate records on produce requests.
 
 
 ```bash
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/duplicate-resource" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1vcluster/someCluster/interceptors/duplicate-resource" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.DuplicateResourcesPlugin",
@@ -257,7 +258,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/duplicate-resource"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/duplicate-resource"
 ```
 and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
 
@@ -265,19 +266,19 @@ and confirm by listing the interceptors for the tenant, you expect an empty list
 docker-compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 ### <a name="leaderElection"></a> Step 11: Simulate Leader Election Errors
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate leader election errors` interceptor against the tenant `myChaosTenant`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
+The command below will create a `simulate leader election errors` interceptor against the tenant `someCluster`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
 
 ```bash
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/leader-election" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/leader-election" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
@@ -322,7 +323,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/leader-election"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/leader-election"
 ```
 and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
 
@@ -330,7 +331,7 @@ and confirm by listing the interceptors for the tenant, you expect an empty list
 docker-compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 
 ### <a name="randomBytes"></a> Step 14: Simulate Message Corruption
@@ -348,13 +349,13 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate message corruption` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
+The command below will create a `simulate message corruption` interceptor against the tenant `someCluster`. This instructs Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
 
 ```bash
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/random-bytes" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/random-bytes" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.ProduceSimulateMessageCorruptionPlugin",
@@ -416,29 +417,29 @@ To stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/random-bytes"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/random-bytes"
 ```
 
-and confirm the removal of the interceptor from the tenant `myChaosTenant`;
+and confirm the removal of the interceptor from the tenant `someCluster`;
 
 ```bash
 docker-compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 
 ### <a name="slowBroker"></a> Step 17: Simulate Slow Broker
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate slow broker` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to simulate slow responses from brokers.
+The command below will create a `simulate slow broker` interceptor against the tenant `someCluster`. This instructs Conduktor Gateway to simulate slow responses from brokers.
 
 ```bash
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-broker" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin",
@@ -486,7 +487,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-broker"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-broker"
 ```
 
 and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
@@ -495,13 +496,13 @@ and confirm by listing the interceptors for the tenant, you expect an empty list
 docker-compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 ### <a name="slowTopic"></a> Step 20: Simulate Slow Producers & Consumers
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate slow producers and consumers` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all trafic.
+The command below will create a `simulate slow producers and consumers` interceptor against the tenant `someCluster`. This instructs Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all trafic.
 
 ```bash
 docker-compose exec kafka-client \
@@ -516,7 +517,7 @@ docker-compose exec kafka-client \
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-topic" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-topic" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowProducersConsumersPlugin",
@@ -564,7 +565,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/slow-topic"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-topic"
 ```
 
 and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
@@ -573,7 +574,7 @@ and confirm by listing the interceptors for the tenant, you expect an empty list
 docker-compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 ### <a name="invalidSchema"></a> Step 23: Simulate Invalid Schema Id
 
@@ -590,12 +591,12 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate invalid schema Id` interceptor against the tenant `myChaosTenant`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
+The command below will create a `simulate invalid schema Id` interceptor against the tenant `someCluster`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
 ```bash
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/invalid-schema" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/invalid-schema" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateInvalidSchemaIdPlugin",
@@ -675,7 +676,7 @@ To delete the interceptor and stop chaos injection run the below:
 docker-compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors/invalid-schema"
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/invalid-schema"
 ```
 
 and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
@@ -684,7 +685,7 @@ and confirm by listing the interceptors for the tenant, you expect an empty list
 docker-compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/myChaosTenant/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 
 # Conclusion
