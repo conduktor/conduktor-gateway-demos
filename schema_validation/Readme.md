@@ -64,7 +64,7 @@ The command below will create an interceptor for validating that the records on 
 docker compose exec kafka-client \
   curl \
     --user admin:conduktor \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/sr-required" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someTenant/interceptor/sr-required" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.TopicRequiredSchemaIdPolicyPlugin",
