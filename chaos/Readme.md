@@ -151,7 +151,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/broken-broker"
 ```
 
-and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -194,7 +194,7 @@ docker-compose exec kafka-client \
 ```
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a duplicate message on produce interceptor against the tenant `someCluster`, instructing Conduktor Gateway to inject duplicate records on produce requests.
+The command below will create a duplicate message on produce interceptor against the virtual cluster `someCluster`, instructing Conduktor Gateway to inject duplicate records on produce requests.
 
 
 ```bash
@@ -262,7 +262,7 @@ docker-compose exec kafka-client \
     --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/duplicate-resource"
 ```
-and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -274,7 +274,7 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate leader election errors` interceptor against the tenant `someCluster`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
+The command below will create a `simulate leader election errors` interceptor against the virtual cluster `someCluster`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
 
 ```bash
 docker-compose exec kafka-client \
@@ -327,7 +327,7 @@ docker-compose exec kafka-client \
     --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/leader-election"
 ```
-and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -351,7 +351,7 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate message corruption` interceptor against the tenant `someCluster`. This instructs Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
+The command below will create a `simulate message corruption` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
 
 ```bash
 docker-compose exec kafka-client \
@@ -422,7 +422,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/random-bytes"
 ```
 
-and confirm the removal of the interceptor from the tenant `someCluster`;
+and confirm the removal of the interceptor from the virtual cluster `someCluster`;
 
 ```bash
 docker-compose exec kafka-client \
@@ -435,7 +435,7 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate slow broker` interceptor against the tenant `someCluster`. This instructs Conduktor Gateway to simulate slow responses from brokers.
+The command below will create a `simulate slow broker` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to simulate slow responses from brokers.
 
 ```bash
 docker-compose exec kafka-client \
@@ -492,7 +492,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-broker"
 ```
 
-and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -504,7 +504,7 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate slow producers and consumers` interceptor against the tenant `someCluster`. This instructs Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all trafic.
+The command below will create a `simulate slow producers and consumers` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all trafic.
 
 ```bash
 docker-compose exec kafka-client \
@@ -570,7 +570,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/slow-topic"
 ```
 
-and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
@@ -593,7 +593,7 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a `simulate invalid schema Id` interceptor against the tenant `someCluster`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
+The command below will create a `simulate invalid schema Id` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
 ```bash
 docker-compose exec kafka-client \
   curl \
@@ -681,7 +681,7 @@ docker-compose exec kafka-client \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/invalid-schema"
 ```
 
-and confirm by listing the interceptors for the tenant, you expect an empty list `{"interceptors":[]}`:
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
 docker-compose exec kafka-client \
