@@ -52,49 +52,20 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
 
-  schema-registry:
-    image: confluentinc/cp-schema-registry:latest
-    hostname: schema-registry
-    container_name: schema-registry
+  conduktor-gateway:
+    image: conduktor/conduktor-gateway:2.0.1
+    hostname: conduktor-gateway
+    container_name: conduktor-gateway
     depends_on:
       - kafka1
-    ports:
-      - "8081:8081"
-    volumes:
-      - type: bind
-        source: "./clientConfig"
-        target: /clientConfig
-        read_only: true
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
-      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
-      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
-
-  conduktor-proxy:
-    image: conduktor/conduktor-proxy:1.0.4_rc1-amd64
-    hostname: conduktor-proxy
-    container_name: conduktor-proxy
-    depends_on:
-      - kafka1
-    ports:
-      - "6969:6969"
-      - "6970:6970"
-      - "9999:9999"
-      - "8888:8888"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
-      AUTHENTICATION_AUTHENTICATOR_TYPE: SASL_PLAIN
-      PROXY_PORT: 12345
-      USER_POOL_TYPE: JWT
-      USER_POOL_SECRET_KEY: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
-      PROXY_HOST: conduktor-proxy
-      SCHEMA_REGISTRY_HOST: http://schema-registry:8081
-      INTERCEPTOR_CONFIG_LOCATION: "~"
-      FEATURE_FLAGS_JWT_TOKEN_ENDPOINT: true
-      ADMIN_API_USERS: "[{username: superUser, password: superUser}]"
-      ADMIN_API_SECRET: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
-      JAVA_TOOL_OPTIONS: -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_USER_POOL_SECRET_KEY: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
+      GATEWAY_HOST: conduktor-gateway
+      GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+      GATEWAY_FEATURE_FLAGS_INTERNAL_LOAD_BALANCING: false
+      GATEWAY_ADMIN_API_USERS: "[{username: superUser, password: superUser, admin: true}]"
 
   kafka-client:
     image: confluentinc/cp-kafka:latest

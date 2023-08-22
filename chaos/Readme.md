@@ -8,20 +8,16 @@ Conduktor Gateway comes to the rescue, simulating common Kafka disruptions witho
 
 In this demo we will inject the following disruptions with Conduktor Gateway and observe the result:
 
-* Broken Broker - Inject intermittent errors in client connections to brokers
+* Simulate Broken Brokers - Inject intermittent errors in client connections to brokers
 * Duplication - Simulate request duplication
-* Leader Election - Simulate leader elections on the underlying Kafka cluster
-* Random Bytes - Add random bytes to message data
-* Slow Broker - Introduce intermittent latency in broker communication
-* Slow Topic - Introduce latency for specific topics
-* Invalid Schema Id - Simulate broker responses as if the schema provided in a message was invalid.
+* Simulate Leader Election Errors - Simulate leader elections on the underlying Kafka cluster
+* Simulate message corruption - Add random bytes to message data
+* Simulate Slow Broker - Introduce intermittent latency in broker communication
+* Slow Producers & Consumers - Introduce latency for specific topics
+* Simulate Invalid Schema Id - Simulate broker responses as if the schema provided in a message was invalid
 
 ### Architecture diagram
 ![architecture diagram](images/chaos.png "chaos")
-
-### Video
-
-[![asciicast](https://asciinema.org/a/YdyxC0HDIR6b7MhNTUhgTj6DE.svg)](https://asciinema.org/a/YdyxC0HDIR6b7MhNTUhgTj6DE)
 
 ## Running the demo: Setup
 
@@ -32,6 +28,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Zookeeper Server
 * A 2 node Kafka cluster
 * A single Conduktor Gateway container
+* A single Schema Registry
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
 ### Step 2: Start the environment
@@ -39,22 +36,22 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker-compose up -d zookeeper kafka1 kafka-client kafka2 schema-registry
-sleep 10
-docker-compose up -d conduktor-proxy
-sleep 5
-echo "Environment started"
+docker compose up --wait --detach
 ```
 
-### Step 3: Create topics
+We have already created a `username`, called `someUser`, for our virtual cluster which is provided in the definition of `clientConfig/gateway.properties` ,we will use this to interact with Gateway throughout this demo.
+
+```bash
+cat clientConfig/gateway.properties
+```
 
 We create topics using the Kafka console tools, the below creates a topic named `conduktorTopic`
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic conduktorTopic
 ```
@@ -62,10 +59,10 @@ docker-compose exec kafka-client \
 List the created topic
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --list
 ```
 
@@ -73,77 +70,94 @@ docker-compose exec kafka-client \
 
 Conduktor Gateway provides a number of different ways to inject Chaos into your data flows:
 
-* [Broken Broker](#brokenBroker)
-* [Duplicate Writes](#duplicateWrites)
-* [Leader Election](#leaderElection)
-* [Random Bytes Injections](#randomBytes)
-* [Slow Broker](#slowBroker)
-* [Slow Topic](#slowTopic)
-* [Invalid Schema Id Injection](#invalidSchema)
+* [Simulate Broken Brokers](#brokenBroker)
+* [Duplicate Message on Produce](#duplicateWrites)
+* [Simulate Leader Election Errors](#leaderElection)
+* [Simulate Message Corruption](#randomBytes)
+* [Simulate Slow Broker](#slowBroker)
+* [Simulate Slow Producers & Consumers](#slowTopic)
+* [Simulate Invalid Schema Id](#invalidSchema)
 
-### <a name="brokenBroker"></a> Step 4: Broken Broker
+### <a name="brokenBroker"></a> Step 4: Simulate Broken Brokers
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
+The command below will create a broken broker interceptor against the virtual cluster `someCluster`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/broken-broker" \
+docker compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/broken-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin",
+        "priority": 100,
         "config": {
-	        "brokerIds": [],
-	        "duration": 6000,
-	        "durationUnit": "MILLISECONDS",
-	        "quietPeriod": 20000,
-	        "quietPeriodUnit": "MILLISECONDS",
-	        "minLatencyToAddInMilliseconds": 6000,
-	        "maxLatencyToAddInMilliseconds": 7000,
-	        "errors": ["REQUEST_TIMED_OUT", "BROKER_NOT_AVAILABLE", "OFFSET_OUT_OF_RANGE", "NOT_ENOUGH_REPLICAS", "INVALID_REQUIRED_ACKS"]
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+            "rateInPercent": 30,
+            "errorMap": {
+                "FETCH": "UNKNOWN_SERVER_ERROR",
+                "PRODUCE": "CORRUPT_MESSAGE"
+            }
+        }
     }'
 ```
+
+We can confirm the interceptor exists on the virtual cluster;
+```bash
+docker compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors" \
+    --header 'Content-Type: application/json' | jq
+```
+
 ### Step 5: Inject some chaos
 
 Let's produce some records to our created topic and observe some errors being injected by Conduktor Gateway.
+Remember this will go to the virtual cluster `someCluster` where the topic conduktorTopic lives.
+
+This should produce warnings as we inteded.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 100 \
-  --topic conduktorTopic
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 100 \
+      --topic conduktorTopic
 ```
 
 This should produce output similar to this:
 
 ```bash
-[2022-11-16 17:00:42,193] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 5 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-16 17:00:42,474] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-6 records sent, 0.8 records/sec (0.00 MB/sec), 1198.5 ms avg latency, 6632.0 ms max latency.
-org.apache.kafka.common.errors.InvalidRequiredAcksException: Produce request specified an invalid value for required acks.
-[2022-11-16 17:00:42,491] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-[2022-11-16 17:00:42,492] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 9 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
-100 records sent, 9.999000 records/sec (0.00 MB/sec), 2454.80 ms avg latency, 6852.00 ms max latency, 2046 ms 50th, 6560 ms 95th, 6852 ms 99th, 6852 ms 99.9th.
+[2023-07-12 12:12:11,213] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 64 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+[2023-07-12 12:12:12,109] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 74 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
+...
+100 records sent, 5.031447 records/sec (0.00 MB/sec), 14587.31 ms avg latency, 19299.00 ms max latency, 14557 ms 50th, 18895 ms 95th, 19299 ms 99th, 19299 ms 99.9th.
 ```
 
-Note the `NOT_ENOUGH_REPLICAS` errors.
+Note the `CORRUPT_MESSAGE` errors, your results will vary each run so don't pay too much attention to any variation in latency figures.
 
 ### Step 6: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/broken-broker/apiKeys/PRODUCE/direction/REQUEST"
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/broken-broker"
+```
+
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
+
+```bash
+docker-compose exec kafka-client \
+  curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 
 ### Step 7: Run with no Chaos
@@ -151,12 +165,13 @@ docker-compose exec kafka-client curl \
 To verify, let's run the produce test again to confirm there are no errors
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 100 \
-  --topic conduktorTopic
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 100 \
+      --topic conduktorTopic
 ```
 
 This should produce output similar to the following:
@@ -166,37 +181,35 @@ This should produce output similar to the following:
 100 records sent, 10.001000 records/sec (0.00 MB/sec), 10.69 ms avg latency, 388.00 ms max latency, 5 ms 50th, 43 ms 95th, 388 ms 99th, 388 ms 99.9th.
 ```
 
-### <a name="duplicateWrites"></a> Step 8: Duplicate Writes
+### <a name="duplicateWrites"></a> Step 8: Duplicate Message on Produce
 
-Conduktor Gateway exposes a REST API to configure the chaos features.
-
-The command below will instruct Conduktor Gateway to inject duplicate records on produce requests.
-
+First let's create a new topic to operate on.
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic conduktorTopicDuplicate
 ```
+Conduktor Gateway exposes a REST API to configure the chaos features.
+
+The command below will create a duplicate message on produce interceptor against the virtual cluster `someCluster`, instructing Conduktor Gateway to inject duplicate records on produce requests.
+
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/duplicate-resource" \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/duplicate-resource" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
-          "topics": ["conduktorTopicDuplicate"], 
-          "duration": 1, 
-          "rateInPercent": 100, 
-          "quietPeriod": 1, 
-          "timeUnit": "MINUTES" 
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.DuplicateResourcesPlugin",
+        "priority": 100,
+        "config": {
+            "topic": "conduktorTopicDuplicate",
+            "rateInPercent": 100
+        }
     }'
 ```
 ### Step 9: Inject some chaos
@@ -204,71 +217,90 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopicDuplicate
+docker-compose exec \
+  kafka-client kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 10 \
+      --topic conduktorTopicDuplicate
 ```
 
 And see the duplicated records:
 
 ```bash
-docker-compose exec kafka-client kafka-console-consumer \
-  --bootstrap-server conduktor-proxy:6969 \
-  --consumer.config /clientConfig/proxy.properties \
-  --from-beginning \
-  --topic conduktorTopicDuplicate
+docker-compose exec kafka-client \
+  kafka-console-consumer \
+      --bootstrap-server conduktor-gateway:6969 \
+      --consumer.config /clientConfig/gateway.properties \
+      --from-beginning \
+      --topic conduktorTopicDuplicate \
+      --max-messages 20
 ```
 
 This should produce output similar to this:
 
 ```bash
-CGJROBQTGLLMKEHLHFUVFZNXYLKVFCAZSWKKHXYLRJJRUZHSKJNAFEHNINWWKGWTMCQSIFNFNXREAHPKKHNEJLEMVSNTDGBNCZPJ
-OOJXKRJIVPUYNYFHBUTAPJHBTNHNKLYTIMMPKMSBHRPNZHHMMJQFCLDFZUFLYHEPRJEBHJLOXJOZSJHWOKZGZLKWJANKCUZRMUMM
-NRWCNDBIYEHZQRRNSDASJMXJAZVHGDIUPDXSGRNWDPVMXPYUCWGGCKOCWVXCGWSPZQLWLWKQDBDWUAKKVLITEVTSIWSHDZTEMYNH
 SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
 SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
 ONJVXZXZOZITKXJBOZWDJMCBOSYQQKCPRRDCZWMRLFXBLGQPRPGRNTAQOOSVXPKJPJLAVSQCCRXFRROLLHWHOHFGCFWPNDLMWCSS
 ONJVXZXZOZITKXJBOZWDJMCBOSYQQKCPRRDCZWMRLFXBLGQPRPGRNTAQOOSVXPKJPJLAVSQCCRXFRROLLHWHOHFGCFWPNDLMWCSS
+HWXQQYKALAAWCMXYLMZALGDESKKTEESEMPRHROVKUMPSXHELIDQEOOHOIHEGJOAZBVPUMCHSHGXZYXXQRUICRIJGQEBBWAXABQRI
+HWXQQYKALAAWCMXYLMZALGDESKKTEESEMPRHROVKUMPSXHELIDQEOOHOIHEGJOAZBVPUMCHSHGXZYXXQRUICRIJGQEBBWAXABQRI
+RUGZJUUVFYQOVCDEDXYFPRLGSGZXSNIAVODTJKSQWHNWVPSAMZKOUDTWHIORJSCZIQYPCZMBYWKDIKOKYNGWPXZWMKRDCMBXKFUI
+RUGZJUUVFYQOVCDEDXYFPRLGSGZXSNIAVODTJKSQWHNWVPSAMZKOUDTWHIORJSCZIQYPCZMBYWKDIKOKYNGWPXZWMKRDCMBXKFUI
+LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXBKAPWAPENUEZNWNWDCACD
+LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXBKAPWAPENUEZNWNWDCACD
+RLPIPHJQQKMOFDQSPKKNURFBORJLBPCBIWTSJNPRBNITTKJYWAHWGKZYNUSFISPIYPIOGAUPZDXHCFVGXGIVVCPFHIXAACZXZLFD
+RLPIPHJQQKMOFDQSPKKNURFBORJLBPCBIWTSJNPRBNITTKJYWAHWGKZYNUSFISPIYPIOGAUPZDXHCFVGXGIVVCPFHIXAACZXZLFD
+MOOSSNTKUPJQEIRRQAMUCTBLBSVPDDYOIHAOODZNJTVHDCIEGTAVMYZOCIVSKUNSMXEKBEWNZPRPWPUJABJXNQBOXSHOEGMJSNBU
+MOOSSNTKUPJQEIRRQAMUCTBLBSVPDDYOIHAOODZNJTVHDCIEGTAVMYZOCIVSKUNSMXEKBEWNZPRPWPUJABJXNQBOXSHOEGMJSNBU
+TGTIFVEQPSYBDXEXORPQDDODZGBELOISTRWXMEYWVVHGMJKWLJCCHPKAFRASZEYQZCVLFSLOWTLBMPPWPPFPQSAZPTULSTCDMODY
+TGTIFVEQPSYBDXEXORPQDDODZGBELOISTRWXMEYWVVHGMJKWLJCCHPKAFRASZEYQZCVLFSLOWTLBMPPWPPFPQSAZPTULSTCDMODY
+KZGSRFQTRFTGCNMNXQQIYVUQZHVNIPHZWVBSGOBYIFDNNXUTBBQUYNXOZCSICGRTZSSRHROJRGBHMHEQJRDLOQBEPTOBMYLMIGPP
+KZGSRFQTRFTGCNMNXQQIYVUQZHVNIPHZWVBSGOBYIFDNNXUTBBQUYNXOZCSICGRTZSSRHROJRGBHMHEQJRDLOQBEPTOBMYLMIGPP
+DPOLTEUVDGATCGYPQOGOYYESKEGBLOCBIYSLQEYGCCIPBXPNSPKDYTBEWDHBHWVDPLOVHJPNYGJUHKKHDASNFGZDAIWWQEPPBRJK
+DPOLTEUVDGATCGYPQOGOYYESKEGBLOCBIYSLQEYGCCIPBXPNSPKDYTBEWDHBHWVDPLOVHJPNYGJUHKKHDASNFGZDAIWWQEPPBRJK
 ```
 
 Note the duplicated messages.
 
 ### Step 10: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/duplicate-resource/apiKeys/PRODUCE/direction/REQUEST"
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/duplicate-resource"
 ```
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
-### <a name="leaderElection"></a> Step 11: Leader Election
+```bash
+docker-compose exec kafka-client \
+  curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+```
+### <a name="leaderElection"></a> Step 11: Simulate Leader Election Errors
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
+The command below will create a `simulate leader election errors` interceptor against the virtual cluster `someCluster`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/leader-election" \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/leader-election" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
+        "priority": 100,
         "config": {
-          "rateInPercent": 100,
-          "duration":6000, 
-          "quietPeriod":20000,
-          "timeUnit":"MILLISECONDS",
-          "errors":["LEADER_NOT_AVAILABLE","NOT_LEADER_OR_FOLLOWER","BROKER_NOT_AVAILABLE"]
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+          "rateInPercent": 50
+        }
     }'
 ```
 ### Step 12: Inject some chaos
@@ -276,12 +308,13 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopic
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 10 \
+      --topic conduktorTopic
 ```
 
 This should produce output similar to this:
@@ -294,50 +327,58 @@ This should produce output similar to this:
 10 records sent, 1.531159 records/sec (0.00 MB/sec), 6010.20 ms avg latency, 6511.00 ms max latency, 6118 ms 50th, 6511 ms 95th, 6511 ms 99th, 6511 ms 99.9th.
 ```
 
-Note the exceptions indicating that the current leader has changed.
+Note both the different error types, and the exceptions indicating that the current leader has changed.
 
 ### Step 13: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/leader-election/apiKeys/PRODUCE/direction/REQUEST"
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/leader-election"
+```
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
+
+```bash
+docker-compose exec kafka-client \
+  curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 
-### <a name="randomBytes"></a> Step 14: Random Bytes
+### <a name="randomBytes"></a> Step 14: Simulate Message Corruption
 
-First let's create a topic to operate on.
+First let's create a new topic to operate on.
 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
-    --topic conduktorTopicRandom
+    --topic conduktorTopicRandomBytes
 ```
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to append random bytes to messages produced.
+The command below will create a `simulate message corruption` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/random-bytes" \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/random-bytes" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.ProduceSimulateMessageCorruptionPlugin",
+        "priority": 100,
         "config": { 
-          "topics": ["conduktorTopicRandom"], 
-          "nbMessages": 1, 
-          "sizeInBytes": 10 
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+          "topic": "conduktorTopicRandomBytes",  
+          "sizeInBytes": 10,
+          "rateInPercent": 100
+        }
     }'
 ```
 ### Step 15: Inject some chaos
@@ -345,22 +386,25 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopicRandom
+docker compose exec kafka-client \
+  kafka-producer-perf-test \
+    --producer.config /clientConfig/gateway.properties \
+    --record-size 100 \
+    --throughput 10 \
+    --num-records 10 \
+    --topic conduktorTopicRandomBytes
 ```
 
 And see the appended bytes in the records:
 
 ```bash
-docker-compose exec kafka-client kafka-console-consumer \
-  --bootstrap-server conduktor-proxy:6969 \
-  --consumer.config /clientConfig/proxy.properties \
-  --from-beginning \
-  --topic conduktorTopicRandom
+docker compose exec kafka-client \
+  kafka-console-consumer \
+      --bootstrap-server conduktor-gateway:6969 \
+      --consumer.config /clientConfig/gateway.properties \
+      --from-beginning \
+      --topic conduktorTopicRandomBytes \
+      --max-messages 10
 ```
 
 This should produce output similar to this:
@@ -376,43 +420,49 @@ RUGZJUUVFYQOVCDEDXYFPRLGSGZXSNIAVODTJKSQWHNWVPSAMZKOUDTWHIORJSCZIQYPCZMBYWKDIKOK
 LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXBKAPWAPENUEZNWNWDCACD	�'6�x���
 ```
 
-Note the longer messages with extra bytes
+Note the longer messages with extra bytes.
+A similar plugin is available for simulating message corrpution on the consumer side too!
 
 ### Step 16: Reset
 
 To stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/random-bytes/apiKeys/PRODUCE/direction/REQUEST"
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/random-bytes"
 ```
 
-### <a name="slowBroker"></a> Step 17: Slow Broker
+and confirm the removal of the interceptor from the virtual cluster `someCluster`;
+
+```bash
+docker-compose exec kafka-client \
+  curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+```
+
+### <a name="slowBroker"></a> Step 17: Simulate Slow Broker
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to simulate slow responses from brokers.
+The command below will create a `simulate slow broker` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to simulate slow responses from brokers.
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/slow-broker" \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-broker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin",
+        "priority": 100,
         "config": {
-          "brokerIds":[],
-          "duration":6000,
-          "durationUnit":"MILLISECONDS",
-          "quietPeriod":20000,
-          "quietPeriodUnit":"MILLISECONDS",
-          "minLatencyToAddInMilliseconds":6000,
-          "maxLatencyToAddInMilliseconds":7000
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+          "rateInPercent": 100,
+          "minLatencyMs":100,
+          "maxLatencyMs":1200
+        }
     }'
 ```
 ### Step 18: Inject some chaos
@@ -420,12 +470,13 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopic
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+    --producer.config /clientConfig/gateway.properties \
+    --record-size 100 \
+    --throughput 10 \
+    --num-records 10 \
+    --topic conduktorTopic
 ```
 
 This should produce output similar to this:
@@ -436,55 +487,61 @@ This should produce output similar to this:
 [2022-11-17 15:21:28,805] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 6 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
 [2022-11-17 15:21:28,805] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 7 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
 [2022-11-17 15:21:29,062] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
-10 records sent, 1.292825 records/sec (0.00 MB/sec), 7019.40 ms avg latency, 7357.00 ms max latency, 6990 ms 50th, 7357 ms 95th, 7357 ms 99th, 7357 ms 99.9th.
+10 records sent, 0.066271 records/sec (0.00 MB/sec), 48360.70 ms avg latency, 120005.00 ms max latency, 2195 ms 50th, 120005 ms 95th, 120005 ms 99th, 120005 ms 99.9th.
 ```
 
 Note the very high latency numbers indicating slow responses.
+You may also get some additional errors depending what version you are running where it tries to rebalance.
 
 ### Step 19: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/slow-broker/apiKeys/PRODUCE/direction/REQUEST"
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-broker"
 ```
 
-### <a name="slowTopic"></a> Step 20: Slow Topic
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
+
+```bash
+docker-compose exec kafka-client \
+  curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+```
+### <a name="slowTopic"></a> Step 20: Simulate Slow Producers & Consumers
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will instruct Conduktor Gateway to simulate slow responses from the brokers. It differs from the above in that it will operate only on a set of topics rather than all traffic.
+The command below will create a `simulate slow producers and consumers` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all trafic.
 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic conduktorTopicSlow
 ```
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/slow-topic" \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-topic" \
     --header 'Content-Type: application/json' \
     --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowProducersConsumersPlugin",
+        "priority": 100,
         "config": {
-          "topicPatterns":["conduktorTopicSlow"],
-          "duration":6000,
-          "durationUnit":"MILLISECONDS",
-          "quietPeriod":20000,
-          "quietPeriodUnit":"MILLISECONDS",
-          "minLatencyToAddInMilliseconds":6000,
-          "maxLatencyToAddInMilliseconds":7000
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+          "topic": "conduktorTopicSlow",
+          "rateInPercent": 100,
+          "minLatencyMs":100,
+          "maxLatencyMs":1200
+        }
     }'
 ```
 ### Step 21: Inject some chaos
@@ -492,12 +549,13 @@ docker-compose exec kafka-client curl \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec kafka-client kafka-producer-perf-test \
-  --producer.config /clientConfig/proxy.properties \
-  --record-size 100 \
-  --throughput 10 \
-  --num-records 10 \
-  --topic conduktorTopicSlow
+docker-compose exec kafka-client \
+  kafka-producer-perf-test \
+      --producer.config /clientConfig/gateway.properties \
+      --record-size 100 \
+      --throughput 10 \
+      --num-records 10 \
+      --topic conduktorTopicSlow
 ```
 
 This should produce output similar to this:
@@ -515,72 +573,85 @@ Note the very high latency numbers indicating slow responses.
 
 ### Step 22: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/slow-topic/apiKeys/PRODUCE/direction/REQUEST"
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-topic"
 ```
 
-### <a name="invalidSchema"></a> Step 23: Invalid Schema
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
-Conduktor Gateway exposes a REST API to configure the chaos features.
+```bash
+docker-compose exec kafka-client \
+  curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+```
+### <a name="invalidSchema"></a> Step 23: Simulate Invalid Schema Id
 
-The command below will instruct Conduktor Gateway to inject Schema Ids into messages. This simulates a situation where clients cannot deserialize messages with the schema information provided.
+First let's create a new topic to operate on.
 
 ```bash
 docker-compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server conduktor-proxy:6969 \
-    --command-config /clientConfig/proxy.properties \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic conduktorTopicSchema
 ```
 
+Conduktor Gateway exposes a REST API to configure interceptors.
+
+The command below will create a `simulate invalid schema Id` interceptor against the virtual cluster `someCluster`. This instructs Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
+
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request POST "conduktor-proxy:8888/tenant/someTenant/feature/invalid-schema" \
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/invalid-schema" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-        "config": { 
-          "topics": ["conduktorTopicSchema"], 
-          "fakeSchemaId": 999 
-        },
-        "direction": "REQUEST",
-        "apiKeys": "PRODUCE"
+        "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateInvalidSchemaIdPlugin",
+        "priority": 100,
+        "config": {
+          "topic": "conduktorTopicSchema",
+          "invalidSchemaId": 999,
+          "target": "CONSUME"
+        }
     }'
-```
+  ```
 ### Step 24: Inject some chaos
 
 Let's produce a record to our created topic.
 
 ```bash
-docker-compose exec schema-registry bash -c "cat /clientConfig/payload.json | kafka-json-schema-console-producer \
-    --bootstrap-server conduktor-proxy:6969 \
+cat clientConfig/payload.json | docker compose exec -T schema-registry \
+  kafka-json-schema-console-producer \
+    --bootstrap-server conduktor-gateway:6969 \
     --topic conduktorTopicSchema  \
-    --producer.config /clientConfig/proxy.properties \
+    --producer.config /clientConfig/gateway.properties \
     --property value.schema='{ 
-        \"title\": \"someSchema\", 
-        \"type\": \"object\", 
-        \"properties\": { 
-          \"some-valid\": { 
-            \"type\": \"string\" 
+        "title": "someSchema", 
+        "type": "object", 
+        "properties": { 
+          "some-valid": { 
+            "type": "string" 
           }
         }
-      }'"
+      }'
 ```
 
 And consume them with a schema aware consumer.
 
 ```bash
-docker-compose exec schema-registry kafka-json-schema-console-consumer \
-    --bootstrap-server conduktor-proxy:6969 \
+docker-compose exec schema-registry \
+  kafka-json-schema-console-consumer \
+    --bootstrap-server conduktor-gateway:6969 \
     --topic conduktorTopicSchema \
-    --consumer.config /clientConfig/proxy.properties \
+    --consumer.config /clientConfig/gateway.properties \
     --from-beginning 
 ```
 
@@ -614,18 +685,25 @@ Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientEx
 
 ### Step 25: Reset
 
-To stop chaos injection run the below:
+To delete the interceptor and stop chaos injection run the below:
 
 ```bash
-docker-compose exec kafka-client curl \
-    -u superUser:superUser \
-    -vvv \
-    --request DELETE "conduktor-proxy:8888/tenant/someTenant/feature/invalid-schema/apiKeys/PRODUCE/direction/REQUEST"
+docker-compose exec kafka-client \
+  curl \
+    --user 'admin:conduktor' \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/invalid-schema"
 ```
 
+and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
+```bash
+docker-compose exec kafka-client \
+  curl \
+    --user "admin:conduktor" \
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+```
 
+# Conclusion
+In this demo we have simulated several highly chaotic scenarios that applications need to handle, in a controlled manner. Be that latency, message quality, infrastructure issues or human error, all can be simulated.  
 
-
-
-
+These are a sample of the types of situations that can be simulated, if you have others or more detailed scenarios you'd want to simualte then [get in touch](https://www.conduktor.io/contact/demo), we'd love to speak with you. 

@@ -7,7 +7,7 @@ docker-compose exec kafka-client \
         --bootstrap-server conduktor-proxy:6969 \
         --command-config /clientConfig/proxy.properties \
         --create --if-not-exists \
-        --topic encryption_performance
+        --topic encryption-performance
 
 docker-compose exec kafka-client curl \
     --silent \
@@ -16,7 +16,7 @@ docker-compose exec kafka-client curl \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "config": {
-            "topic": "encryption_performance",
+            "topic": "encryption-performance",
             "fields": [ {
                 "fieldName": "password",
                 "keySecretId": "secret-key-password",
@@ -48,13 +48,13 @@ time docker compose exec -T kafka-client \
     kafka-console-producer  \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
-        --topic encryption_performance < customers.json
+        --topic encryption-performance < customers.json
 
 docker-compose exec kafka-client \
     kafka-console-consumer \
         --bootstrap-server conduktor-proxy:6969 \
         --consumer.config /clientConfig/proxy.properties \
-        --topic encryption_performance \
+        --topic encryption-performance \
         --from-beginning \
         --max-messages 20 | jq
 
@@ -62,7 +62,7 @@ docker compose cp customers.json kafka-client:/home/appuser
 
 docker compose exec kafka-client \
     kafka-producer-perf-test \
-        --topic encryption_performance \
+        --topic encryption-performance \
         --throughput -1 \
         --num-records 1000000 \
         --producer-props bootstrap.servers=conduktor-proxy:6969 \

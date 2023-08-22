@@ -59,15 +59,14 @@ services:
       retries: 25
 
   conduktor-gateway:
-    image: ghcr.io/conduktor/conduktor-proxy:2.0.0.5
+    image: conduktor/conduktor-gateway:2.0.1
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092, kafka2:9093
-      AUTHENTICATION_AUTHENTICATOR_TYPE: SASL_PLAIN
-      PROXY_HOST: conduktor-gateway
-      FEATURE_FLAGS_JWT_TOKEN_ENDPOINT: true
-      FEATURE_FLAGS_PASS_THROUGH: false
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_HOST: conduktor-gateway
+      GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
     healthcheck:
       test: curl localhost:8888/health
       interval: 5s
@@ -77,6 +76,27 @@ services:
         condition: service_healthy
       kafka2:
         condition: service_healthy
+
+  conduktor-platform:
+    image: conduktor/conduktor-platform:1.14.0
+    hostname: conduktor-console
+    container_name: conduktor-console
+    ports:
+      - "8080:8080"
+    volumes:
+      - type: bind
+        source: "./platform-config.yaml"
+        target: /opt/conduktor/platform-config.yaml
+        read_only: true
+    depends_on:
+      - kafka1
+    environment:
+      CDK_IN_CONF_FILE: /opt/conduktor/platform-config.yaml
+      KAFKA_BOOTSTRAP_SERVER: kafka1:9092
+      ORGANISATION_NAME: "conduktor"
+      ADMIN_EMAIL: "test@conduktor.io"
+      ADMIN_PSW: "password1"
+      PROXY_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoxLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.Eb94MxCyesPeVdQmm0EDBGvhwcx8j-ST-mvmdAId_j0
 
   kafka-client:
     image: confluentinc/cp-kafka:latest
@@ -88,7 +108,3 @@ services:
         source: "./clientConfig"
         target: /clientConfig
         read_only: true
-    environment:
-      ORG_ID: "1"
-      CLUSTER_ID: cluster1
-      USER_ID: test@conduktor.io
