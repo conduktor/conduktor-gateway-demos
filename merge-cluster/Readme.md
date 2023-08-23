@@ -1,6 +1,6 @@
-# Conduktor Proxy Merge Cluster Demo
+# Conduktor Gateway Merged Clusters Demo
 
-## What is Conduktor Proxy Merge Cluster?
+## What is Conduktor Gateway Merged Clusters?
 
 Imagine being able to bring all your Kafka clusters together into a instance for clients to access.  Conduktor's Merge Clusters feature does just this.
 
@@ -8,17 +8,14 @@ Conduktor Gateway can sit in front of multiple Kafka clusters, making them appea
 
 Test applications can read live production data from a production cluster, for realistic testing, without affecting or altering that production data, and then use test topics on a test cluster to write data, all without having to reconfigure any applications.  There is no need to do expensive replication of data to get useful and accurate testing data.  
 
-Failover is made much simpler by Conduktor Gateway managing the routing in your Kafka environment.  Say you want to do a managed failover from cluster A to cluster B as part of planned maintenance.  If your applications connects to Conduktor Gateway, to do this move just alter the Gateway configuration, and your applications are routed to the new cluster, with no need for application restarts or changes.
+![architecture diagram](images/merge-cluster.png "merge cluster")
+
+Another potential application is failover, this made much simpler by Conduktor Gateway managing the routing in your Kafka environment.  Say you want to do a managed failover from cluster A to cluster B as part of planned maintenance.  If your applications connects to Conduktor Gateway, to do this move just alter the Gateway configuration, and your applications are routed to the new cluster, with no need for application restarts or changes.
 
 Data costs and complexity are reduced by consolidating data from multiple sources in to a central resource.  For example, you might have data centres in multiple regions, perhaps because they are close to the applications using that data, but also because of legal requirements to keep data stored in a particular region. Conduktor Gateway gives a central consuming application access to data in all these regions, with a single set of connection configuration and a single set of credentials. Requests are routed to the right backend cluster, avoiding replication and avoiding complicated sets of configuration. Gateway manages the complexity of the multiple backends, allowing the application team to focus on getting the most value from the easily accessible data.
 
 
 This example demonstrate this last use case - how to bring together data from multiple sources, into a single access point that can be read by a single consumer.
-
-
-### Architecture diagram
-![architecture diagram](images/merge-cluster.png "merge cluster")
-
 
 ### Video
 
@@ -32,7 +29,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of two k
 
   * A single Zookeeper Server
   * A 2 node Kafka cluster
-  * A single Conduktor Proxy container
+  * A single Conduktor Gateway container
   * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
 ### Step 2: Start the environment
@@ -40,17 +37,13 @@ As can be seen from `docker-compose.yaml` the demo environment consists of two k
 Start the environment using:
 
 ```bash
-docker-compose up -d 
+docker-compose up --detach --wait 
 ```
-
-Note:  You might see the warning message `! conduktor-proxy The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested`.
-
-If you do see this, it is likely that the conduktor-proxy container has still started successfully.  Run `docker ps` and confirm you see a docker container running with the name ` conduktor-proxy`. You can also check the logs for this container using `docker logs -f <container id>`, looking for the messages `Proxy HTTP server started on port 8888`.
 
 ### Step 3: Create topics
 Create a topic on each of the backing kafka clusters, connecting to each individual Kafka cluster directly and creating topics using the Kafka console tools.  Both topics here are called `cars` but they don't have to have the same name.
 
-In the next steps, we'll set the gateway topic `eu_cars` to route to the kafka1_m cluster's `cars` topic and the gateway topic `us_cars` to route to the kafka1_s1 cluster's `cars` topic.
+In the next steps, we'll set the gateway topic `eu_cars` to route to the `kafka1_m` cluster's `cars` topic and the gateway topic `us_cars` to route to the `kafka1_s1` cluster's `cars` topic.
 
 ```bash
 docker-compose exec kafka-client \
@@ -72,22 +65,33 @@ Next, register these topics and the associated cluster id with Conduktor Gateway
 
 First, `eu_cars`:
 
-```bash
-docker-compose exec kafka-client curl \
--X POST \
--H "content-type:application/json" \
--H "authorization:Basic bm9uZTpub25l" \
-'conduktor-proxy:8888/topicMappings/passThroughTenant/eu_cars' \
--d '{ "clusterId" : "main", "topicName":"cars", "isVirtual": true}'
+```
+docker-compose exec kafka-client\
+  curl \
+    --user "admin:conduktor" \
+    --request POST 'conduktor-gateway:8888/admin/vclusters/v1/vcluster/someCluster/topics/eu_cars' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "physicalTopicName": "cars",
+        "readOnly": false,
+        "concentrated": false
+    }'
 
-docker-compose exec kafka-client curl \
--X POST \
--H "content-type:application/json" \
--H "authorization:Basic bm9uZTpub25l" \
-'conduktor-proxy:8888/topics/passThroughTenant' -d '{"name":"eu_cars"}'
 ```
 
 Then, `us_cars`:
+```bash
+docker-compose exec kafka-client\
+  curl \
+    --user "admin:conduktor" \
+    --request POST 'conduktor-gateway:8888/admin/vclusters/v1/vcluster/someCluster/topics/eu_cars' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "physicalTopicName": "cars",
+        "readOnly": false,
+        "concentrated": false
+    }'
+```
 
 ```bash
 docker-compose exec kafka-client curl \
