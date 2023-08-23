@@ -128,54 +128,27 @@ services:
         limits:
           memory: 512M
 
-  schema-registry:
-    image: confluentinc/cp-schema-registry:latest
-    hostname: schema-registry
-    container_name: schema-registry
-    depends_on:
-      - kafka1_m
-    ports:
-      - "8081:8081"
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1_m:9092
-      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
-      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
-  conduktor-proxy:
-    image: conduktor/conduktor-proxy:1.8.0-amd64
-    hostname: conduktor-proxy
-    container_name: conduktor-proxy
+  conduktor-gateway:
+    image: conduktor/conduktor-gateway:2.0.1
+    hostname: conduktor-gateway
+    container_name: conduktor-gateway
     depends_on:
       - kafka1_m
       - kafka1_s1
-    ports:
-      - "6969:6969"
-      - "6970:6970"
     environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka1_m:9092
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_USER_POOL_SECRET_KEY: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
+      GATEWAY_ADVERTISED_HOST: conduktor-gateway
+      GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+      GATEWAY_FEATURE_FLAGS_MERGE_CLUSTER: true
+      GATEWAY_FEATURE_FLAGS_INTERNAL_LOAD_BALANCING: false
       BACKEND_KAFKA_SELECTOR: 'file : { path: /clusterConfig/multi_clusters.yaml}'
-      FEATURE_FLAGS_MERGE_CLUSTER: true
-      ADMIN_API_USERS: '[{username: none, password: none}]'
-      AUTHENTICATION_AUTHENTICATOR_TYPE: NONE
-      INTERCEPTOR_CONFIG_LOCATION: '  '
-      USER_POOL_TYPE: JWT
-      USER_POOL_CLASSNAME: io.conduktor.proxy.service.userPool.JwtUserPoolService
-      USER_POOL_SECRET_KEY: secret
-      PROXY_HOST: conduktor-proxy
-      SCHEMA_REGISTRY_HOST: http://schema-registry:8081
     volumes:
       - type: bind
         source: "./clusterConfig"
         target: /clusterConfig
         read_only: true
-    deploy:
-      resources:
-        limits:
-          memory: 2000M
 
   kafka-client:
     image: confluentinc/cp-kafka:latest
