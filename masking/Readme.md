@@ -34,7 +34,7 @@ In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up -d
+docker compose up --wait --detach
 ```
 
 ### Step 4: Create topics
@@ -66,9 +66,10 @@ docker compose exec kafka-client \
 The same REST API can be used to create the masking interceptor. 
 
 The command below will add a masking interceptor, configured to mask the `password` and `visa` fields in records.
-admin/interceptors/v1/tenants/userTenant2/interceptors/myInterceptor1
+
 ```bash
-docker compose exec kafka-client curl \
+docker compose exec kafka-client \
+  curl \
     --user admin:conduktor \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/masker" \
     --header 'Content-Type: application/json' \
@@ -76,6 +77,9 @@ docker compose exec kafka-client curl \
                   "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
                   "priority": 100,
                   "config": {
+                    "schemaRegistryConfig": {
+                        "host": "http://schema-registry:8081"
+                    },
                     "policies": [
                       {
                         "name": "Mask password",
@@ -118,6 +122,7 @@ echo '{
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic maskedTopic \
+        --property schema.registry.url=http://schema-registry:8081 \
         --property value.schema='{ 
             "title": "User",
             "type": "object",
@@ -141,9 +146,10 @@ docker compose exec schema-registry \
    kafka-json-schema-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
+    --property schema.registry.url=http://schema-registry:8081 \
     --topic maskedTopic \
     --from-beginning \
-    --max-messages 1 | jq .
+    --max-messages 1 | jq
 ```
 
 You should see the masked fields as below:
@@ -167,9 +173,10 @@ Let's consume directly from the underlying Kafka cluster.
 docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
+    --property schema.registry.url=http://schema-registry:8081 \
     --topic someTenantmaskedTopic \
     --from-beginning \
-    --max-messages 1 | jq .
+    --max-messages 1 | jq
 ```
 
 ### Step 9: Visualise the workflow

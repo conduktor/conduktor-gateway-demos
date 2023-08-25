@@ -118,14 +118,3 @@ services:
         condition: service_healthy
       kafka2:
         condition: service_healthy
-
-  kafka-client:
-    image: confluentinc/cp-kafka:latest
-    hostname: kafka-client
-    container_name: kafka-client
-    command: sleep infinity
-    volumes:
-      - type: bind
-        source: "./clientConfig"
-        target: /clientConfig
-        read_only: true

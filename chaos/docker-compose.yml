@@ -82,15 +82,14 @@ services:
       retries: 25
 
   conduktor-gateway:
-    image: ghcr.io/conduktor/conduktor-proxy:2.0.0.5
+    image: conduktor/conduktor-gateway:2.0.1
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092, kafka2:9093
-      AUTHENTICATION_AUTHENTICATOR_TYPE: SASL_PLAIN
-      PROXY_HOST: conduktor-gateway
-      FEATURE_FLAGS_JWT_TOKEN_ENDPOINT: true
-      FEATURE_FLAGS_PASS_THROUGH: false
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_HOST: conduktor-gateway
+      GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
     healthcheck:
       test: curl localhost:8888/health
       interval: 5s
