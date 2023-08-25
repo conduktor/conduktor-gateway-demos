@@ -79,10 +79,26 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
       SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: schema-registry
 
-  client-schema-registry:
+  schema-registry-dev:
     image: confluentinc/cp-schema-registry:latest
-    hostname: client-schema-registry
-    container_name: client-schema-registry
+    hostname: schema-registry-dev
+    container_name: schema-registry-dev
+    depends_on:
+      - kafka1
+    ports:
+      - "8082:8082"
+    volumes:
+      - type: bind
+        source: "./clientConfig"
+        target: /clientConfig
+        read_only: true
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry-dev
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemasDev
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: schema-registry-dev
 
   conduktor-gateway:
     image: conduktor/conduktor-gateway:2.0.1

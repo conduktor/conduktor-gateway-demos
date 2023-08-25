@@ -19,7 +19,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Conduktor Gateway container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 
-Note that there are 2 Schema registries. Client-schema-registry will be used to produce new messages through kafka clients. Schema-registry is attached to Conduktor Gateway.
+Note that there are 2 Schema registries. 
 
 This means that schemas created by Kafka clients will not be valid in Gateway, enabling the test scenario.
 
@@ -64,7 +64,7 @@ The command below will create an interceptor for validating that the records on 
 docker compose exec kafka-client \
   curl \
     --user admin:conduktor \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someTenant/interceptor/sr-required" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-required" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.TopicRequiredSchemaIdPolicyPlugin",
@@ -72,13 +72,42 @@ docker compose exec kafka-client \
         "config": {
             "topic": "sr-topic",
             "schemaIdRequired": true
-            }
+        }
     }'
 ```
 
-### Step 5: Produce data to the topic
+Verify 
+
+```bash
+docker compose exec kafka-client \
+    curl \
+        --silent \
+        --user admin:conduktor \
+        --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-required" \
+        --header 'Content-Type: application/json' | jq
+```
+
+### Step 5: Produce bad data to the topic
 
 Let's produce a simple record to the topic.
+
+```bash
+echo '{"msg": "hello world"}' | 
+  docker compose exec -T kafka-client \
+      kafka-console-producer  \
+          --bootstrap-server conduktor-gateway:6969 \
+          --producer.config /clientConfig/gateway.properties \
+          --topic sr-topic
+```
+
+The result is 
+
+```
+[2023-08-25 14:46:03,620] ERROR Error when sending message to topic sr-topic with key: null, value: 22 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'sr-topic' with schemaId is required.
+```
+
+### Step 6: Produce good data to the topic
 
 ```bash
 echo '{ 
@@ -92,7 +121,7 @@ echo '{
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic sr-topic \
-        --property schema.registry.url=http://client-schema-registry:8082 \
+        --property schema.registry.url=http://schema-registry:8081 \
         --property value.schema='{ 
             "title": "User",
             "type": "object",
@@ -106,13 +135,6 @@ echo '{
         }'
 ```
 
-You should see something similar to the following produced:
-
-```bash
-[2022-12-12 21:49:51,205] ERROR Error when sending message to topic sr-topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
-org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
-```
-
 ### Step 6: Confirm the schemas
 
 To see why this happens let's query the 2 schema registries for the subject we are trying to produce with.
@@ -120,7 +142,8 @@ To see why this happens let's query the 2 schema registries for the subject we a
 First if we look at the client Schema Registry (i.e. the one used by the producer) we see a schema present.
 
 ```bash
-docker compose exec kafka-client curl http://client-schema-registry:8082/subjects/sr-topic-value/versions/1 | jq
+docker compose exec kafka-client \
+  curl --silent http://schema-registry:8081/subjects/sr-topic-value/versions/1 | jq
 ```
 
 produces:
@@ -138,7 +161,8 @@ produces:
 If we run the same queries against the Schema Registry associated with Conduktor Gateway we do not see the schema
 
 ```bash
-docker compose exec kafka-client curl http://schema-registry:8081/subjects/sr-topic-value/versions/1 | jq
+docker compose exec kafka-client \
+  curl http://schema-registry:8081/subjects/sr-topic-value/versions/1 | jq
 ```
 
 produces:
@@ -157,27 +181,30 @@ Because the subject is not available in this Schema Registry it is rejected by t
 Now let's add a schema with the correct Id but incorrect content to the Gateway cluster
 
 ```bash
-docker compose exec kafka-client curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  --data '{"compatibility": "NONE"}' \
-  http://schema-registry:8081/config
+docker compose exec kafka-client \
+  curl \
+    --request PUT http://schema-registry:8081/config \
+    --header "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data-raw '{"compatibility": "NONE"}'
 ```
 
 ```bash
 docker compose exec kafka-client curl \
-  -X POST \
-  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  -d '{
+  --request POST http://schema-registry:8081/subjects/sr-topic-value/versions \
+  --header "Content-Type: application/vnd.schemaregistry.v1+json" \
+  --data-raw '{
 	"schemaType": "JSON",
 	"schema": "{\"type\":\"object\",\"properties\": {\"name\":{\"type\":\"integer\"}},\"additionalProperties\": false}"
-  }' \
-  http://schema-registry:8081/subjects/sr-topic-value/versions     
+  }'
 ```
 
 We have now created the situation where client and Gateway see different schemas for id 1
 
 ```bash
-docker compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  http://schema-registry:8081/schemas/ids/1 | jq
+docker compose exec kafka-client \
+  curl \
+    --header "Content-Type: application/vnd.schemaregistry.v1+json" \
+    http://schema-registry:8081/schemas/ids/1 | jq
 ```
 
 produces:
@@ -192,8 +219,10 @@ produces:
 and
 
 ```bash
-docker compose exec kafka-client curl -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  http://client-schema-registry:8082/schemas/ids/1 | jq
+docker compose exec kafka-client \
+  curl \
+    --header "Content-Type: application/vnd.schemaregistry.v1+json" \
+    http://schema-registry:8081/schemas/ids/1 | jq
 ```
 
 produces:
@@ -221,7 +250,7 @@ echo '{
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic sr-topic \
-        --property schema.registry.url=http://client-schema-registry:8082 \
+        --property schema.registry.url=http://schema-registry:8081 \
         --property value.schema='{ 
             "title": "User",
             "type": "object",
