@@ -71,7 +71,7 @@ The command below will add a masking interceptor, configured to mask the `passwo
 docker compose exec kafka-client \
   curl \
     --user admin:conduktor \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/masker" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/masker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
                   "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
@@ -174,7 +174,7 @@ docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
     --property schema.registry.url=http://schema-registry:8081 \
-    --topic someTenantmaskedTopic \
+    --topic someClustermaskedTopic \
     --from-beginning \
     --max-messages 1 | jq
 ```
@@ -198,7 +198,7 @@ Navigate to `Console` and select the `Gateway` cluster from the top right. You s
 
 ### Step 12: View the messages in Conduktor Console
 
-Navigate to `Console` and select the `Kafka Backing Cluster` cluster from the top right. You should now see the `someTenantmaskedTopic` topic (ignore the tenant name prefix for now) and clicking on it will show you the produced message.
+Navigate to `Console` and select the `Kafka Backing Cluster` cluster from the top right. You should now see the `someClustermaskedTopic` topic (ignore the virtual cluster name prefix for now) and clicking on it will show you the produced message.
 
 ![create a topic](images/through_backing_cluster.png "View Messages")
 

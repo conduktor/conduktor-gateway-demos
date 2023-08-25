@@ -68,7 +68,7 @@ Conduktor gateway provides a REST API used to add interceptors.
 docker-compose exec kafka-client \
 curl \
     --user "admin:conduktor" \
-    --request POST conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/guard-alter-configs \
+    --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUser/interceptors/guard-alter-configs \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.AlterBrokerConfigPolicyPlugin",
