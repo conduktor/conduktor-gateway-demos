@@ -86,7 +86,7 @@ services:
     depends_on:
       - kafka1
     ports:
-      - "8082:8082"
+      - "8082:8081"
     volumes:
       - type: bind
         source: "./clientConfig"
@@ -101,13 +101,13 @@ services:
       SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: schema-registry-dev
 
   conduktor-gateway:
-    image: conduktor/conduktor-gateway:2.0.1
+    image: ghcr.io/conduktor/conduktor-gateway-distro
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093
       GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      GATEWAY_HOST: conduktor-gateway
+      GATEWAY_ADVERTISED_HOST: conduktor-gateway
       GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
     healthcheck:
       test: curl localhost:8888/health

@@ -64,7 +64,7 @@ The command below will create an interceptor for validating that the records on 
 docker compose exec kafka-client \
   curl \
     --user admin:conduktor \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-required" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.TopicRequiredSchemaIdPolicyPlugin",
@@ -83,7 +83,7 @@ docker compose exec kafka-client \
     curl \
         --silent \
         --user admin:conduktor \
-        --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-required" \
+        --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required" \
         --header 'Content-Type: application/json' | jq
 ```
 
@@ -121,7 +121,7 @@ echo '{
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic sr-topic \
-        --property schema.registry.url=http://schema-registry:8081 \
+        --property schema.registry.url=http://schema-registry-dev:8081 \
         --property value.schema='{ 
             "title": "User",
             "type": "object",
@@ -135,108 +135,46 @@ echo '{
         }'
 ```
 
-### Step 6: Confirm the schemas
+### Step 6: Bringing the big guns: validating the schemas for real
 
-To see why this happens let's query the 2 schema registries for the subject we are trying to produce with.
-
-First if we look at the client Schema Registry (i.e. the one used by the producer) we see a schema present.
-
-```bash
-docker compose exec kafka-client \
-  curl --silent http://schema-registry:8081/subjects/sr-topic-value/versions/1 | jq
-```
-
-produces:
-
-```bash
-{
-  "subject": "sr-topic-value",
-  "version": 1,
-  "id": 1,
-  "schemaType": "JSON",
-  "schema": "{\"title\":\"User\",\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"username\":{\"type\":\"string\"},\"password\":{\"type\":\"string\"},\"visa\":{\"type\":\"string\"},\"address\":{\"type\":\"string\"}}}"
-}
-```
-
-If we run the same queries against the Schema Registry associated with Conduktor Gateway we do not see the schema
-
-```bash
-docker compose exec kafka-client \
-  curl http://schema-registry:8081/subjects/sr-topic-value/versions/1 | jq
-```
-
-produces:
-
-```bash
-{
-  "error_code": 40401,
-  "message": "Subject 'sr-topic-value' not found."
-}
-```
-
-Because the subject is not available in this Schema Registry it is rejected by the Gateway.
-
-### Step 7: Differing schemas
-
-Now let's add a schema with the correct Id but incorrect content to the Gateway cluster
+Now instead of just making sure we have a schema Id, we'll make sure that it exists in the defined schema registry
+... and that the payload can be deserizalized with it.
 
 ```bash
 docker compose exec kafka-client \
   curl \
-    --request PUT http://schema-registry:8081/config \
-    --header "Content-Type: application/vnd.schemaregistry.v1+json" \
-    --data-raw '{"compatibility": "NONE"}'
+    --user admin:conduktor \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required" \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "pluginClass": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin",
+        "priority": 100,
+        "config": {
+            "topic": "sr-topic",
+            "schemaIdRequired": true,
+            "validateSchema": true,
+            "schemaRegistryConfig": {
+                "host": "http://schema-registry:8081"
+            }
+        }
+    }'
 ```
 
-```bash
-docker compose exec kafka-client curl \
-  --request POST http://schema-registry:8081/subjects/sr-topic-value/versions \
-  --header "Content-Type: application/vnd.schemaregistry.v1+json" \
-  --data-raw '{
-	"schemaType": "JSON",
-	"schema": "{\"type\":\"object\",\"properties\": {\"name\":{\"type\":\"integer\"}},\"additionalProperties\": false}"
-  }'
-```
-
-We have now created the situation where client and Gateway see different schemas for id 1
-
-```bash
-docker compose exec kafka-client \
-  curl \
-    --header "Content-Type: application/vnd.schemaregistry.v1+json" \
-    http://schema-registry:8081/schemas/ids/1 | jq
-```
-
-produces:
-
-```bash
-{
-  "schemaType": "JSON",
-  "schema": "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"}}}"
-}
-```
-
-and
+Verify
 
 ```bash
 docker compose exec kafka-client \
-  curl \
-    --header "Content-Type: application/vnd.schemaregistry.v1+json" \
-    http://schema-registry:8081/schemas/ids/1 | jq
+    curl \
+        --silent \
+        --user admin:conduktor \
+        --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required" \
+        --header 'Content-Type: application/json' | jq
 ```
 
-produces:
+Send data with schema id gateway does not know.
 
-```bash
-{
-  "schemaType": "JSON",
-  "schema": "{\"title\":\"User\",\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"username\":{\"type\":\"string\"},\"password\":{\"type\":\"string\"},\"visa\":{\"type\":\"string\"},\"address\":{\"type\":\"string\"}}}"
-}
-```
+Gateway knows schemas from `http://schema-registry:8081`, here we'll send data with ids from a schema registry it does not know. 
 
-### Step 8: Produce data to the topic again
-
-We produce with the client schema, this time schema id: 1 is present on both Schema Registries but the Gateway should not be able to deserialize the message using it's schema.
 
 ```bash
 echo '{ 
@@ -250,7 +188,7 @@ echo '{
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic sr-topic \
-        --property schema.registry.url=http://schema-registry:8081 \
+        --property schema.registry.url=http://schema-registry-dev:8081 \
         --property value.schema='{ 
             "title": "User",
             "type": "object",
@@ -264,9 +202,54 @@ echo '{
         }'
 ```
 
-You should once again see an error like this:
+And you get the following exception
+
+```
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'sr-topic' with schemaId is required.
+```
+
+
+### Step 6: Confirm there's not schema in schema-registry 
 
 ```bash
-[2022-12-12 21:51:59,888] ERROR Error when sending message to topic sr-topic with key: null, value: 136 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
-org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. SchemaId is required, offset=0
+docker compose exec kafka-client \
+  curl --silent http://schema-registry:8081/subjects/ | jq
+```
+
+outputs `[]`
+
+There are no schema.
+
+What about in `schema-registry-dev`?
+
+
+```bash
+docker compose exec kafka-client \
+  curl --silent http://schema-registry-dev:8081/subjects/ | jq
+```
+
+outputs 
+```json
+[
+  "sr-topic-value"
+]
+```
+
+Let's see this schema
+
+```bash
+docker compose exec kafka-client \
+  curl --silent http://schema-registry-dev:8081/subjects/sr-topic-value/versions/1 | jq
+```
+
+produces:
+
+```bash
+{
+  "subject": "sr-topic-value",
+  "version": 1,
+  "id": 1,
+  "schemaType": "JSON",
+  "schema": "{\"title\":\"User\",\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"username\":{\"type\":\"string\"},\"password\":{\"type\":\"string\"},\"visa\":{\"type\":\"string\"},\"address\":{\"type\":\"string\"}}}"
+}
 ```
