@@ -122,7 +122,7 @@ kafka-console-consumer \
 ### Step 7: Applying Multi-tenancy to existing topics (topic mapping)
 
 During migration to Conduktor Gateway you may want to make up a virtual cluster population from existing topics in your Kafka cluster. Conduktor Gateway allows this via the administration APIs through **topic mapping**. For more detail on the APIs check the Conduktor docs site.
-In this next section we will create topics on the backing Kafka cluster and add them to tenants within Conduktor Gateway.
+In this next section we will create topics on the backing Kafka cluster and add them to vclusters within Conduktor Gateway.
 
 Let's start by creating some pre-exiting topics on the backing Kafka cluster and adding data to them.
 
@@ -133,7 +133,7 @@ echo existingLondonMessage | docker compose exec -T kafka-client kafka-console-p
 echo existingSharedMessage | docker compose exec -T kafka-client kafka-console-producer --bootstrap-server kafka1:9092 --topic existingSharedTopic
 ```
 
-### Step 8: Configuring tenants for existing topics
+### Step 8: Configuring vclusters for existing topics
 
 We'll create the following mappings:
 * virtualCluster: `London` can see `existingLondonTopic` and `existingSharedTopic`
@@ -234,7 +234,7 @@ docker compose exec kafka-client \
     --max-messages 1
 ```
 
-On `existingSharedTopic` the same messages are available to both tenants.
+On `existingSharedTopic` the same messages are available to both vclusters.
 
 
 ### Step 11: Visualise what we've been doing

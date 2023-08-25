@@ -73,7 +73,7 @@ docker compose exec kafka-client \
   curl \
     --silent \
     --user "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/encrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/encrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
@@ -103,13 +103,13 @@ docker compose exec kafka-client \
     }' 
 ```
 
-and confirm succesful creation by listing the interceptors for tenant `someTenant`:
+and confirm succesful creation by listing the interceptors for virtual cluster `someCluster`:
 
 ```bash
 docker compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
 ```
 
 ### Step 6: Configure Decryption
@@ -121,7 +121,7 @@ docker compose exec kafka-client \
   curl \
     --silent \
     --user "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/decrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/decrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
@@ -135,13 +135,13 @@ docker compose exec kafka-client \
     }'
 ```
 
-and list the interceptors for tenant proxy:
+and list the interceptors for virtual cluster someCluster:
 
 ```bash
 docker compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors | jq
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 
 ### Step 7: Produce data to the topic
@@ -207,7 +207,7 @@ To confirm the fields are encrypted in Kafka we can consume directly from the un
 docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic someTenantencryptedTopic \
+    --topic someClusterencryptedTopic \
     --from-beginning \
     --max-messages 1 | jq
 ```
@@ -243,7 +243,7 @@ Navigate to `Console` and select the `cdk-gateway` virtual cluster from the top 
 
 ### Step 13: View the encrypted messages in Conduktor Console
 
-Navigating to `Console` and select the `kafka-backing-cluster` cluster from the cluster selector in the top right. You should now see the `someTenantencryptedTopic` topic (ignore the tenant prefix for now) and clicking on it will show you an encrypted version of the produced message. What you see without Gateway.
+Navigating to `Console` and select the `kafka-backing-cluster` cluster from the cluster selector in the top right. You should now see the `someClusterencryptedTopic` topic (ignore the virtual cluster prefix for now) and clicking on it will show you an encrypted version of the produced message. What you see without Gateway.
 
 ![create a topic](images/through_backing_cluster.png "View Encrypted Messages")
 
@@ -270,7 +270,7 @@ docker compose exec kafka-client \
   curl \
     --silent \
     --user "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/interceptors/performanceEncrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/performanceEncrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",

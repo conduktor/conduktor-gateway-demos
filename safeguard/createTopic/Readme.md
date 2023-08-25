@@ -42,7 +42,7 @@ The command below will instruct Conduktor Gateway to enforce a minimum of 2 repl
 docker-compose exec kafka-client \
 curl \
     --user "admin:conduktor" \
-    --request POST conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/guard-create-topics \
+    --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUser/interceptors/guard-create-topics \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin",

@@ -89,14 +89,14 @@ docker compose exec kafka-client \
 
 Use the Admin API to add the inject header interceptor. 
 
-The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, tenant and Gateway ip in records on the topic `injectHeaderTopic`. 
+The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, vcluster and Gateway ip in records on the topic `injectHeaderTopic`. 
 
 ```bash
 docker compose exec kafka-client \
   curl \
     --silent \
     --user admin:conduktor \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/injectHeader" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUsername/interceptors/injectHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DynamicHeaderInjectionPlugin",
@@ -117,7 +117,7 @@ Confirm the interceptor exists;
 docker compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request GET "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors" \
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUsername/interceptors" \
     --header 'Content-Type: application/json'
 ```
 
@@ -173,7 +173,7 @@ docker compose exec kafka-client \
 
 You should see the message with headers as below;
 ```
-X-RAW_KEY:a value,X-USERNAME:someUser,X-USER_IP:172.21.0.3,X-USER_IP_GATEWAY_IP_USERNAME:172.21.0.3 to 172.21.0.6 of someUser	inject_header
+X-RAW_KEY:a value,X-USERNAME:someUsername,X-USER_IP:172.21.0.3,X-USER_IP_GATEWAY_IP_USERNAME:172.21.0.3 to 172.21.0.6 of someUsername	inject_header
 ```
 
 ### Step 8: Confirm injected headers at rest
@@ -184,7 +184,7 @@ To confirm the message headers are injected in Kafka we can consume directly fro
 docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic someTenantinjectHeaderTopic \
+    --topic someClusterinjectHeaderTopic \
     --from-beginning \
     --max-messages 1 \
     --property print.headers=true
@@ -199,7 +199,7 @@ Let's create another interceptor against our user for the remove header with key
 docker compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/tenants/someTenant/users/someUser/interceptors/removeHeader" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUsername/interceptors/removeHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
@@ -259,7 +259,7 @@ To observer the message headers are intact in the backing Kafka cluster;
 docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server kafka1:9092 \
-    --topic someTenantremoveHeaderKeyPatternTopic \
+    --topic someClusterremoveHeaderKeyPatternTopic \
     --from-beginning \
     --max-messages 1 \
     --property print.headers=true
@@ -290,7 +290,7 @@ Navigate to `Console` and select the `Gateway` cluster from the top right. You s
 
 ### Step 16: View the injected headers messages in Conduktor Console
 
-Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `someTenantinjectHeaderTopic` topic (ignore the someTenant prefix for now) and clicking on it will show you an injected headers version of the produced message.
+Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `someClusterinjectHeaderTopic` topic (ignore the someCluster prefix for now) and clicking on it will show you an injected headers version of the produced message.
 
 ![create a topic](images/inject_through_backing_cluster.png "View Injected Headers Messages")
 
@@ -302,7 +302,7 @@ Navigate to `Console` and select the `Gateway` cluster from the top right. You s
 
 ### Step 18: View the not removed headers messages in Conduktor Console
 
-Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `someTenantremoveHeaderKeyPatternTopic` topic (ignore the someTenant prefix for now) and clicking on it will show you a removed headers version of the produced message.
+Navigate to `Console` and select the `Backing Cluster` cluster from the top right. You should now see the `someClusterremoveHeaderKeyPatternTopic` topic (ignore the someCluster prefix for now) and clicking on it will show you a removed headers version of the produced message.
 
 ![create a topic](images/key_pattern_through_backing_cluster.png "View Removed Headers By Key Pattern Messages")
 
