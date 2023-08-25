@@ -76,7 +76,7 @@ docker compose exec kafka-client \
     }'
 ```
 
-Verify 
+Verify it exists
 
 ```bash
 docker compose exec kafka-client \
@@ -138,7 +138,7 @@ echo '{
 ### Step 6: Bringing the big guns: validating the schemas for real
 
 Now instead of just making sure we have a schema Id, we'll make sure that it exists in the defined schema registry
-... and that the payload can be deserizalized with it.
+... and that the payload can be deserizalized with it. Let's create our schema payload validation interceptor for that.
 
 ```bash
 docker compose exec kafka-client \
@@ -160,7 +160,7 @@ docker compose exec kafka-client \
     }'
 ```
 
-Verify
+Verify it exists.
 
 ```bash
 docker compose exec kafka-client \
@@ -171,9 +171,9 @@ docker compose exec kafka-client \
         --header 'Content-Type: application/json' | jq
 ```
 
-Send data with schema id gateway does not know.
+Send data with a schema id Gateway does not know.
 
-Gateway knows schemas from `http://schema-registry:8081`, here we'll send data with ids from a schema registry it does not know. 
+Gateway knows schemas from `http://schema-registry:8081` (we told it that in our interceptor creation), here we'll send data with ids from a schema registry it does not know. 
 
 
 ```bash
@@ -209,7 +209,7 @@ org.apache.kafka.common.errors.PolicyViolationException: Request parameters do n
 ```
 
 
-### Step 6: Confirm there's not schema in schema-registry 
+### Step 6: Confirm there's not a schema in the schema-registry 
 
 ```bash
 docker compose exec kafka-client \
@@ -218,7 +218,7 @@ docker compose exec kafka-client \
 
 outputs `[]`
 
-There are no schema.
+There are no schemas.
 
 What about in `schema-registry-dev`?
 
@@ -244,7 +244,7 @@ docker compose exec kafka-client \
 
 produces:
 
-```bash
+```json
 {
   "subject": "sr-topic-value",
   "version": 1,
