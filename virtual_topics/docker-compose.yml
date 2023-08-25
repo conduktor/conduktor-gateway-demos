@@ -83,10 +83,8 @@ services:
       KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
       KAFKA_SASL_MECHANISM: PLAIN
       KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret";
-      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
       GATEWAY_ADVERTISED_HOST: conduktor-gateway
-      
-
     healthcheck:
       test: curl localhost:8888/health
       interval: 5s
