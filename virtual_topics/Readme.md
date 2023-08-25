@@ -1,13 +1,12 @@
 # Virtual SQL Topic Demo
 
-## What is A virtual topic?
+## What is a virtual topic?
 
 Conduktor Gateway's virtual topics allow you to create a "virtual" copy of an existing Kafka topic that can then 
 have interceptors applied to it without affecting the original topic. 
 
 For instance, I may have a topic 'cars' that contains information on cars of all colors, and an application that is only 
-interested in Red cars. To satisfy this requirement I can create a virtual topic 'redCarVirtualTopic' and apply a filter to this 
-topic so that only blue car data is available.
+interested in Red cars. To satisfy this requirement I can create a virtual topic 'redCarVirtualTopic' which filters out all but the red car data.
 
 ## Running the demo
 
@@ -25,56 +24,60 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker compose up -d
+docker compose up --wait --detach
 ```
 
 ### Step 3: Create source topic
 
-We create an existing topic in the Kafka cluster, this will form the basis of our virtual topic. In this example lets have all our car data here. 
+Create our topic cars to have all car data.
 
 ```bash
 docker compose exec kafka-client \
   kafka-topics \
-    --bootstrap-server kafka1:9092 \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
-    --topic allCarsTopic \
+    --topic cars \
     --replication-factor 1 \
     --partitions 1
 ```
-### Step 4: Create the virtual topic template interceptor, and the virtual topic
-Next we create the virtual topic. This is a 2 step process, first we must create a template for the virtual topic that defines 
-the underlying topic it will source it's data from, and then use this template to create the virtual topic. 
+### Step 4: Create the virtual topic interceptor
+Let's create the interceptor to filter out the red cars from the all cars.
 
 ```bash
-# Create the template in Gateway
+# Create the interceptor in Gateway
 docker compose exec kafka-client curl \
     -u "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/redCarsVirtualTopicTemplate" \
+    --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/admin/interceptor/red-cars-virtual-topic" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
-        "priority": 100,
+        "priority": 1,
         "config": {
-            "virtualTopic": "redCarsVirtualTopic",
-            "statement": "SELECT type, price as price FROM allCarsTopic WHERE color = 'red'"
+            "virtualTopic": "redCars",
+            "statement": "SELECT type, price as price FROM cars WHERE color = '"'red'"'"
         }
     }'
+```
 
+and let's create the virtual topic.
+
+```bash
 # Create the virtual topic
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create \
-    --topic redCarsVirtualTopic \
+    --topic redCars \
     --if-not-exists \
     --replication-factor 1 \
     --partitions 1
 ```
 
-### Step 5: Produce data to the underlying topic
+### Step 5: Produce sample data to the all cars topic
 
-Now we will produce 2 records to the underlying topic, our mock car data for allCarsTopic, a red and blue car.
+Produce 2 records to the underlying topic, our mock car data for cars, a red and blue car.
 
 ```bash
 echo '{ 
@@ -83,39 +86,42 @@ echo '{
     "color": "blue" 
 }' | jq -c | docker compose exec -T kafka-client \
     kafka-console-producer  \
-        --bootstrap-server kafka1:9092 \
-        --topic allCarsTopic
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
+        --topic cars
 echo '{ 
     "type": "SUV",
     "price": 55,
     "color": "red" 
 }' | jq -c | docker compose exec -T kafka-client \
     kafka-console-producer  \
-        --bootstrap-server kafka1:9092 \
-        --topic allCarsTopic
+        --bootstrap-server conduktor-gateway:6969 \
+        --producer.config /clientConfig/gateway.properties \
+        --topic cars
 ```
 
-Let;s confirm the 2 records are there by consuming from the source topic:
-
-```bash
-docker compose exec kafka-client \
-    kafka-console-consumer  \
-        --bootstrap-server kafka1:9092 \
-        --topic allCarsTopic \
-        --from-beginning  \
-        --max-messages 2
-```
-
-### Step 6: Consume from the topic
-
-Let's consume from our virtual topic `redCarsVirtualTopic`.
+Let's confirm the 2 records are there by consuming from the all cars topic:
 
 ```bash
 docker compose exec kafka-client \
     kafka-console-consumer  \
         --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/gateway.properties \
-        --topic redCarsVirtualTopic \
+        --topic cars \
+        --from-beginning  \
+        --max-messages 2
+```
+
+### Step 6: Consume from the virtual topic
+
+Let's consume from our virtual topic `redCars`.
+
+```bash
+docker compose exec kafka-client \
+    kafka-console-consumer  \
+        --bootstrap-server conduktor-gateway:6969 \
+        --consumer.config /clientConfig/gateway.properties \
+        --topic redCars \
         --from-beginning  
 ```
 
