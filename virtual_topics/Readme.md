@@ -24,13 +24,12 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker compose up --detach
-
+docker compose up --wait --detach
 ```
 
 ### Step 3: Create source topic
 
-Create our topic cars to have all car data.
+Create our topic `cars` to have all car data.
 
 ```bash
 docker compose exec kafka-client \
@@ -45,7 +44,7 @@ docker compose exec kafka-client \
 
 ### Step 4: Produce sample data to cars topic
 
-Produce 2 records to the cars topic, our mock car data for cars, 
+Produce 2 records to the `cars` topic, our mock car data for cars, 
 
 A blue car.
 
@@ -93,9 +92,9 @@ docker compose exec kafka-client \
 Let's create the interceptor to filter out the red cars from the all cars.
 
 ```bash
-# Create the interceptor in Gateway
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/red-cars-virtual-topic" \
     --header 'Content-Type: application/json' \
@@ -114,6 +113,7 @@ Make sure it is saved
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/red-cars-virtual-topic" | jq
 ```
@@ -129,23 +129,23 @@ docker compose exec kafka-client \
         --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/gateway.properties \
         --topic red-cars \
-        --from-beginning  
+        --from-beginning
 ```
 
 You should see only one message consumed with the format changed according to our SQL statement's projection.
 
 ```json
 {"type":"SUV","color":"red"}
-
 ```
 
 ### Step 7: Cleaning up
 
-You can delete the interceptor on the virtual topic and once more you will see 2 records when consuming:
+You can delete the interceptor on the virtual topic, the virtual topic will no more be accessible.
 
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/red-cars-virtual-topic"
 ```
