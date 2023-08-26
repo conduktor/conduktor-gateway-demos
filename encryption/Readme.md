@@ -111,6 +111,7 @@ and confirm succesful creation by listing the interceptors for virtual cluster `
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
@@ -143,6 +144,7 @@ and list the interceptors for virtual cluster someCluster:
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
@@ -300,14 +302,22 @@ docker compose exec kafka-client \
     }'
 ```
 
-Let's create a large `customers.json` file with 1 000 000 entries
+Let's create an example file for `kafka-producer-perf-test`, the benchmark tool that comes with Kafka.
 
 ```sh
+echo '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}' > customers.json
+echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#qsdsqd","address":"Jumeira 1, Dubai"}' >> customers.json
+```
 
-echo '{"name":"london","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}' > customers.json
+Let's copy it to the container where `kafka-producer-perf-test` will run.
 
+```bash
 docker compose cp customers.json kafka-client:/home/appuser
+```
 
+Then run the benchmark
+
+```bash
 docker compose exec kafka-client \
     kafka-producer-perf-test \
         --topic encryption-performance \
@@ -320,5 +330,7 @@ docker compose exec kafka-client \
 
 # Conclusion
 We have today reviewed how you can encrypt your data, setup the decryption all whilst ensuring it is encrypted at rest.
+
 We have shown this visually using Console and shown the inevitable, but low, impact on performance.
-This of course is but one of the many features availble from the Gateway, for further questions on how Gateway can help take your Kafka experience to the next level [contact us](https://www.conduktor.io/contact/).
+
+This of course is but one of the many features available from the Gateway, for further questions on how Gateway can help take your Kafka experience to the next level [contact us](https://www.conduktor.io/contact/).
