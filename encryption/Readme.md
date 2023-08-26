@@ -36,7 +36,7 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --detach
+docker compose up --wait --detach
 
 ```
 

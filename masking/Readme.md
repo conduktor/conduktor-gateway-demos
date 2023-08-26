@@ -34,7 +34,7 @@ In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --detach
+docker compose up --wait --detach
 ```
 
 ### Step 4: Create topics

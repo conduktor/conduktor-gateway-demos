@@ -39,14 +39,14 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --detach
-
+docker compose up --wait --detach
 ```
 
 ### Step 4: Create topics
 
 We create a base set of topics using the Kafka CLI tools;
 
+`injectHeaderTopic` topic
 ```bash
 docker compose exec kafka-client \
   kafka-topics \
@@ -54,21 +54,33 @@ docker compose exec kafka-client \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic injectHeaderTopic
+```
 
+`removeHeaderKeyPatternTopic` topic
+
+```bash
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderKeyPatternTopic
+```
 
+`removeHeaderValuePatternTopic` topic
+
+```bash
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderValuePatternTopic
+```
 
+`removeHeaderKeyValuePatternTopic` topic
+
+```bash
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
@@ -76,6 +88,7 @@ docker compose exec kafka-client \
     --create --if-not-exists \
     --topic removeHeaderKeyValuePatternTopic
 ```
+
 List the created topics
 
 ```bash
@@ -115,9 +128,11 @@ docker compose exec kafka-client \
 ```
 Confirm the interceptor exists.
 (We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
+
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptors" \
     --header 'Content-Type: application/json' | jq
@@ -199,6 +214,7 @@ Let's create another interceptor against our user for the remove header with key
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/removeHeader" \
     --header 'Content-Type: application/json' \

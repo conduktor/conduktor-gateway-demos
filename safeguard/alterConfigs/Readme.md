@@ -30,7 +30,7 @@ Start the environment with
 
 ```bash
 # setup environment
-docker compose up --detach
+docker compose up --wait --detach
 
 ```
 
@@ -149,7 +149,7 @@ license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 the start the Conduktor Platform container:
 
 ```bash
-docker compose up --detach
+docker compose up --wait --detach
  conduktor-platform
 ```
 

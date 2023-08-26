@@ -38,7 +38,7 @@ See the JWT demo or the docs site for more info.
 Start the environment with
 
 ```bash
-docker compose up --detach
+docker compose up --wait --detach
 
 ```
 
