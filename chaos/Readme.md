@@ -88,6 +88,7 @@ The command below will create a broken broker interceptor against the virtual cl
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/broken-broker" \
     --header 'Content-Type: application/json' \
@@ -109,6 +110,7 @@ We can confirm the interceptor exists on the virtual cluster.
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors" \
     --header 'Content-Type: application/json' | jq
@@ -119,7 +121,7 @@ docker compose exec kafka-client \
 Let's produce some records to our created topic and observe some errors being injected by Conduktor Gateway.
 Remember this will go to the virtual cluster `someCluster` where the topic conduktorTopic lives.
 
-This should produce warnings as we inteded.
+This should produce warnings as we intended.
 
 ```bash
 docker-compose exec kafka-client \
@@ -127,7 +129,7 @@ docker-compose exec kafka-client \
       --producer.config /clientConfig/gateway.properties \
       --record-size 10 \
       --throughput 10 \
-      --num-records 10 \
+      --num-records 100 \
       --topic conduktorTopic
 ```
 
@@ -158,8 +160,9 @@ and confirm by listing the interceptors for the virtual cluster, you expect an e
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 
 ### Step 7: Run with no Chaos
@@ -202,6 +205,7 @@ The command below will create a duplicate message on produce interceptor against
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/duplicate-resource" \
     --header 'Content-Type: application/json' \
@@ -219,12 +223,11 @@ docker-compose exec kafka-client \
 Let's produce some records to our created topic.
 
 ```bash
-docker-compose exec \
-  kafka-client kafka-producer-perf-test \
+echo '{"message": "hello world"}' | \
+  docker compose exec -T kafka-client \
+    kafka-console-producer \
+      --bootstrap-server conduktor-gateway:6969 \
       --producer.config /clientConfig/gateway.properties \
-      --record-size 100 \
-      --throughput 10 \
-      --num-records 10 \
       --topic conduktorTopicDuplicate
 ```
 
@@ -237,35 +240,15 @@ docker-compose exec kafka-client \
       --consumer.config /clientConfig/gateway.properties \
       --from-beginning \
       --topic conduktorTopicDuplicate \
-      --max-messages 20
+      --max-messages 2
 ```
 
 This should produce output similar to this:
 
-```bash
-SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
-SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
-ONJVXZXZOZITKXJBOZWDJMCBOSYQQKCPRRDCZWMRLFXBLGQPRPGRNTAQOOSVXPKJPJLAVSQCCRXFRROLLHWHOHFGCFWPNDLMWCSS
-ONJVXZXZOZITKXJBOZWDJMCBOSYQQKCPRRDCZWMRLFXBLGQPRPGRNTAQOOSVXPKJPJLAVSQCCRXFRROLLHWHOHFGCFWPNDLMWCSS
-HWXQQYKALAAWCMXYLMZALGDESKKTEESEMPRHROVKUMPSXHELIDQEOOHOIHEGJOAZBVPUMCHSHGXZYXXQRUICRIJGQEBBWAXABQRI
-HWXQQYKALAAWCMXYLMZALGDESKKTEESEMPRHROVKUMPSXHELIDQEOOHOIHEGJOAZBVPUMCHSHGXZYXXQRUICRIJGQEBBWAXABQRI
-RUGZJUUVFYQOVCDEDXYFPRLGSGZXSNIAVODTJKSQWHNWVPSAMZKOUDTWHIORJSCZIQYPCZMBYWKDIKOKYNGWPXZWMKRDCMBXKFUI
-RUGZJUUVFYQOVCDEDXYFPRLGSGZXSNIAVODTJKSQWHNWVPSAMZKOUDTWHIORJSCZIQYPCZMBYWKDIKOKYNGWPXZWMKRDCMBXKFUI
-LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXBKAPWAPENUEZNWNWDCACD
-LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXBKAPWAPENUEZNWNWDCACD
-RLPIPHJQQKMOFDQSPKKNURFBORJLBPCBIWTSJNPRBNITTKJYWAHWGKZYNUSFISPIYPIOGAUPZDXHCFVGXGIVVCPFHIXAACZXZLFD
-RLPIPHJQQKMOFDQSPKKNURFBORJLBPCBIWTSJNPRBNITTKJYWAHWGKZYNUSFISPIYPIOGAUPZDXHCFVGXGIVVCPFHIXAACZXZLFD
-MOOSSNTKUPJQEIRRQAMUCTBLBSVPDDYOIHAOODZNJTVHDCIEGTAVMYZOCIVSKUNSMXEKBEWNZPRPWPUJABJXNQBOXSHOEGMJSNBU
-MOOSSNTKUPJQEIRRQAMUCTBLBSVPDDYOIHAOODZNJTVHDCIEGTAVMYZOCIVSKUNSMXEKBEWNZPRPWPUJABJXNQBOXSHOEGMJSNBU
-TGTIFVEQPSYBDXEXORPQDDODZGBELOISTRWXMEYWVVHGMJKWLJCCHPKAFRASZEYQZCVLFSLOWTLBMPPWPPFPQSAZPTULSTCDMODY
-TGTIFVEQPSYBDXEXORPQDDODZGBELOISTRWXMEYWVVHGMJKWLJCCHPKAFRASZEYQZCVLFSLOWTLBMPPWPPFPQSAZPTULSTCDMODY
-KZGSRFQTRFTGCNMNXQQIYVUQZHVNIPHZWVBSGOBYIFDNNXUTBBQUYNXOZCSICGRTZSSRHROJRGBHMHEQJRDLOQBEPTOBMYLMIGPP
-KZGSRFQTRFTGCNMNXQQIYVUQZHVNIPHZWVBSGOBYIFDNNXUTBBQUYNXOZCSICGRTZSSRHROJRGBHMHEQJRDLOQBEPTOBMYLMIGPP
-DPOLTEUVDGATCGYPQOGOYYESKEGBLOCBIYSLQEYGCCIPBXPNSPKDYTBEWDHBHWVDPLOVHJPNYGJUHKKHDASNFGZDAIWWQEPPBRJK
-DPOLTEUVDGATCGYPQOGOYYESKEGBLOCBIYSLQEYGCCIPBXPNSPKDYTBEWDHBHWVDPLOVHJPNYGJUHKKHDASNFGZDAIWWQEPPBRJK
+```json
+{"message": "hello world"}
+{"message": "hello world"}
 ```
-
-Note the duplicated messages.
 
 ### Step 10: Reset
 
@@ -280,10 +263,11 @@ docker-compose exec kafka-client \
 and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
-docker-compose exec kafka-client \
+docker-compose exec kafka-client \  
   curl \
+    --silent \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 ### <a name="leaderElection"></a> Step 11: Simulate Leader Election Errors
 
@@ -294,6 +278,7 @@ The command below will create a `simulate leader election errors` interceptor ag
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/leader-election" \
     --header 'Content-Type: application/json' \
@@ -346,8 +331,9 @@ and confirm by listing the interceptors for the virtual cluster, you expect an e
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 
 ### <a name="randomBytes"></a> Step 14: Simulate Message Corruption
@@ -370,6 +356,7 @@ The command below will create a `simulate message corruption` interceptor agains
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/random-bytes" \
     --header 'Content-Type: application/json' \
@@ -388,13 +375,12 @@ docker-compose exec kafka-client \
 Let's produce some records to our created topic.
 
 ```bash
-docker compose exec kafka-client \
-  kafka-producer-perf-test \
-    --producer.config /clientConfig/gateway.properties \
-    --record-size 100 \
-    --throughput 10 \
-    --num-records 10 \
-    --topic conduktorTopicRandomBytes
+echo '{"message": "hello world"}' | \
+  docker compose exec -T kafka-client \
+    kafka-console-producer \
+      --bootstrap-server conduktor-gateway:6969 \
+      --producer.config /clientConfig/gateway.properties \
+      --topic conduktorTopicRandomBytes
 ```
 
 And see the appended bytes in the records:
@@ -406,24 +392,17 @@ docker compose exec kafka-client \
       --consumer.config /clientConfig/gateway.properties \
       --from-beginning \
       --topic conduktorTopicRandomBytes \
-      --max-messages 10
+      --max-messages 1
 ```
 
 This should produce output similar to this:
 
 ```bash
-TGTIFVEQPSYBDXEXORPQDDODZGBELOISTRWXMEYWVVHGMJKWLJCCHPKAFRASZEYQZCVLFSLOWTLBMPPWPPFPQSAZPTULSTCDMODY
-KZGSRFQTRFTGCNMNXQQIYVUQZHVNIPHZWVBSGOBYIFDNNXUTBBQUYNXOZCSICGRTZSSRHROJRGBHMHEQJRDLOQBEPTOBMYLMIGPP
-DPOLTEUVDGATCGYPQOGOYYESKEGBLOCBIYSLQEYGCCIPBXPNSPKDYTBEWDHBHWVDPLOVHJPNYGJUHKKHDASNFGZDAIWWQEPPBRJK
-SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNLH|��>�yC
-ONJVXZXZOZITKXJBOZWDJMCBOSYQQKCPRRDCZWMRLFXBLGQPRPGRNTAQOOSVXPKJPJLAVSQCCRXFRROLLHWHOHFGCFWPNDLMWCSSv��k�z�
-HWXQQYKALAAWCMXYLMZALGDESKKTEESEMPRHROVKUMPSXHELIDQEOOHOIHEGJOAZBVPUMCHSHGXZYXXQRUICRIJGQEBBWAXABQRI�����W�N
-RUGZJUUVFYQOVCDEDXYFPRLGSGZXSNIAVODTJKSQWHNWVPSAMZKOUDTWHIORJSCZIQYPCZMBYWKDIKOKYNGWPXZWMKRDCMBXKFUI��*2�Ћ�
-LWDHBFXRFAOPRUGDFLPDLHXXCXCUPLWGDPPHEMJGMTVMFQQFVCUPOFYWLDUEBICKPZKHKVMCJVWVKTXBKAPWAPENUEZNWNWDCACD	�'6�x���
+{"message": "hello world"}T[�   �X�{�
 ```
 
 Note the longer messages with extra bytes.
-A similar plugin is available for simulating message corrpution on the consumer side too!
+A similar plugin is available for simulating message corruption on the consumer side too!
 
 ### Step 16: Reset
 
@@ -441,8 +420,9 @@ and confirm the removal of the interceptor from the virtual cluster `someCluster
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 
 ### <a name="slowBroker"></a> Step 17: Simulate Slow Broker
@@ -454,6 +434,7 @@ The command below will create a `simulate slow broker` interceptor against the v
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-broker" \
     --header 'Content-Type: application/json' \
@@ -502,6 +483,7 @@ To delete the interceptor and stop chaos injection run the below:
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-broker"
 ```
@@ -511,8 +493,9 @@ and confirm by listing the interceptors for the virtual cluster, you expect an e
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 ### <a name="slowTopic"></a> Step 20: Simulate Slow Producers & Consumers
 
@@ -532,6 +515,7 @@ docker-compose exec kafka-client \
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-topic" \
     --header 'Content-Type: application/json' \
@@ -580,6 +564,7 @@ To delete the interceptor and stop chaos injection run the below:
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-topic"
 ```
@@ -589,8 +574,9 @@ and confirm by listing the interceptors for the virtual cluster, you expect an e
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 ### <a name="invalidSchema"></a> Step 23: Simulate Invalid Schema Id
 
@@ -612,6 +598,7 @@ The command below will create a `simulate invalid schema Id` interceptor against
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/invalid-schema" \
     --header 'Content-Type: application/json' \
@@ -624,26 +611,27 @@ docker-compose exec kafka-client \
           "target": "CONSUME"
         }
     }'
-  ```
+```
 ### Step 24: Inject some chaos
 
 Let's produce a record to our created topic.
 
 ```bash
-cat clientConfig/payload.json | docker compose exec -T schema-registry \
-  kafka-json-schema-console-producer \
-    --bootstrap-server conduktor-gateway:6969 \
-    --topic conduktorTopicSchema  \
-    --producer.config /clientConfig/gateway.properties \
-    --property value.schema='{ 
-        "title": "someSchema", 
-        "type": "object", 
-        "properties": { 
-          "some-valid": { 
-            "type": "string" 
-          }
-        }
-      }'
+echo '{"msg": "hello world"}' | \
+  docker compose exec -T schema-registry \
+    kafka-json-schema-console-producer \
+        --bootstrap-server conduktor-gateway:6969 \
+        --topic conduktorTopicSchema  \
+        --producer.config /clientConfig/gateway.properties \
+        --property value.schema='{ 
+            "title": "someSchema", 
+            "type": "object", 
+            "properties": { 
+              "msg": { 
+                "type": "string" 
+              }
+            }
+          }'
 ```
 
 And consume them with a schema aware consumer.
@@ -692,6 +680,7 @@ To delete the interceptor and stop chaos injection run the below:
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user 'admin:conduktor' \
     --request DELETE "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/invalid-schema"
 ```
@@ -701,11 +690,14 @@ and confirm by listing the interceptors for the virtual cluster, you expect an e
 ```bash
 docker-compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 
 # Conclusion
-In this demo we have simulated several highly chaotic scenarios that applications need to handle, in a controlled manner. Be that latency, message quality, infrastructure issues or human error, all can be simulated.  
+In this demo we have simulated several highly chaotic scenarios that applications need to handle, in a controlled manner. 
 
-These are a sample of the types of situations that can be simulated, if you have others or more detailed scenarios you'd want to simualte then [get in touch](https://www.conduktor.io/contact/demo), we'd love to speak with you. 
+Be that latency, message quality, infrastructure issues or human error, all can be simulated.  
+
+These are a sample of the types of situations that can be simulated, if you have others or more detailed scenarios you'd want to simulate then [get in touch](https://www.conduktor.io/contact/demo), we'd love to speak with you. 
