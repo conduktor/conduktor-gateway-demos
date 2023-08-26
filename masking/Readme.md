@@ -39,7 +39,7 @@ docker compose up --wait --detach
 
 ### Step 4: Create topics
 
-Let's creates a topic named `maskedTopic`
+Let's create a topic named `maskedTopic`
 
 ```bash
 docker compose exec kafka-client \
@@ -53,7 +53,6 @@ docker compose exec kafka-client \
 List the created topic
 
 ```bash
-# Check it has been created
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
@@ -70,40 +69,41 @@ The command below will add a masking interceptor, configured to mask the `passwo
 ```bash
 docker compose exec kafka-client \
   curl \
-    --user admin:conduktor \
+    --silent \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/masker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
-                  "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
-                  "priority": 100,
-                  "config": {
-                    "schemaRegistryConfig": {
-                        "host": "http://schema-registry:8081"
-                    },
-                    "policies": [
-                      {
-                        "name": "Mask password",
-                        "rule": {
-                          "type": "MASK_ALL"
-                        },
-                        "fields": [
-                          "password"
-                        ]
-                      },
-                      {
-                        "name": "Mask visa",
-                        "rule": {
-                          "type": "MASK_LAST_N",
-                          "maskingChar": "X",
-                          "numberOfChars": 4
-                        },
-                        "fields": [
-                          "visa"
-                        ]
-                      }
-                    ]
-                  }
-                }'
+          "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
+          "priority": 100,
+          "config": {
+            "schemaRegistryConfig": {
+                "host": "http://schema-registry:8081"
+            },
+            "policies": [
+              {
+                "name": "Mask password",
+                "rule": {
+                  "type": "MASK_ALL"
+                },
+                "fields": [
+                  "password"
+                ]
+              },
+              {
+                "name": "Mask visa",
+                "rule": {
+                  "type": "MASK_LAST_N",
+                  "maskingChar": "X",
+                  "numberOfChars": 4
+                },
+                "fields": [
+                  "visa"
+                ]
+              }
+            ]
+          }
+        }'
 ```
 
 ### Step 6: Produce data to the topic
@@ -142,7 +142,6 @@ echo '{
 Let's consume from our `maskedTopic`.
 
 ```bash
-# And consume through the Gateway, it's masked
 docker compose exec schema-registry \
    kafka-json-schema-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
@@ -170,7 +169,6 @@ You should see the masked fields as below:
 Let's consume directly from the underlying Kafka cluster.
 
 ```bash
-# And consume through the underlying cluster
 docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
