@@ -62,7 +62,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
       GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
       GATEWAY_USER_POOL_SECRET_KEY: OaM4lG+xO5Gz10GB1apZ2XDUuWw/sK1H+XXcgExpYm2YEHgnvEf63q9TJraebD3SQb/JzefcZkUEKz/8V5V+Fg==
-      GATEWAY_HOST: conduktor-gateway
+      GATEWAY_ADVERTISED_HOST: conduktor-gateway
       GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
       GATEWAY_FEATURE_FLAGS_INTERNAL_LOAD_BALANCING: false
       GATEWAY_ADMIN_API_USERS: "[{username: superUser, password: superUser, admin: true}]"
