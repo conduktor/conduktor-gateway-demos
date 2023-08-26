@@ -100,6 +100,17 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemasDev
       SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: schema-registry-dev
 
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+      - type: bind
+        source: "./clientConfig"
+        target: /clientConfig
+        read_only: true
+
   conduktor-gateway:
     image: conduktor/conduktor-gateway:2.1.0
     hostname: conduktor-gateway
