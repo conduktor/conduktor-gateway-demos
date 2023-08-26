@@ -36,7 +36,8 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
 We have already created a `username`, called `someUsername`, for our virtual cluster which is provided in the definition of `clientConfig/gateway.properties`, we will use this to interact with Gateway throughout this demo.

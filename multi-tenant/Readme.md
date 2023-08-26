@@ -27,14 +27,15 @@ For the later part of our demo we discuss how our Conduktor Console was connecte
 * London - a connection through Conduktor Gateway that represents the London virtual cluster/tenant
 * Paris - a connection through Conduktor Gateway that represents the Paris virutal cluster/tenant
 
-Note: Tenancy is determined by the SASL credentials configured for each cluster. These credentials provide a token that encodes tenancy information.
+Note: Tenancy is determined by the SASL credentials configured for each cluster. These credentials provide a token that encodes tenancy information. See the JWT demo or the docs site for more info.
 
 ### Step 3: Start the environment
 
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
 ### Step 4: Create topics

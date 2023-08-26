@@ -30,7 +30,8 @@ Start the environment with
 
 ```bash
 # setup environment
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
 ### Step 4: Create a topic
@@ -149,7 +150,8 @@ license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 the start the Conduktor Platform container:
 
 ```bash
-docker compose up --wait --detach conduktor-platform
+docker compose up --detach
+ conduktor-platform
 ```
 
 From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
