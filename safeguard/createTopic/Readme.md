@@ -30,7 +30,6 @@ Start the environment with
 
 ```bash
 docker compose up --wait --detach
-
 ```
 
 ### Step 4: Configure safeguard
@@ -41,7 +40,8 @@ The command below will instruct Conduktor Gateway to enforce a minimum of 2 repl
 
 ```bash
 docker-compose exec kafka-client \
-curl \
+  curl \
+    --silent \
     --user "admin:conduktor" \
     --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/guard-create-topics \
     --header 'Content-Type: application/json' \
