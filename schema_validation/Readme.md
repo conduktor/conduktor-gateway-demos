@@ -28,7 +28,8 @@ This means that schemas created by Kafka clients will not be valid in Gateway, e
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
 ### Step 3: Create topics
@@ -76,7 +77,8 @@ docker compose exec kafka-client \
     }'
 ```
 
-Verify it exists
+Verify it exists.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
 docker compose exec kafka-client \

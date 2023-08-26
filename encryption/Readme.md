@@ -4,7 +4,7 @@
 
 Conduktor Gateway's encryption feature encrypts sensitive fields within messages as they are produced through the Gateway. 
 
-These fields are stored on disk encrypted but can easily be read by clients reading through the Gateway. (We also support an encrypt on fetch functionality for keeping your data secure when working with 3rd parties, we won't demo that today but get in touch to discuss further.)
+These fields are stored on disk encrypted but can easily be read by clients reading through the Gateway. (We also support an encrypt on fetch functionality for keeping your data secure when working with 3rd parties and partners, we won't demo that today but get in touch to discuss further.)
 
 ### Architecture diagram
 ![architecture diagram](images/encryption.png "encryption")
@@ -36,7 +36,8 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
 ### Step 4: Create topics
@@ -73,7 +74,7 @@ docker compose exec kafka-client \
   curl \
     --silent \
     --user "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/encrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/encrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
@@ -103,13 +104,15 @@ docker compose exec kafka-client \
     }' 
 ```
 
-and confirm succesful creation by listing the interceptors for virtual cluster `someCluster`:
+and confirm succesful creation by listing the interceptors for virtual cluster `someCluster`.
+
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
 docker compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors
+    conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
 
 ### Step 6: Configure Decryption
@@ -121,7 +124,7 @@ docker compose exec kafka-client \
   curl \
     --silent \
     --user "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/decrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/decrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
@@ -270,7 +273,7 @@ docker compose exec kafka-client \
   curl \
     --silent \
     --user "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/performanceEncrypt" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/performanceEncrypt" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",

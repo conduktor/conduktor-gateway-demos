@@ -36,10 +36,11 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
-We have already created a `username`, called `someUser`, for our virtual cluster which is provided in the definition of `clientConfig/gateway.properties` ,we will use this to interact with Gateway throughout this demo.
+We have already created a `username`, called `someUsername`, for our virtual cluster which is provided in the definition of `clientConfig/gateway.properties`, we will use this to interact with Gateway throughout this demo.
 
 ```bash
 cat clientConfig/gateway.properties
@@ -103,7 +104,8 @@ docker compose exec kafka-client \
     }'
 ```
 
-We can confirm the interceptor exists on the virtual cluster;
+We can confirm the interceptor exists on the virtual cluster.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 ```bash
 docker compose exec kafka-client \
   curl \
@@ -123,9 +125,9 @@ This should produce warnings as we inteded.
 docker-compose exec kafka-client \
   kafka-producer-perf-test \
       --producer.config /clientConfig/gateway.properties \
-      --record-size 100 \
+      --record-size 10 \
       --throughput 10 \
-      --num-records 100 \
+      --num-records 10 \
       --topic conduktorTopic
 ```
 
@@ -135,7 +137,7 @@ This should produce output similar to this:
 [2023-07-12 12:12:11,213] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 64 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
 [2023-07-12 12:12:12,109] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 74 on topic-partition conduktorTopic-0, retrying (2147483646 attempts left). Error: OUT_OF_ORDER_SEQUENCE_NUMBER (org.apache.kafka.clients.producer.internals.Sender)
 ...
-100 records sent, 5.031447 records/sec (0.00 MB/sec), 14587.31 ms avg latency, 19299.00 ms max latency, 14557 ms 50th, 18895 ms 95th, 19299 ms 99th, 19299 ms 99.9th.
+10 records sent, 5.031447 records/sec (0.00 MB/sec), 14587.31 ms avg latency, 19299.00 ms max latency, 14557 ms 50th, 18895 ms 95th, 19299 ms 99th, 19299 ms 99.9th.
 ```
 
 Note the `CORRUPT_MESSAGE` errors, your results will vary each run so don't pay too much attention to any variation in latency figures.

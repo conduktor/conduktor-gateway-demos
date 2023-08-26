@@ -27,14 +27,15 @@ For the later part of our demo we discuss how our Conduktor Console was connecte
 * London - a connection through Conduktor Gateway that represents the London virtual cluster/tenant
 * Paris - a connection through Conduktor Gateway that represents the Paris virutal cluster/tenant
 
-Note: Tenancy is determined by the SASL credentials configured for each cluster. These credentials provide a token that encodes tenancy information.
+Note: Tenancy is determined by the SASL credentials configured for each cluster. These credentials provide a token that encodes tenancy information. See the JWT demo or the docs site for more info.
 
 ### Step 3: Start the environment
 
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
 ### Step 4: Create topics
@@ -82,7 +83,12 @@ kafka-console-producer \
 --producer.config /clientConfig/london.properties \
 --topic londonTopic
 
-echo testMessageParis | docker compose exec -T kafka-client kafka-console-producer --bootstrap-server conduktor-gateway:6969 --producer.config /clientConfig/paris.properties --topic parisTopic
+echo testMessageParis \
+| docker compose exec -T kafka-client \
+kafka-console-producer \
+--bootstrap-server conduktor-gateway:6969 \
+--producer.config /clientConfig/paris.properties \
+--topic parisTopic
 ```
 
 ### Step 6: Consume from the topics
@@ -95,27 +101,17 @@ kafka-console-consumer --bootstrap-server conduktor-gateway:6969 \
 --consumer.config /clientConfig/london.properties \
 --topic londonTopic \
 --from-beginning --max-messages 1
-```
 
-```bash
-docker compose exec kafka-client kafka-console-consumer --bootstrap-server conduktor-gateway:6969 --consumer.config /clientConfig/paris.properties --topic parisTopic --from-beginning --max-messages 1
+docker compose exec kafka-client \
+kafka-console-consumer --bootstrap-server conduktor-gateway:6969 \
+--consumer.config /clientConfig/paris.properties \
+--topic parisTopic \
+--from-beginning --max-messages 1
 ```
 
 You could see how the message `testMessageLondon` cannot be consumed from the `Paris` virtual cluster client due to cluster isolation. It is not aware of this topic as it's in a different "cluster".
 
-You could see this from running the below command, you would get the `{parisTopic=UNKNOWN_TOPIC_OR_PARTITION}` error untill timeout . The command is to show that trying to find the parisTopic from perspective of London (using the london.properties client) is not possible.
-
-`WARNING!` don't run the comamnd immediately below, unless you really want to! You will get 5 minutes of retry messages.
-```bash
-# don't run me!
-docker compose exec kafka-client \
-kafka-console-consumer \
---bootstrap-server conduktor-gateway:6969\
- --consumer.config /clientConfig/london.properties \
- --topic parisTopic \
- --from-beginning \
- --max-messages 1
-```
+If you tried to, you would get the `{parisTopic=UNKNOWN_TOPIC_OR_PARTITION}` error untill timeout(default 5 minutes).
 
 `WARN [Consumer clientId=console-consumer, groupId=console-consumer-68780] Error while fetching metadata with correlation id 921 : {parisTopic=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)`
 
@@ -127,10 +123,27 @@ In this next section we will create topics on the backing Kafka cluster and add 
 Let's start by creating some pre-exiting topics on the backing Kafka cluster and adding data to them.
 
 ```bash
-docker compose exec kafka-client kafka-topics --bootstrap-server kafka1:9092 --create --topic existingLondonTopic
-docker compose exec kafka-client kafka-topics --bootstrap-server kafka1:9092 --create --topic existingSharedTopic
-echo existingLondonMessage | docker compose exec -T kafka-client kafka-console-producer --bootstrap-server kafka1:9092 --topic existingLondonTopic
-echo existingSharedMessage | docker compose exec -T kafka-client kafka-console-producer --bootstrap-server kafka1:9092 --topic existingSharedTopic
+docker compose exec kafka-client \
+kafka-topics \
+--bootstrap-server kafka1:9092 \
+--create --topic existingLondonTopic \
+
+docker compose exec kafka-client \
+kafka-topics \
+--bootstrap-server kafka1:9092 \
+--create --topic existingSharedTopic \
+
+echo existingLondonMessage \
+| docker compose exec -T kafka-client \
+kafka-console-producer \
+--bootstrap-server kafka1:9092 \
+--topic existingLondonTopic \
+
+echo existingSharedMessage \
+| docker compose exec -T kafka-client \
+kafka-console-producer \
+--bootstrap-server kafka1:9092 \
+--topic existingSharedTopic
 ```
 
 ### Step 8: Configuring vclusters for existing topics
@@ -158,6 +171,7 @@ docker compose exec kafka-client \
 ```
 
 and again to add the mapping existingSharedTopic into the London virtual cluster.
+
 ```bash
 docker compose exec kafka-client \
  curl \
@@ -198,9 +212,13 @@ docker compose exec kafka-client \
 ```
 
 ```bash
-docker compose exec kafka-client kafka-topics --bootstrap-server conduktor-gateway:6969 --command-config /clientConfig/paris.properties --list
+docker compose exec kafka-client \
+kafka-topics \
+--bootstrap-server conduktor-gateway:6969 \
+--command-config /clientConfig/paris.properties \
+--list
 ```
-You should see that the Paris tenant can only see `existingSharedTopic` whereas London can see `existingSharedTopic` and `existingLondonTopic` (as well as our prevoiusly created topics earlier in the demo.
+You should see that the Paris tenant can only see `existingSharedTopic` whereas London can see `existingSharedTopic` and `existingLondonTopic` (as well as our prevoiusly created topics earlier in the demo).
 
 ### Step 10: Consume from the topics
 

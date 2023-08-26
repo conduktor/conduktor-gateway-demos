@@ -34,7 +34,7 @@ In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
 ```
 
 ### Step 4: Create topics
@@ -71,7 +71,7 @@ The command below will add a masking interceptor, configured to mask the `passwo
 docker compose exec kafka-client \
   curl \
     --user admin:conduktor \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors/masker" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/masker" \
     --header 'Content-Type: application/json' \
     --data-raw '{
                   "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
@@ -109,6 +109,7 @@ docker compose exec kafka-client \
 ### Step 6: Produce data to the topic
 
 Let's produce a simple record to the masked topic.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
 echo '{ 

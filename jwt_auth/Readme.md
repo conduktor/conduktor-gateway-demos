@@ -2,7 +2,7 @@
 
 ## What is JWT Auth?
 
-To unlock the full potential of Conduktor Gateway you'll want to make use of virtual clusters (VC), a.k.a multi-tenancy. 
+Some features of Conduktor Gateway make use of virtual clusters (VC), a.k.a multi-tenancy, instead of the Passthrough mode.
 
 In order for this to work seamlessly with your clients the Gateway expects to receive extra information about the vcluster (or virtual cluster) a connecting client represents  during authentication. 
 
@@ -31,7 +31,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
 ```
 
 ### Step 3: Configuring the environment
@@ -40,11 +40,9 @@ This step is for reference only, the demo is pre-configured in `docker-compose.y
 
 Conduktor Gateway manages user access in a "user pool".
 
-You may wish to further configure the pool when in production, in this case we require a secret that is used to encrypt any tokens generated, which can be provided by setting the appropriate environment variable. 
+You may wish to further configure the pool when in production, in this case Gateway requires a secret that is used to encrypt any tokens generated, which can be provided by setting the appropriate environment variable. For more information on setting environment varialbles or any other part of the configuration details, checkout the [docs site](https://docs.conduktor.io/).
 
-For more information on this or any other part of the configuration details, checkout the [docs site](https://docs.conduktor.io/).
-
-You'll also see that passthrough is set to false as we're turning on multi-tenancy.
+You'll also see in the docker compose that Passthrough is set to false as we're turning on multi-tenancy.
 
 ### Step 4: Generating a token
 
@@ -60,13 +58,11 @@ In this demo we will use the default values that are already set `ADMIN_API_USER
 In addition to the admin credentials for authorisation, we will need the following information to include in the API call:
 
 1. A virtual cluster name - to determine which part of the cluster these credentials should access.
-2. A username - to determine who or which app is interacting with the virtual cluster. A username might have additional interceptors applied.
+2. A username - to determine who or which app is interacting with the virtual cluster. A username might have additional interceptors beyond that of the vcluster applied.
 
 ![vcluster-user](./images/tenant-user-london.png)
 
-In our example below let's create a username against `vcluster:someCluster` and `username:someUsername`.
-
-Now that we have these credentials and know which vcluster & username we wish to interact with, we can create a new token:
+In our example below let's create a username `someUsername` against `vcluster:someCluster`.
 
 ```bash
 docker compose exec kafka-client \
@@ -77,11 +73,11 @@ docker compose exec kafka-client \
         --data-raw '{"lifeTimeSeconds":7776000}'
 ```
 
-This should return a JWT, an output similar to this:
+This should return a JWT, an output similar to:
 
 ```bash
 {
-  "data" : "eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM"
+  "token" : "eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM"
 }
 ```
 
@@ -91,7 +87,7 @@ This token should form the password field of a generic Kafka client configuratio
 
 We have created a template ready to receive this token as below. 
 
-Let's take a quick look at the current provided file, with the below command or open in your IDE:
+Let's take a quick look at the current provided file, with the below command, or open it in your in your IDE:
 
 ```bash
 docker compose exec kafka-client \
@@ -103,10 +99,10 @@ should return something similar to:
 ```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUsername" password="JWT_PLACEHOLDER";
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUsername" password="JWT_TOKEN_VALUE";
 ```
 
-Let's add our JWT, that we just generated from our CURL to the admin API, as the password value. Navigate and open the file `gateway.properties`, and paste your token into the password field being careful about the "" marks.
+Let's add our JWT, that we just generated from our CURL to the admin API, as the password value. Navigate and open the file `gateway.properties`, and paste your token into the password field being careful about the "" marks. Or just leave it as is to continue.
 
 Verify your saved changes look similar to the below:
 
@@ -118,7 +114,7 @@ docker compose exec kafka-client \
 ```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUsername" password="eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM";
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUsername" password="eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNvbWVVc2VybmFtZSIsInZjbHVzdGVyIjoic29tZUNsdXN0ZXIiLCJleHAiOjIwMDgyOTgzNzJ9.vgTd0QngJQp51gt73HNbHlwjK0m2dW8wD9zRLSZnZd4";
 ```
 
 ### Step 5: Using the token

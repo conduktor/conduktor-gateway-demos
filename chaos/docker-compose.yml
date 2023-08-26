@@ -82,13 +82,13 @@ services:
       retries: 25
 
   conduktor-gateway:
-    image: conduktor/conduktor-gateway:2.0.1
+    image: conduktor/conduktor-gateway:2.1.0
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093
       GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      GATEWAY_HOST: conduktor-gateway
+      GATEWAY_ADVERTISED_HOST: conduktor-gateway
       GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
     healthcheck:
       test: curl localhost:8888/health

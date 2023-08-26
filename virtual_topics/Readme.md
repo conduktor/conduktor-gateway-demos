@@ -24,7 +24,8 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
 ### Step 3: Create source topic
@@ -46,7 +47,9 @@ docker compose exec kafka-client \
 
 Produce 2 records to the cars topic, our mock car data for cars, 
 
-A blue car
+A blue car.
+
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
 echo '{ 

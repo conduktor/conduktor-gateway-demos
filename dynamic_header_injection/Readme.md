@@ -39,7 +39,8 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --wait --detach
+docker compose up --detach
+
 ```
 
 ### Step 4: Create topics
@@ -89,14 +90,14 @@ docker compose exec kafka-client \
 
 Use the Admin API to add the inject header interceptor. 
 
-The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, vcluster and Gateway ip in records on the topic `injectHeaderTopic`. 
+The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, username and Gateway ip in records on the topic `injectHeaderTopic`. 
 
 ```bash
 docker compose exec kafka-client \
   curl \
     --silent \
     --user admin:conduktor \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUsername/interceptors/injectHeader" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/injectHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DynamicHeaderInjectionPlugin",
@@ -112,13 +113,14 @@ docker compose exec kafka-client \
         }
     }'
 ```
-Confirm the interceptor exists;
+Confirm the interceptor exists.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 ```bash
 docker compose exec kafka-client \
   curl \
     --user 'admin:conduktor' \
-    --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUsername/interceptors" \
-    --header 'Content-Type: application/json'
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptors" \
+    --header 'Content-Type: application/json' | jq
 ```
 
 ```json
@@ -195,11 +197,10 @@ docker compose exec kafka-client \
 Let's create another interceptor against our user for the remove header with key pattern only e.g. to remove headers which key matches the pattern `k0.*'` in records on the topic `removeHeaderKeyPatternTopic`.
 
 ```bash
-
 docker compose exec kafka-client \
   curl \
     --user "admin:conduktor" \
-    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUsername/interceptors/removeHeader" \
+    --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/removeHeader" \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
@@ -253,7 +254,7 @@ k1:v1   key_pattern
 ### Step 12: Observe headers are not removed with the matching key pattern, at rest
 
 This interceptor only removes the messages on consume rather than produce as such you'll see them on the backing Kafka cluster, because you're not consuming through Gateway in this case.
-To observer the message headers are intact in the backing Kafka cluster;
+To observe the message headers are intact in the backing Kafka cluster;
 
 ```bash
 docker compose exec kafka-client \

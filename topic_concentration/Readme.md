@@ -26,7 +26,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 Start the environment with
 
 ```bash
-docker-compose up --wait --detach
+docker compose up --detach
 ```
 
 ### Step 3: Create topics
@@ -53,7 +53,7 @@ client topic ending "concentrationTest" will be concentrated to the "concentrati
 ```bash
 docker-compose exec kafka-client \
   curl \
-    --user "superUser:superUser" \
+    --user "admin:conduktor" \
     --request POST 'conduktor-gateway:8888/admin/vclusters/v1/vcluster/someCluster/topics/.%2AconcentrationTest' \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -111,7 +111,7 @@ This regular mapping allows our virtual cluster to see the topic on the backing 
 ```bash
 docker-compose exec kafka-client\
   curl \
-    --user "superUser:superUser" \
+    --user "admin:conduktor" \
     --request POST 'conduktor-gateway:8888/admin/vclusters/v1/vcluster/someCluster/topics/sourceTopic' \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -135,6 +135,7 @@ docker-compose exec kafka-client \
 
 Now we will produce 20 records to the physical topic, the one on the backing cluster.
 and read it back through the Gateway.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
 seq 1 20 | jq -c | docker-compose exec -T kafka-client \
