@@ -43,17 +43,24 @@ The command below will instruct Conduktor Gateway to enforce a minimum of 2 repl
 docker-compose exec kafka-client \
 curl \
     --user "admin:conduktor" \
-    --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/users/someUser/interceptors/guard-create-topics \
+    --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/guard-create-topics \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin",
         "priority": 100,
         "config": { 
             "topic": "",
-            "minNumPartition": 3,
-            "maxNumPartition": 3,
-            "minReplicationFactor": 2,
-            "maxReplicationFactor": 2 
+            "numPartition": {
+              "min": 3,
+              "max":3,
+              "whatToDo": "BLOCK"
+            },
+              "replicationFactor": {
+                "min": 2,
+                "max": 2,
+                "whatToDo": "OVERRIDE",
+                "overrideValue": 2
+            }
         }
     }'
 ```
@@ -76,7 +83,8 @@ docker compose exec kafka-client \
 You should see an output similar to the following:
 
 ```bash
-Error while executing topic command : Request parameters do not satisfy the configured policy. Number partitions is '10', must not be greater than 3. Replication factor is '1', must not be less than 2
+Error while executing topic command : Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
+[2023-08-26 11:27:14,206] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
 ```
 ### Step 6: Create a valid topic
 
