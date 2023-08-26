@@ -112,7 +112,8 @@ docker compose exec kafka-client \
         }
     }'
 ```
-Confirm the interceptor exists;
+Confirm the interceptor exists.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 ```bash
 docker compose exec kafka-client \
   curl \

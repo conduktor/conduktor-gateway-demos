@@ -103,7 +103,8 @@ docker compose exec kafka-client \
     }'
 ```
 
-We can confirm the interceptor exists on the virtual cluster;
+We can confirm the interceptor exists on the virtual cluster.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 ```bash
 docker compose exec kafka-client \
   curl \

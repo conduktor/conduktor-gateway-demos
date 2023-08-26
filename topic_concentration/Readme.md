@@ -135,6 +135,7 @@ docker-compose exec kafka-client \
 
 Now we will produce 20 records to the physical topic, the one on the backing cluster.
 and read it back through the Gateway.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
 seq 1 20 | jq -c | docker-compose exec -T kafka-client \

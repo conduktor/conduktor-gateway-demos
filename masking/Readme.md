@@ -109,6 +109,7 @@ docker compose exec kafka-client \
 ### Step 6: Produce data to the topic
 
 Let's produce a simple record to the masked topic.
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
 echo '{ 

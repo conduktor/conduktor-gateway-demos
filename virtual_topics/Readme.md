@@ -47,6 +47,7 @@ docker compose exec kafka-client \
 Produce 2 records to the cars topic, our mock car data for cars, 
 
 A blue car
+(We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
 echo '{ 
