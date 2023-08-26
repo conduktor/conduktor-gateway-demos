@@ -14,7 +14,8 @@ Walkthrough of the main Conduktor Gateway features
 
 * [End To End Encryption](encryption/Readme.md) - Seamlessly encrypt data at rest.
 * [SQL Topics](sql-topics/Readme.md) - The power of SQL... for topics!
-* [Multi Tenancy](multi-tenant/Readme.md) - host multiple, isolated vclusters on your Kafka cluster.
+* [Multi Tenancy](multi-tenant/Readme.md) - Host multiple, isolated vclusters on your Kafka cluster.
+* [Create Virtual Cluster](create-virtual-cluster/Readme.md) - Creating a virtual cluster
 * [Chaos](chaos/Readme.md) - Simulating Kafka problems to test the resiliency of your Kafka applications.
 * [Safeguard](safeguard/Readme.md) - Protect Kafka from inefficient configurations, or lack of knowledge.
 * [Masking](masking/Readme.md) - Hide important information.

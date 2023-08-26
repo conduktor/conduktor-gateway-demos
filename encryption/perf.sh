@@ -45,7 +45,7 @@ echo number of lines: `wc -l customers.json | awk '{print $1}'`
 echo file size: `du -sh customers.json | awk '{print $1}'`
 
 time docker compose exec -T kafka-client \
-    kafka-console-producer  \
+    kafka-console-producer \
         --bootstrap-server conduktor-proxy:6969 \
         --producer.config /clientConfig/proxy.properties \
         --topic encryption-performance < customers.json

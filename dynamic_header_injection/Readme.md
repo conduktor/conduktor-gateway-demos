@@ -166,11 +166,12 @@ docker compose exec kafka-client \
 Let's produce a simple record to the `injectHeaderTopic` topic.
 
 ```bash
-echo 'inject_header' | docker compose exec -T kafka-client \
-    kafka-console-producer  \
-        --bootstrap-server conduktor-gateway:6969 \
-        --producer.config /clientConfig/gateway.properties \
-        --topic injectHeaderTopic
+echo '{"message": "hello world"}' | \
+  docker compose exec -T kafka-client \
+    kafka-console-producer \
+      --bootstrap-server conduktor-gateway:6969 \
+      --producer.config /clientConfig/gateway.properties \
+      --topic injectHeaderTopic
 ```
 
 ### Step 7: Consume from the topic
@@ -235,7 +236,7 @@ Let's produce a simple record to the `removeHeaderKeyPatternTopic` topic.
 
 ```bash
 echo 'k0:v0,k1:v1^key_pattern' | docker compose exec -T kafka-client \
-    kafka-console-producer  \
+    kafka-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic removeHeaderKeyPatternTopic \

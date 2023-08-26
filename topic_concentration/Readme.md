@@ -121,7 +121,7 @@ We can send and query the data in the concentrated topics
 ```bash
 echo '{"type": "Sports", "price": 75, "color": "blue"}' | \
   docker compose exec -T kafka-client \
-    kafka-console-producer  \
+    kafka-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic concentrated-topic-with-10-partitions
@@ -142,7 +142,7 @@ Same for `concentrated-topic-with-100-partitions`
 ```bash
 echo '{"msg": "hello world"}' | \
   docker compose exec -T kafka-client \
-    kafka-console-producer  \
+    kafka-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic concentrated-topic-with-100-partitions

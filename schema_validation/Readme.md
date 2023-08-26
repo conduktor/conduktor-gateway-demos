@@ -96,7 +96,7 @@ Let's produce a simple record to the topic.
 ```bash
 echo '{"msg": "hello world"}' | 
   docker compose exec -T kafka-client \
-      kafka-console-producer  \
+      kafka-console-producer \
           --bootstrap-server conduktor-gateway:6969 \
           --producer.config /clientConfig/gateway.properties \
           --topic sr-topic

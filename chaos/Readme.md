@@ -240,7 +240,7 @@ docker-compose exec kafka-client \
       --consumer.config /clientConfig/gateway.properties \
       --from-beginning \
       --topic conduktorTopicDuplicate \
-      --max-messages 2
+      --max-messages 2 | jq
 ```
 
 This should produce output similar to this:
@@ -617,7 +617,7 @@ docker-compose exec kafka-client \
 Let's produce a record to our created topic.
 
 ```bash
-echo '{"msg": "hello world"}' | \
+echo '{"message": "hello world"}' | \
   docker compose exec -T schema-registry \
     kafka-json-schema-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
@@ -627,7 +627,7 @@ echo '{"msg": "hello world"}' | \
             "title": "someSchema", 
             "type": "object", 
             "properties": { 
-              "msg": { 
+              "message": { 
                 "type": "string" 
               }
             }

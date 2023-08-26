@@ -56,7 +56,7 @@ echo '{
     "price": 75,
     "color": "blue" 
 }' | jq -c | docker compose exec -T kafka-client \
-    kafka-console-producer  \
+    kafka-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic cars
@@ -70,7 +70,7 @@ echo '{
     "price": 55,
     "color": "red" 
 }' | jq -c | docker compose exec -T kafka-client \
-    kafka-console-producer  \
+    kafka-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic cars
