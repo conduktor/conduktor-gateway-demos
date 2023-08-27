@@ -57,7 +57,7 @@ docker-compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST 'conduktor-gateway:8888/admin/vclusters/v1/vcluster/someCluster/topics/concentrated-.%2A' \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "physicalTopicName": "hold-many-virtual-topics",
         "readOnly": false,

@@ -37,7 +37,7 @@ execute """docker-compose exec kafka-client \\
   curl \\
     --user \"admin:conduktor\" \\
     --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/guard-alter-configs \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin\",
         \"priority\": 100,

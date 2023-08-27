@@ -60,9 +60,9 @@ execute """docker compose exec kafka-client \\
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
-    --user admin:conduktor \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/injectHeader\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.DynamicHeaderInjectionPlugin\",
         \"priority\": 100,
@@ -81,9 +81,9 @@ execute """docker compose exec kafka-client \\
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptors\" \\
-    --header 'Content-Type: application/json' | jq
+    --header \"Content-Type: application/json\" | jq
 """
 
 execute """echo '{\"message\": \"hello world\"}' | \\
@@ -118,7 +118,7 @@ execute """docker compose exec kafka-client \\
     --silent \\
     --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/removeHeader\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin\",
         \"priority\": 100,

@@ -111,8 +111,8 @@ execute """echo existingSharedMessage | \\
 execute """docker compose exec kafka-client \\
  curl \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingLondonTopic \\
-    --user admin:conduktor \\
-    --header 'Content-Type: application/json' \\
+    --user \"admin:conduktor\" \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{ 
         \"physicalTopicName\": \"existingLondonTopic\",
         \"readOnly\": false,
@@ -123,8 +123,8 @@ execute """docker compose exec kafka-client \\
 execute """docker compose exec kafka-client \\
  curl \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingSharedTopic \\
-    --user admin:conduktor \\
-    --header 'Content-Type: application/json' \\
+    --user \"admin:conduktor\" \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{ 
         \"physicalTopicName\": \"existingSharedTopic\",
         \"readOnly\": false,
@@ -135,8 +135,8 @@ execute """docker compose exec kafka-client \\
 execute """docker compose exec kafka-client \\
  curl \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/paris/topics/existingSharedTopic \\
-    --user admin:conduktor \\
-    --header 'Content-Type: application/json' \\
+    --user \"admin:conduktor\" \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{ 
         \"physicalTopicName\": \"existingSharedTopic\",
         \"readOnly\": false,

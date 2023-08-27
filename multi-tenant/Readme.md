@@ -217,8 +217,8 @@ First let's add the mapping of the topic name for the London virtual cluster and
 docker compose exec kafka-client \
  curl \
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingLondonTopic \
-    --user admin:conduktor \
-    --header 'Content-Type: application/json' \
+    --user "admin:conduktor" \
+    --header "Content-Type: application/json" \
     --data-raw '{ 
         "physicalTopicName": "existingLondonTopic",
         "readOnly": false,
@@ -232,8 +232,8 @@ and again to add the mapping `existingSharedTopic` into the London virtual clust
 docker compose exec kafka-client \
  curl \
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingSharedTopic \
-    --user admin:conduktor \
-    --header 'Content-Type: application/json' \
+    --user "admin:conduktor" \
+    --header "Content-Type: application/json" \
     --data-raw '{ 
         "physicalTopicName": "existingSharedTopic",
         "readOnly": false,
@@ -247,8 +247,8 @@ and finally to add the mapping `existingSharedTopic` also into the Paris virtual
 docker compose exec kafka-client \
  curl \
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/paris/topics/existingSharedTopic \
-    --user admin:conduktor \
-    --header 'Content-Type: application/json' \
+    --user "admin:conduktor" \
+    --header "Content-Type: application/json" \
     --data-raw '{ 
         "physicalTopicName": "existingSharedTopic",
         "readOnly": false,

@@ -72,7 +72,7 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/masker" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
           "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
           "priority": 100,

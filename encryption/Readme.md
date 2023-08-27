@@ -74,7 +74,7 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/encrypt" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
         "priority": 100,
@@ -125,7 +125,7 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/decrypt" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
         "priority": 100,
@@ -276,7 +276,7 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/performanceEncrypt" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
         "priority": 100,

@@ -35,9 +35,9 @@ execute """docker compose exec kafka-client \\
 
 execute """docker compose exec kafka-client \\
   curl \\
-    --user admin:conduktor \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.safeguard.TopicRequiredSchemaIdPolicyPlugin\",
         \"priority\": 100,
@@ -51,9 +51,9 @@ execute """docker compose exec kafka-client \\
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
-    --user admin:conduktor \\
+    --user \"admin:conduktor\" \\
     --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required\" \\
-    --header 'Content-Type: application/json' | jq
+    --header \"Content-Type: application/json\" | jq
 """
 
 execute """echo '{\"msg\": \"hello world\"}' | 
@@ -91,9 +91,9 @@ execute """echo '{
 
 execute """docker compose exec kafka-client \\
   curl \\
-    --user admin:conduktor \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin\",
         \"priority\": 100,
@@ -111,9 +111,9 @@ execute """docker compose exec kafka-client \\
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
-    --user admin:conduktor \\
+    --user \"admin:conduktor\" \\
     --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required\" \\
-    --header 'Content-Type: application/json' | jq
+    --header \"Content-Type: application/json\" | jq
 """
 
 execute """echo '{ 

@@ -109,9 +109,9 @@ The command below will add an interceptor to Conduktor Gateway to inject headers
 docker compose exec kafka-client \
   curl \
     --silent \
-    --user admin:conduktor \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/injectHeader" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DynamicHeaderInjectionPlugin",
         "priority": 100,
@@ -133,9 +133,9 @@ Confirm the interceptor exists.
 docker compose exec kafka-client \
   curl \
     --silent \
-    --user 'admin:conduktor' \
+    --user "admin:conduktor" \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptors" \
-    --header 'Content-Type: application/json' | jq
+    --header "Content-Type: application/json" | jq
 ```
 
 ```json
@@ -218,7 +218,7 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/removeHeader" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
         "priority": 100,

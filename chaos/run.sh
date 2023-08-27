@@ -40,9 +40,9 @@ execute """docker compose exec kafka-client \\
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/broken-broker\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin\",
         \"priority\": 100,
@@ -59,9 +59,9 @@ execute """docker compose exec kafka-client \\
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors\" \\
-    --header 'Content-Type: application/json' | jq
+    --header \"Content-Type: application/json\" | jq
 """
 
 execute """docker-compose exec kafka-client \\
@@ -75,7 +75,7 @@ execute """docker-compose exec kafka-client \\
 
 execute """docker-compose exec kafka-client \\
   curl \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/broken-broker\"
 """
 
@@ -110,9 +110,9 @@ execute """docker-compose exec kafka-client \\
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/duplicate-resource\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.chaos.DuplicateResourcesPlugin\",
         \"priority\": 100,
@@ -142,7 +142,7 @@ execute """docker-compose exec kafka-client \\
 
 execute """docker-compose exec kafka-client \\
   curl \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/duplicate-resource\"
 """
 
@@ -156,9 +156,9 @@ execute """docker-compose exec kafka-client \
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/leader-election\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin\",
         \"priority\": 100,
@@ -179,7 +179,7 @@ execute """docker-compose exec kafka-client \\
 
 execute """docker-compose exec kafka-client \\
   curl \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/leader-election\"
 """
 
@@ -201,9 +201,9 @@ execute """docker-compose exec kafka-client \\
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/random-bytes\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.chaos.ProduceSimulateMessageCorruptionPlugin\",
         \"priority\": 100,
@@ -237,7 +237,7 @@ execute """{\"message\": \"hello world\"}T[�   �X�{�
 
 execute """docker-compose exec kafka-client \\
   curl \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/random-bytes\"
 """
 
@@ -251,9 +251,9 @@ execute """docker-compose exec kafka-client \\
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-broker\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin\",
         \"priority\": 100,
@@ -277,7 +277,7 @@ execute """docker-compose exec kafka-client \\
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-broker\"
 """
 
@@ -299,9 +299,9 @@ execute """docker-compose exec kafka-client \\
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-topic\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.chaos.SimulateSlowProducersConsumersPlugin\",
         \"priority\": 100,
@@ -326,7 +326,7 @@ execute """docker-compose exec kafka-client \\
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/slow-topic\"
 """
 
@@ -348,9 +348,9 @@ execute """docker-compose exec kafka-client \\
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request POST \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/invalid-schema\" \\
-    --header 'Content-Type: application/json' \\
+    --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.chaos.SimulateInvalidSchemaIdPlugin\",
         \"priority\": 100,
@@ -415,7 +415,7 @@ Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientEx
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
-    --user 'admin:conduktor' \\
+    --user \"admin:conduktor\" \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/invalid-schema\"
 """
 

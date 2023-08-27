@@ -44,7 +44,7 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/guard-create-topics \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin",
         "priority": 100,

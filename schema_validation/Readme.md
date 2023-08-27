@@ -63,9 +63,9 @@ The command below will create an interceptor for validating that the records on 
 ```bash
 docker compose exec kafka-client \
   curl \
-    --user admin:conduktor \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.TopicRequiredSchemaIdPolicyPlugin",
         "priority": 100,
@@ -83,9 +83,9 @@ Verify it exists.
 docker compose exec kafka-client \
   curl \
     --silent \
-    --user admin:conduktor \
+    --user "admin:conduktor" \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required" \
-    --header 'Content-Type: application/json' | jq
+    --header "Content-Type: application/json" | jq
 ```
 
 ### Step 5: Produce bad data to the topic
@@ -144,9 +144,9 @@ Now instead of just making sure we have a schema Id, we'll make sure that it exi
 ```bash
 docker compose exec kafka-client \
   curl \
-    --user admin:conduktor \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin",
         "priority": 100,
@@ -167,9 +167,9 @@ Verify it exists.
 docker compose exec kafka-client \
   curl \
     --silent \
-    --user admin:conduktor \
+    --user "admin:conduktor" \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required" \
-    --header 'Content-Type: application/json' | jq
+    --header "Content-Type: application/json" | jq
 ```
 
 Send data with a schema id Gateway does not know.
