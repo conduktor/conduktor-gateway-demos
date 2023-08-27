@@ -4,11 +4,13 @@ services:
     image: confluentinc/cp-zookeeper:latest
     hostname: zookeeper
     container_name: zookeeper
-    ports:
-      - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: nc -zv zookeeper 2181 || exit 1
+      interval: 5s
+      retries: 25
 
   kafka1:
     image: confluentinc/cp-kafka:latest
@@ -30,6 +32,10 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+    healthcheck:
+      test: nc -zv kafka1 9092 || exit 1
+      interval: 5s
+      retries: 25
 
   kafka2:
     image: confluentinc/cp-kafka:latest
@@ -51,18 +57,29 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+    healthcheck:
+      test: nc -zv kafka2 9093 || exit 1
+      interval: 5s
+      retries: 25
 
   conduktor-gateway:
     image: conduktor/conduktor-gateway:2.1.0
     hostname: conduktor-gateway
     container_name: conduktor-gateway
-    depends_on:
-      - kafka1
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
       GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
       GATEWAY_ADVERTISED_HOST: conduktor-gateway
       GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    healthcheck:
+      test: curl localhost:8888/health
+      interval: 5s
+      retries: 25
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
 
 
   kafka-client:

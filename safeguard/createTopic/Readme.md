@@ -21,7 +21,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection through Conduktor Gateway to the underlying Kafka
 
-Note: Gateway and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -29,8 +29,7 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --detach
-
+docker compose up --wait --detach
 ```
 
 ### Step 4: Configure safeguard
@@ -40,15 +39,16 @@ Conduktor gateway provides a REST API used to configure the interceptors.
 The command below will instruct Conduktor Gateway to enforce a minimum of 2 replicas and 3 partitions for any newly created topics. Leaving `topic` blank applies this to all topics on the tenant.
 
 ```bash
-docker-compose exec kafka-client \
-curl \
+docker compose exec kafka-client \
+  curl \
+    --silent \
     --user "admin:conduktor" \
     --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/guard-create-topics \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin",
         "priority": 100,
-        "config": { 
+        "config": {
             "topic": "",
             "numPartition": {
               "min": 3,
@@ -82,7 +82,7 @@ docker compose exec kafka-client \
 
 You should see an output similar to the following:
 
-```bash
+```
 Error while executing topic command : Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
 [2023-08-26 11:27:14,206] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
 ```
@@ -100,9 +100,10 @@ docker compose exec kafka-client \
     --replication-factor 2 \
     --partitions 3
 ```
+
 ### Step 7: Visualise the workflow
 
-> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/).
 > Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 ### Step 8: View the clusters in Conduktor Console
 

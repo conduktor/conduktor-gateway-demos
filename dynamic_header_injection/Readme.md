@@ -31,7 +31,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection to Conduktor Gateway, which sits as a proxy infront of the underlying Kafka
 
-Note: Gateway and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -39,14 +39,14 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --detach
-
+docker compose up --wait --detach
 ```
 
 ### Step 4: Create topics
 
 We create a base set of topics using the Kafka CLI tools;
 
+`injectHeaderTopic` topic
 ```bash
 docker compose exec kafka-client \
   kafka-topics \
@@ -54,21 +54,33 @@ docker compose exec kafka-client \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic injectHeaderTopic
+```
 
+`removeHeaderKeyPatternTopic` topic
+
+```bash
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderKeyPatternTopic
+```
 
+`removeHeaderValuePatternTopic` topic
+
+```bash
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create --if-not-exists \
     --topic removeHeaderValuePatternTopic
+```
 
+`removeHeaderKeyValuePatternTopic` topic
+
+```bash
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
@@ -76,6 +88,7 @@ docker compose exec kafka-client \
     --create --if-not-exists \
     --topic removeHeaderKeyValuePatternTopic
 ```
+
 List the created topics
 
 ```bash
@@ -88,17 +101,17 @@ docker compose exec kafka-client \
 
 ### <a name="injectHeader"></a> Step 5: Inject Header
 
-Use the Admin API to add the inject header interceptor. 
+Use the Admin API to add the inject header interceptor.
 
-The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, username and Gateway ip in records on the topic `injectHeaderTopic`. 
+The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, username and Gateway ip in records on the topic `injectHeaderTopic`.
 
 ```bash
 docker compose exec kafka-client \
   curl \
     --silent \
-    --user admin:conduktor \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/injectHeader" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DynamicHeaderInjectionPlugin",
         "priority": 100,
@@ -115,12 +128,14 @@ docker compose exec kafka-client \
 ```
 Confirm the interceptor exists.
 (We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
+
 ```bash
 docker compose exec kafka-client \
   curl \
-    --user 'admin:conduktor' \
+    --silent \
+    --user "admin:conduktor" \
     --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptors" \
-    --header 'Content-Type: application/json' | jq
+    --header "Content-Type: application/json" | jq
 ```
 
 ```json
@@ -151,11 +166,12 @@ docker compose exec kafka-client \
 Let's produce a simple record to the `injectHeaderTopic` topic.
 
 ```bash
-echo 'inject_header' | docker compose exec -T kafka-client \
-    kafka-console-producer  \
-        --bootstrap-server conduktor-gateway:6969 \
-        --producer.config /clientConfig/gateway.properties \
-        --topic injectHeaderTopic
+echo '{"message": "hello world"}' | \
+  docker compose exec -T kafka-client \
+    kafka-console-producer \
+      --bootstrap-server conduktor-gateway:6969 \
+      --producer.config /clientConfig/gateway.properties \
+      --topic injectHeaderTopic
 ```
 
 ### Step 7: Consume from the topic
@@ -199,9 +215,10 @@ Let's create another interceptor against our user for the remove header with key
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/removeHeader" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
         "priority": 100,
@@ -219,7 +236,7 @@ Let's produce a simple record to the `removeHeaderKeyPatternTopic` topic.
 
 ```bash
 echo 'k0:v0,k1:v1^key_pattern' | docker compose exec -T kafka-client \
-    kafka-console-producer  \
+    kafka-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic removeHeaderKeyPatternTopic \
@@ -274,7 +291,7 @@ k0:v0,k1:v1     key_pattern
 
 ### Step 13: Visualise the workflow
 
-> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/).
 > Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 
 ### Step 14: View the clusters in Conduktor Console

@@ -2,7 +2,7 @@
 
 ## What is Conduktor Gateway Encryption?
 
-Conduktor Gateway's encryption feature encrypts sensitive fields within messages as they are produced through the Gateway. 
+Conduktor Gateway's encryption feature encrypts sensitive fields within messages as they are produced through the Gateway.
 
 These fields are stored on disk encrypted but can easily be read by clients reading through the Gateway. (We also support an encrypt on fetch functionality for keeping your data secure when working with 3rd parties and partners, we won't demo that today but get in touch to discuss further.)
 
@@ -28,7 +28,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection through Conduktor Gateway to the underlying Kafka
 
-Note: Gateway and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -36,8 +36,7 @@ In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --detach
-
+docker compose up --wait --detach
 ```
 
 ### Step 4: Create topics
@@ -67,7 +66,7 @@ docker compose exec kafka-client \
 
 Now let's create an encryption interceptor via the Admin API.
 
-The configuration of this interceptor will encrypt the `password` and `visa` fields in records on our topic `encryptedTopic`. 
+The configuration of this interceptor will encrypt the `password` and `visa` fields in records on our topic `encryptedTopic`.
 
 ```bash
 docker compose exec kafka-client \
@@ -75,7 +74,7 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/encrypt" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
         "priority": 100,
@@ -87,7 +86,7 @@ docker compose exec kafka-client \
             "fields": [ {
                 "fieldName": "password",
                 "keySecretId": "password-secret",
-                "algorithm": { 
+                "algorithm": {
                     "type": "AES_GCM",
                     "kms": "IN_MEMORY"
                 }
@@ -101,7 +100,7 @@ docker compose exec kafka-client \
                 }
             }]
         }
-    }' 
+    }'
 ```
 
 and confirm succesful creation by listing the interceptors for virtual cluster `someCluster`.
@@ -111,6 +110,7 @@ and confirm succesful creation by listing the interceptors for virtual cluster `
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
@@ -125,7 +125,7 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/decrypt" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
         "priority": 100,
@@ -143,6 +143,7 @@ and list the interceptors for virtual cluster someCluster:
 ```bash
 docker compose exec kafka-client \
   curl \
+    --silent \
     --user "admin:conduktor" \
     conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 ```
@@ -152,27 +153,27 @@ docker compose exec kafka-client \
 Let's produce a simple record to the encrypted topic.
 
 ```bash
-echo '{ 
+echo '{
     "name": "conduktor",
     "username": "test@conduktor.io",
     "password": "password1",
     "visa": "visa123456",
-    "address": "Conduktor Towers, London" 
+    "address": "Conduktor Towers, London"
 }' | jq -c | docker compose exec -T schema-registry \
-    kafka-json-schema-console-producer  \
+    kafka-json-schema-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic encryptedTopic \
-        --property value.schema='{ 
+        --property value.schema='{
             "title": "User",
             "type": "object",
-            "properties": { 
+            "properties": {
                 "name": { "type": "string" },
                 "username": { "type": "string" },
                 "password": { "type": "string" },
                 "visa": { "type": "string" },
-                "address": { "type": "string" } 
-            } 
+                "address": { "type": "string" }
+            }
         }'
 ```
 
@@ -229,7 +230,7 @@ You should see an output similar to the below:
 
 ## Step 10: Visualise the workflow
 
-> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/).
 > Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 
 ### Step 11: Viewing the clusters in Conduktor Console
@@ -257,13 +258,14 @@ Encryption won't come without some trade-off elsewhere and you might be worried 
 [![asciicast](https://asciinema.org/a/IDVSYFYL2xjAQSN2cPhZ7Hfih.svg)](https://asciinema.org/a/IDVSYFYL2xjAQSN2cPhZ7Hfih)
 
 Create a performance topic
-```sh
+
+```bash
 docker compose exec kafka-client \
-    kafka-topics \
-        --bootstrap-server conduktor-gateway:6969 \
-        --command-config /clientConfig/gateway.properties \
-        --create --if-not-exists \
-        --topic encryption-performance
+  kafka-topics \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
+    --create --if-not-exists \
+    --topic encryption-performance
 ```
 
 Let's apply the encryption on this topic
@@ -274,51 +276,60 @@ docker compose exec kafka-client \
     --silent \
     --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/performanceEncrypt" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
         "priority": 100,
         "config": {
             "topic": "encryption-performance",
-            "fields": [ { 
+            "fields": [ {
                 "fieldName": "password",
                 "keySecretId": "password-secret",
-                "algorithm": { 
+                "algorithm": {
                     "type": "AES_GCM",
                     "kms": "IN_MEMORY"
                 }
             },
-            { 
+            {
                 "fieldName": "visa",
                 "keySecretId": "visa-secret",
-                "algorithm": { 
+                "algorithm": {
                     "type": "AES_GCM",
                     "kms": "IN_MEMORY"
-                } 
+                }
             }]
         }
     }'
 ```
 
-Let's create a large `customers.json` file with 1 000 000 entries
+We create a payload example file for `kafka-producer-perf-test`, the benchmark tool that comes with Kafka.
 
-```sh
+```bash
+cat customers.json
+```
 
-echo '{"name":"london","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}' > customers.json
+Let's copy it to the container where `kafka-producer-perf-test` will run.
 
+```bash
 docker compose cp customers.json kafka-client:/home/appuser
+```
 
+Then run the benchmark
+
+```bash
 docker compose exec kafka-client \
-    kafka-producer-perf-test \
-        --topic encryption-performance \
-        --throughput -1 \
-        --num-records 1000000 \
-        --producer-props bootstrap.servers=conduktor-gateway:6969 linger.ms=100 \
-        --producer.config /clientConfig/gateway.properties \
-        --payload-file customers.json
+  kafka-producer-perf-test \
+    --topic encryption-performance \
+    --throughput -1 \
+    --num-records 1000000 \
+    --producer-props bootstrap.servers=conduktor-gateway:6969 linger.ms=100 \
+    --producer.config /clientConfig/gateway.properties \
+    --payload-file customers.json
 ```
 
 # Conclusion
 We have today reviewed how you can encrypt your data, setup the decryption all whilst ensuring it is encrypted at rest.
+
 We have shown this visually using Console and shown the inevitable, but low, impact on performance.
-This of course is but one of the many features availble from the Gateway, for further questions on how Gateway can help take your Kafka experience to the next level [contact us](https://www.conduktor.io/contact/).
+
+This of course is but one of the many features available from the Gateway, for further questions on how Gateway can help take your Kafka experience to the next level [contact us](https://www.conduktor.io/contact/).

@@ -26,7 +26,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection to Conduktor Gateway
 
-Note: Gateway and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -34,12 +34,12 @@ In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 Start the environment with
 
 ```bash
-docker compose up --detach
+docker compose up --wait --detach
 ```
 
 ### Step 4: Create topics
 
-Let's creates a topic named `maskedTopic`
+Let's create a topic named `maskedTopic`
 
 ```bash
 docker compose exec kafka-client \
@@ -53,7 +53,6 @@ docker compose exec kafka-client \
 List the created topic
 
 ```bash
-# Check it has been created
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
@@ -63,47 +62,48 @@ docker compose exec kafka-client \
 
 ### Step 5: Configure masking
 
-The same REST API can be used to create the masking interceptor. 
+The same REST API can be used to create the masking interceptor.
 
 The command below will add a masking interceptor, configured to mask the `password` and `visa` fields in records.
 
 ```bash
 docker compose exec kafka-client \
   curl \
-    --user admin:conduktor \
+    --silent \
+    --user "admin:conduktor" \
     --request POST "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/masker" \
-    --header 'Content-Type: application/json' \
+    --header "Content-Type: application/json" \
     --data-raw '{
-                  "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
-                  "priority": 100,
-                  "config": {
-                    "schemaRegistryConfig": {
-                        "host": "http://schema-registry:8081"
-                    },
-                    "policies": [
-                      {
-                        "name": "Mask password",
-                        "rule": {
-                          "type": "MASK_ALL"
-                        },
-                        "fields": [
-                          "password"
-                        ]
-                      },
-                      {
-                        "name": "Mask visa",
-                        "rule": {
-                          "type": "MASK_LAST_N",
-                          "maskingChar": "X",
-                          "numberOfChars": 4
-                        },
-                        "fields": [
-                          "visa"
-                        ]
-                      }
-                    ]
-                  }
-                }'
+          "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
+          "priority": 100,
+          "config": {
+            "schemaRegistryConfig": {
+                "host": "http://schema-registry:8081"
+            },
+            "policies": [
+              {
+                "name": "Mask password",
+                "rule": {
+                  "type": "MASK_ALL"
+                },
+                "fields": [
+                  "password"
+                ]
+              },
+              {
+                "name": "Mask visa",
+                "rule": {
+                  "type": "MASK_LAST_N",
+                  "maskingChar": "X",
+                  "numberOfChars": 4
+                },
+                "fields": [
+                  "visa"
+                ]
+              }
+            ]
+          }
+        }'
 ```
 
 ### Step 6: Produce data to the topic
@@ -112,28 +112,28 @@ Let's produce a simple record to the masked topic.
 (We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
-echo '{ 
+echo '{
     "name": "conduktor",
     "username": "test@conduktor.io",
     "password": "password1",
     "visa": "visa123456",
-    "address": "Conduktor Towers, London" 
+    "address": "Conduktor Towers, London"
 }' | jq -c | docker compose exec -T schema-registry \
-    kafka-json-schema-console-producer  \
+    kafka-json-schema-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic maskedTopic \
         --property schema.registry.url=http://schema-registry:8081 \
-        --property value.schema='{ 
+        --property value.schema='{
             "title": "User",
             "type": "object",
-            "properties": { 
+            "properties": {
                 "name": { "type": "string" },
                 "username": { "type": "string" },
                 "password": { "type": "string" },
                 "visa": { "type": "string" },
-                "address": { "type": "string" } 
-            } 
+                "address": { "type": "string" }
+            }
         }'
 ```
 
@@ -142,7 +142,6 @@ echo '{
 Let's consume from our `maskedTopic`.
 
 ```bash
-# And consume through the Gateway, it's masked
 docker compose exec schema-registry \
    kafka-json-schema-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
@@ -170,7 +169,6 @@ You should see the masked fields as below:
 Let's consume directly from the underlying Kafka cluster.
 
 ```bash
-# And consume through the underlying cluster
 docker compose exec schema-registry \
   kafka-json-schema-console-consumer \
     --bootstrap-server kafka1:9092 \
@@ -182,7 +180,7 @@ docker compose exec schema-registry \
 
 ### Step 9: Visualise the workflow
 
-> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/).
 > Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 
 ### Step 10: View the clusters in Conduktor Console
