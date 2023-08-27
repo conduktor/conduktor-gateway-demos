@@ -301,11 +301,10 @@ docker compose exec kafka-client \
     }'
 ```
 
-Let's create an example file for `kafka-producer-perf-test`, the benchmark tool that comes with Kafka.
+We create a payload example file for `kafka-producer-perf-test`, the benchmark tool that comes with Kafka.
 
 ```bash
-echo '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}' > customers.json
-echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#qsdsqd","address":"Jumeira 1, Dubai"}' >> customers.json
+cat customers.json
 ```
 
 Let's copy it to the container where `kafka-producer-perf-test` will run.
