@@ -85,7 +85,7 @@ docker compose exec kafka-client \
         --consumer.config /clientConfig/gateway.properties \
         --topic cars \
         --from-beginning  \
-        --max-messages 2
+        --max-messages 2 | jq
 ```
 
 ### Step 5: Create the virtual topic interceptor
@@ -125,17 +125,21 @@ Let's consume from our virtual topic `red-cars`.
 
 ```bash
 docker compose exec kafka-client \
-    kafka-console-consumer  \
-        --bootstrap-server conduktor-gateway:6969 \
-        --consumer.config /clientConfig/gateway.properties \
-        --topic red-cars \
-        --from-beginning
+  kafka-console-consumer  \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
+    --topic red-cars \
+    --from-beginning \
+    --max-messages 1 | jq
 ```
 
 You should see only one message consumed with the format changed according to our SQL statement's projection.
 
 ```json
-{"type":"SUV","color":"red"}
+{
+  "type":"SUV",
+  "color":"red"
+}
 ```
 
 ### Step 7: Cleaning up
