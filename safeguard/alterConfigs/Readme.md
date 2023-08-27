@@ -21,7 +21,7 @@ The `platform-config.yaml` defines 2 cluster configurations:
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection through Conduktor Gateway to the underlying Kafka
 
-Note: Gateway and the backing Kafka can use different security schemes. 
+Note: Gateway and the backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the gateway is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -76,7 +76,7 @@ docker-compose exec kafka-client \
             "min": 86400000,
             "max": 432000000
           }
-        }  
+        }
     }'
 ```
 

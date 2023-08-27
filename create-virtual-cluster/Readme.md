@@ -4,11 +4,11 @@
 
 Some features of Conduktor Gateway make use of virtual clusters (VC), a.k.a multi-tenancy, instead of the Passthrough mode.
 
-In order for this to work seamlessly with your clients the Gateway expects to receive extra information about the vcluster (or virtual cluster) a connecting client represents  during authentication. 
+In order for this to work seamlessly with your clients the Gateway expects to receive extra information about the vcluster (or virtual cluster) a connecting client represents  during authentication.
 
-This information is typically encoded into an encrypted JWT token that is created by a Gateway administrator. 
+This information is typically encoded into an encrypted JWT token that is created by a Gateway administrator.
 
-The client then supplies this token in it's security credentials and the Gateway validates it before routing accordingly.   
+The client then supplies this token in it's security credentials and the Gateway validates it before routing accordingly.
 
 This demo shows you how to generate client tokens and use them in your applications.
 
@@ -40,7 +40,7 @@ This step is for reference only, the demo is pre-configured in `docker-compose.y
 
 Conduktor Gateway manages user access in a "user pool".
 
-You may wish to further configure the pool when in production, in this case Gateway requires a secret that is used to encrypt any tokens generated, which can be provided by setting the appropriate environment variable. 
+You may wish to further configure the pool when in production, in this case Gateway requires a secret that is used to encrypt any tokens generated, which can be provided by setting the appropriate environment variable.
 
 For more information on setting environment variables or any other part of the configuration details, checkout the [docs site](https://docs.conduktor.io/).
 
@@ -48,9 +48,9 @@ You'll also see in the docker compose that Passthrough is set to false as we're 
 
 ### Step 4: Generating a token
 
-With our environment configured we can start generating tokens!  
+With our environment configured we can start generating tokens!
 
-Tokens are created from calls to a REST endpoint.  This endpoint is intended only for use by administrators so requires master credentials for use. 
+Tokens are created from calls to a REST endpoint.  This endpoint is intended only for use by administrators so requires master credentials for use.
 
 More info about the admin API is available online and can be found from the docs site.
 
@@ -72,7 +72,7 @@ docker compose exec kafka-client \
     --user "admin:conduktor" \
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/someCluster/username/someUsername \
     --header "content-type:application/json" \
-    --data-raw '{"lifeTimeSeconds":7776000}' | jq 
+    --data-raw '{"lifeTimeSeconds":7776000}' | jq
 ```
 
 This should return a JWT, an output similar to:
@@ -85,9 +85,9 @@ This should return a JWT, an output similar to:
 
 ### Step 5: Creating a client configuration
 
-This token should form the password field of a generic Kafka client configuration that uses `SASL_PLAIN` as it's security mechanism. 
+This token should form the password field of a generic Kafka client configuration that uses `SASL_PLAIN` as it's security mechanism.
 
-We have created a template ready to receive this token as below. 
+We have created a template ready to receive this token as below.
 
 Let's take a quick look at the current provided file, with the below command, or open it in your IDE:
 
@@ -103,8 +103,8 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUsername" password="JWT_TOKEN_VALUE";
 ```
 
-Let's add our JWT, that we just generated from our CURL to the admin API, as the password value. 
-Navigate and open the file `gateway.properties`, and paste your token into the password field being careful about the "" marks. 
+Let's add our JWT, that we just generated from our CURL to the admin API, as the password value.
+Navigate and open the file `gateway.properties`, and paste your token into the password field being careful about the "" marks.
 Or just leave it as is to continue.
 
 Verify your saved changes look similar to the below:

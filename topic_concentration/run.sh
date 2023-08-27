@@ -1,8 +1,8 @@
 #!/bin/sh
 function execute() {
     chars=$(echo "$*" | wc -c)
-    printf "$"
     sleep 2
+    printf "$"
     if [ "$chars" -lt 100 ] ; then
         echo "$*" | pv -qL 50
     elif [ "$chars" -lt 250 ] ; then
@@ -82,7 +82,7 @@ execute """echo '{\"type\": \"Sports\", \"price\": 75, \"color\": \"blue\"}' | \
 """
 
 execute """docker-compose exec kafka-client \\
-  kafka-console-consumer  \\
+  kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
     --consumer.config /clientConfig/gateway.properties \\
     --topic concentrated-topic-with-10-partitions \\
@@ -99,7 +99,7 @@ execute """echo '{\"msg\": \"hello world\"}' | \\
 """
 
 execute """docker-compose exec kafka-client \\
-  kafka-console-consumer  \\
+  kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
     --consumer.config /clientConfig/gateway.properties \\
     --topic concentrated-topic-with-100-partitions \\
@@ -108,7 +108,7 @@ execute """docker-compose exec kafka-client \\
 """
 
 execute """docker-compose exec kafka-client \\
-  kafka-console-consumer  \\
+  kafka-console-consumer \\
     --bootstrap-server kafka1:9092 \\
     --topic hold-many-virtual-topics \\
     --from-beginning \\
@@ -116,7 +116,7 @@ execute """docker-compose exec kafka-client \\
 """
 
 execute """docker-compose exec kafka-client \\
-  kafka-console-consumer  \\
+  kafka-console-consumer \\
     --bootstrap-server kafka1:9092 \\
     --topic hold-many-virtual-topics \\
     --property print.headers=true \\

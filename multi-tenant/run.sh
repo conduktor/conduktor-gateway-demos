@@ -1,8 +1,8 @@
 #!/bin/sh
 function execute() {
     chars=$(echo "$*" | wc -c)
-    printf "$"
     sleep 2
+    printf "$"
     if [ "$chars" -lt 100 ] ; then
         echo "$*" | pv -qL 50
     elif [ "$chars" -lt 250 ] ; then
@@ -113,7 +113,7 @@ execute """docker compose exec kafka-client \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingLondonTopic \\
     --user \"admin:conduktor\" \\
     --header \"Content-Type: application/json\" \\
-    --data-raw '{ 
+    --data-raw '{
         \"physicalTopicName\": \"existingLondonTopic\",
         \"readOnly\": false,
         \"concentrated\": false
@@ -125,7 +125,7 @@ execute """docker compose exec kafka-client \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingSharedTopic \\
     --user \"admin:conduktor\" \\
     --header \"Content-Type: application/json\" \\
-    --data-raw '{ 
+    --data-raw '{
         \"physicalTopicName\": \"existingSharedTopic\",
         \"readOnly\": false,
         \"concentrated\": false
@@ -137,7 +137,7 @@ execute """docker compose exec kafka-client \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/paris/topics/existingSharedTopic \\
     --user \"admin:conduktor\" \\
     --header \"Content-Type: application/json\" \\
-    --data-raw '{ 
+    --data-raw '{
         \"physicalTopicName\": \"existingSharedTopic\",
         \"readOnly\": false,
         \"concentrated\": false

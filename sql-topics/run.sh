@@ -1,8 +1,8 @@
 #!/bin/sh
 function execute() {
     chars=$(echo "$*" | wc -c)
-    printf "$"
     sleep 2
+    printf "$"
     if [ "$chars" -lt 100 ] ; then
         echo "$*" | pv -qL 50
     elif [ "$chars" -lt 250 ] ; then
@@ -28,10 +28,10 @@ execute """docker compose exec kafka-client \\
     --partitions 1
 """
 
-execute """echo '{ 
+execute """echo '{
     \"type\": \"Sports\",
     \"price\": 75,
-    \"color\": \"blue\" 
+    \"color\": \"blue\"
 }' | jq -c | docker compose exec -T kafka-client \\
     kafka-console-producer \\
         --bootstrap-server conduktor-gateway:6969 \\
@@ -39,10 +39,10 @@ execute """echo '{
         --topic cars
 """
 
-execute """echo '{ 
+execute """echo '{
     \"type\": \"SUV\",
     \"price\": 55,
-    \"color\": \"red\" 
+    \"color\": \"red\"
 }' | jq -c | docker compose exec -T kafka-client \\
     kafka-console-producer \\
         --bootstrap-server conduktor-gateway:6969 \\
@@ -51,11 +51,11 @@ execute """echo '{
 """
 
 execute """docker compose exec kafka-client \\
-    kafka-console-consumer  \\
+    kafka-console-consumer \\
         --bootstrap-server conduktor-gateway:6969 \\
         --consumer.config /clientConfig/gateway.properties \\
         --topic cars \\
-        --from-beginning  \\
+        --from-beginning \\
         --max-messages 2 | jq
 """
 
@@ -83,7 +83,7 @@ execute """docker compose exec kafka-client \\
 """
 
 execute """docker compose exec kafka-client \\
-  kafka-console-consumer  \\
+  kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
     --consumer.config /clientConfig/gateway.properties \\
     --topic red-cars \\

@@ -1,8 +1,8 @@
 #!/bin/sh
 function execute() {
     chars=$(echo "$*" | wc -c)
-    printf "$"
     sleep 2
+    printf "$"
     if [ "$chars" -lt 100 ] ; then
         echo "$*" | pv -qL 50
     elif [ "$chars" -lt 250 ] ; then
@@ -146,7 +146,7 @@ execute """docker-compose exec kafka-client \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/duplicate-resource\"
 """
 
-execute """docker-compose exec kafka-client \  
+execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
     --user \"admin:conduktor\" \\
@@ -207,8 +207,8 @@ execute """docker-compose exec kafka-client \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.chaos.ProduceSimulateMessageCorruptionPlugin\",
         \"priority\": 100,
-        \"config\": { 
-          \"topic\": \"conduktorTopicRandomBytes\",  
+        \"config\": {
+          \"topic\": \"conduktorTopicRandomBytes\",
           \"sizeInBytes\": 10,
           \"rateInPercent\": 100
         }
@@ -366,14 +366,14 @@ execute """echo '{\"message\": \"hello world\"}' | \\
   docker compose exec -T schema-registry \\
     kafka-json-schema-console-producer \\
         --bootstrap-server conduktor-gateway:6969 \\
-        --topic conduktorTopicSchema  \\
+        --topic conduktorTopicSchema \\
         --producer.config /clientConfig/gateway.properties \\
-        --property value.schema='{ 
-            \"title\": \"someSchema\", 
-            \"type\": \"object\", 
-            \"properties\": { 
-              \"message\": { 
-                \"type\": \"string\" 
+        --property value.schema='{
+            \"title\": \"someSchema\",
+            \"type\": \"object\",
+            \"properties\": {
+              \"message\": {
+                \"type\": \"string\"
               }
             }
           }'
@@ -384,7 +384,7 @@ execute """docker-compose exec schema-registry \\
     --bootstrap-server conduktor-gateway:6969 \\
     --topic conduktorTopicSchema \\
     --consumer.config /clientConfig/gateway.properties \\
-    --from-beginning 
+    --from-beginning
 """
 
 execute """Processed a total of 1 messages

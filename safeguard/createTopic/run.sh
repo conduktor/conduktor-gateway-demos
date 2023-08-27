@@ -1,8 +1,8 @@
 #!/bin/sh
 function execute() {
     chars=$(echo "$*" | wc -c)
-    printf "$"
     sleep 2
+    printf "$"
     if [ "$chars" -lt 100 ] ; then
         echo "$*" | pv -qL 50
     elif [ "$chars" -lt 250 ] ; then
@@ -27,7 +27,7 @@ execute """docker compose exec kafka-client \\
     --data-raw '{
         \"pluginClass\": \"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin\",
         \"priority\": 100,
-        \"config\": { 
+        \"config\": {
             \"topic\": \"\",
             \"numPartition\": {
               \"min\": 3,

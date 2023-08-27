@@ -31,7 +31,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection to Conduktor Gateway, which sits as a proxy infront of the underlying Kafka
 
-Note: Gateway and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -101,9 +101,9 @@ docker compose exec kafka-client \
 
 ### <a name="injectHeader"></a> Step 5: Inject Header
 
-Use the Admin API to add the inject header interceptor. 
+Use the Admin API to add the inject header interceptor.
 
-The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, username and Gateway ip in records on the topic `injectHeaderTopic`. 
+The command below will add an interceptor to Conduktor Gateway to inject headers with values of user ip, username and Gateway ip in records on the topic `injectHeaderTopic`.
 
 ```bash
 docker compose exec kafka-client \
@@ -291,7 +291,7 @@ k0:v0,k1:v1     key_pattern
 
 ### Step 13: Visualise the workflow
 
-> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/).
 > Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 
 ### Step 14: View the clusters in Conduktor Console

@@ -26,7 +26,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection to Conduktor Gateway
 
-Note: Gateway and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the proxy is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -62,7 +62,7 @@ docker compose exec kafka-client \
 
 ### Step 5: Configure masking
 
-The same REST API can be used to create the masking interceptor. 
+The same REST API can be used to create the masking interceptor.
 
 The command below will add a masking interceptor, configured to mask the `password` and `visa` fields in records.
 
@@ -112,28 +112,28 @@ Let's produce a simple record to the masked topic.
 (We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
-echo '{ 
+echo '{
     "name": "conduktor",
     "username": "test@conduktor.io",
     "password": "password1",
     "visa": "visa123456",
-    "address": "Conduktor Towers, London" 
+    "address": "Conduktor Towers, London"
 }' | jq -c | docker compose exec -T schema-registry \
-    kafka-json-schema-console-producer  \
+    kafka-json-schema-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic maskedTopic \
         --property schema.registry.url=http://schema-registry:8081 \
-        --property value.schema='{ 
+        --property value.schema='{
             "title": "User",
             "type": "object",
-            "properties": { 
+            "properties": {
                 "name": { "type": "string" },
                 "username": { "type": "string" },
                 "password": { "type": "string" },
                 "visa": { "type": "string" },
-                "address": { "type": "string" } 
-            } 
+                "address": { "type": "string" }
+            }
         }'
 ```
 
@@ -180,7 +180,7 @@ docker compose exec schema-registry \
 
 ### Step 9: Visualise the workflow
 
-> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/).
 > Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 
 ### Step 10: View the clusters in Conduktor Console

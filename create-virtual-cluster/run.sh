@@ -1,8 +1,8 @@
 #!/bin/sh
 function execute() {
     chars=$(echo "$*" | wc -c)
-    printf "$"
     sleep 2
+    printf "$"
     if [ "$chars" -lt 100 ] ; then
         echo "$*" | pv -qL 50
     elif [ "$chars" -lt 250 ] ; then
@@ -24,7 +24,7 @@ execute """docker compose exec kafka-client \\
     --user \"admin:conduktor\" \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/someCluster/username/someUsername \\
     --header \"content-type:application/json\" \\
-    --data-raw '{\"lifeTimeSeconds\":7776000}' | jq 
+    --data-raw '{\"lifeTimeSeconds\":7776000}' | jq
 """
 
 execute """cat clientConfig/gateway.properties

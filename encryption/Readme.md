@@ -2,7 +2,7 @@
 
 ## What is Conduktor Gateway Encryption?
 
-Conduktor Gateway's encryption feature encrypts sensitive fields within messages as they are produced through the Gateway. 
+Conduktor Gateway's encryption feature encrypts sensitive fields within messages as they are produced through the Gateway.
 
 These fields are stored on disk encrypted but can easily be read by clients reading through the Gateway. (We also support an encrypt on fetch functionality for keeping your data secure when working with 3rd parties and partners, we won't demo that today but get in touch to discuss further.)
 
@@ -28,7 +28,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection through Conduktor Gateway to the underlying Kafka
 
-Note: Gateway and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -66,7 +66,7 @@ docker compose exec kafka-client \
 
 Now let's create an encryption interceptor via the Admin API.
 
-The configuration of this interceptor will encrypt the `password` and `visa` fields in records on our topic `encryptedTopic`. 
+The configuration of this interceptor will encrypt the `password` and `visa` fields in records on our topic `encryptedTopic`.
 
 ```bash
 docker compose exec kafka-client \
@@ -86,7 +86,7 @@ docker compose exec kafka-client \
             "fields": [ {
                 "fieldName": "password",
                 "keySecretId": "password-secret",
-                "algorithm": { 
+                "algorithm": {
                     "type": "AES_GCM",
                     "kms": "IN_MEMORY"
                 }
@@ -100,7 +100,7 @@ docker compose exec kafka-client \
                 }
             }]
         }
-    }' 
+    }'
 ```
 
 and confirm succesful creation by listing the interceptors for virtual cluster `someCluster`.
@@ -153,27 +153,27 @@ docker compose exec kafka-client \
 Let's produce a simple record to the encrypted topic.
 
 ```bash
-echo '{ 
+echo '{
     "name": "conduktor",
     "username": "test@conduktor.io",
     "password": "password1",
     "visa": "visa123456",
-    "address": "Conduktor Towers, London" 
+    "address": "Conduktor Towers, London"
 }' | jq -c | docker compose exec -T schema-registry \
-    kafka-json-schema-console-producer  \
+    kafka-json-schema-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
         --producer.config /clientConfig/gateway.properties \
         --topic encryptedTopic \
-        --property value.schema='{ 
+        --property value.schema='{
             "title": "User",
             "type": "object",
-            "properties": { 
+            "properties": {
                 "name": { "type": "string" },
                 "username": { "type": "string" },
                 "password": { "type": "string" },
                 "visa": { "type": "string" },
-                "address": { "type": "string" } 
-            } 
+                "address": { "type": "string" }
+            }
         }'
 ```
 
@@ -230,7 +230,7 @@ You should see an output similar to the below:
 
 ## Step 10: Visualise the workflow
 
-> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/).
 > Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 
 ### Step 11: Viewing the clusters in Conduktor Console
@@ -282,21 +282,21 @@ docker compose exec kafka-client \
         "priority": 100,
         "config": {
             "topic": "encryption-performance",
-            "fields": [ { 
+            "fields": [ {
                 "fieldName": "password",
                 "keySecretId": "password-secret",
-                "algorithm": { 
+                "algorithm": {
                     "type": "AES_GCM",
                     "kms": "IN_MEMORY"
                 }
             },
-            { 
+            {
                 "fieldName": "visa",
                 "keySecretId": "visa-secret",
-                "algorithm": { 
+                "algorithm": {
                     "type": "AES_GCM",
                     "kms": "IN_MEMORY"
-                } 
+                }
             }]
         }
     }'

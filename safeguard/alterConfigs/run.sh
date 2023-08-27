@@ -1,8 +1,8 @@
 #!/bin/sh
 function execute() {
     chars=$(echo "$*" | wc -c)
-    printf "$"
     sleep 2
+    printf "$"
     if [ "$chars" -lt 100 ] ; then
         echo "$*" | pv -qL 50
     elif [ "$chars" -lt 250 ] ; then
@@ -47,7 +47,7 @@ execute """docker-compose exec kafka-client \\
             \"min\": 86400000,
             \"max\": 432000000
           }
-        }  
+        }
     }'
 """
 

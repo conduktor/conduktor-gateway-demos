@@ -21,7 +21,7 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * Backing Kafka - this is a direct connection to the underlying Kafka cluster hosting the demo
 * Gateway - a connection through Conduktor Gateway to the underlying Kafka
 
-Note: Gateway and backing Kafka can use different security schemes. 
+Note: Gateway and backing Kafka can use different security schemes.
 In this case the backing Kafka is PLAINTEXT but the Gateway is SASL_PLAIN.
 
 ### Step 3: Start the environment
@@ -48,7 +48,7 @@ docker compose exec kafka-client \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin",
         "priority": 100,
-        "config": { 
+        "config": {
             "topic": "",
             "numPartition": {
               "min": 3,
@@ -103,7 +103,7 @@ docker compose exec kafka-client \
 
 ### Step 7: Visualise the workflow
 
-> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 
+> To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/).
 > Without a license you can follow along how you can visualise what we did today in Console. Please note the UI may change as we're constantly improving.
 ### Step 8: View the clusters in Conduktor Console
 

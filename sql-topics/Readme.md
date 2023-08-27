@@ -2,10 +2,10 @@
 
 ## What is a virtual topic?
 
-Conduktor Gateway's virtual topics allow you to create a "virtual" copy of an existing Kafka topic that can then 
-have interceptors applied to it without affecting the original topic. 
+Conduktor Gateway's virtual topics allow you to create a "virtual" copy of an existing Kafka topic that can then
+have interceptors applied to it without affecting the original topic.
 
-For instance, I may have a topic 'cars' that contains information on cars of all colors, and an application that is only 
+For instance, I may have a topic 'cars' that contains information on cars of all colors, and an application that is only
 interested in Red cars. To satisfy this requirement I can create a virtual topic 'red-car' which filters out all but the red car data.
 
 ## Running the demo
@@ -44,17 +44,17 @@ docker compose exec kafka-client \
 
 ### Step 4: Produce sample data to cars topic
 
-Produce 2 records to the `cars` topic, our mock car data for cars, 
+Produce 2 records to the `cars` topic, our mock car data for cars,
 
 A blue car.
 
 (We use `jq` for readability, if you don't have this installed remove simply the `| jq` from the below command.)
 
 ```bash
-echo '{ 
+echo '{
     "type": "Sports",
     "price": 75,
-    "color": "blue" 
+    "color": "blue"
 }' | jq -c | docker compose exec -T kafka-client \
     kafka-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
@@ -65,10 +65,10 @@ echo '{
 And a red car
 
 ```bash
-echo '{ 
+echo '{
     "type": "SUV",
     "price": 55,
-    "color": "red" 
+    "color": "red"
 }' | jq -c | docker compose exec -T kafka-client \
     kafka-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
@@ -80,11 +80,11 @@ Let's confirm the 2 records are there by consuming from the all cars topic:
 
 ```bash
 docker compose exec kafka-client \
-    kafka-console-consumer  \
+    kafka-console-consumer \
         --bootstrap-server conduktor-gateway:6969 \
         --consumer.config /clientConfig/gateway.properties \
         --topic cars \
-        --from-beginning  \
+        --from-beginning \
         --max-messages 2 | jq
 ```
 
@@ -125,7 +125,7 @@ Let's consume from our virtual topic `red-cars`.
 
 ```bash
 docker compose exec kafka-client \
-  kafka-console-consumer  \
+  kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
     --topic red-cars \

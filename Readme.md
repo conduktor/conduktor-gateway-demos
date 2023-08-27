@@ -19,7 +19,7 @@ Walkthrough of the main Conduktor Gateway features
 * [Chaos](chaos/Readme.md) - Simulating Kafka problems to test the resiliency of your Kafka applications.
 * [Safeguard](safeguard/Readme.md) - Protect Kafka from inefficient configurations, or lack of knowledge.
 * [Masking](masking/Readme.md) - Hide important information.
-* [Headers Injection](inject-remove-header/Readme.md) - Add and remove headers to be able to help your customers. 
+* [Headers Injection](inject-remove-header/Readme.md) - Add and remove headers to be able to help your customers.
 * [Schema Validation](schema-validation/Readme.md) - Validate schemas, the real way
 
 Note: Some of the demos might not be available for Gateway V2 upwards, in which case they can be found in the historical V1 branch.

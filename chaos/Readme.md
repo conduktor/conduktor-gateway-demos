@@ -4,7 +4,7 @@
 
 Chaos testing is the process of testing a distributed computing system to ensure that it can withstand unexpected disruptions. Kafka is an extremely resilient system and so it can be difficult to injects disruptions in order to be sure that applications can handle them.
 
-Conduktor Gateway comes to the rescue, simulating common Kafka disruptions without and actual disruption occurring in the underlying Kafka cluster. 
+Conduktor Gateway comes to the rescue, simulating common Kafka disruptions without and actual disruption occurring in the underlying Kafka cluster.
 
 In this demo we will inject the following disruptions with Conduktor Gateway and observe the result:
 
@@ -83,7 +83,7 @@ Conduktor Gateway provides a number of different ways to inject Chaos into your 
 
 Conduktor Gateway exposes a REST API to configure the chaos features.
 
-The command below will create a broken broker interceptor against the virtual cluster `someCluster`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues. 
+The command below will create a broken broker interceptor against the virtual cluster `someCluster`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues.
 
 ```bash
 docker compose exec kafka-client \
@@ -263,7 +263,7 @@ docker-compose exec kafka-client \
 and confirm by listing the interceptors for the virtual cluster, you expect an empty list `{"interceptors":[]}`:
 
 ```bash
-docker-compose exec kafka-client \  
+docker-compose exec kafka-client \
   curl \
     --silent \
     --user "admin:conduktor" \
@@ -363,8 +363,8 @@ docker-compose exec kafka-client \
     --data-raw '{
         "pluginClass": "io.conduktor.gateway.interceptor.chaos.ProduceSimulateMessageCorruptionPlugin",
         "priority": 100,
-        "config": { 
-          "topic": "conduktorTopicRandomBytes",  
+        "config": {
+          "topic": "conduktorTopicRandomBytes",
           "sizeInBytes": 10,
           "rateInPercent": 100
         }
@@ -621,14 +621,14 @@ echo '{"message": "hello world"}' | \
   docker compose exec -T schema-registry \
     kafka-json-schema-console-producer \
         --bootstrap-server conduktor-gateway:6969 \
-        --topic conduktorTopicSchema  \
+        --topic conduktorTopicSchema \
         --producer.config /clientConfig/gateway.properties \
-        --property value.schema='{ 
-            "title": "someSchema", 
-            "type": "object", 
-            "properties": { 
-              "message": { 
-                "type": "string" 
+        --property value.schema='{
+            "title": "someSchema",
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
               }
             }
           }'
@@ -642,7 +642,7 @@ docker-compose exec schema-registry \
     --bootstrap-server conduktor-gateway:6969 \
     --topic conduktorTopicSchema \
     --consumer.config /clientConfig/gateway.properties \
-    --from-beginning 
+    --from-beginning
 ```
 
 This should produce output similar to this:
@@ -696,8 +696,8 @@ docker-compose exec kafka-client \
 ```
 
 # Conclusion
-In this demo we have simulated several highly chaotic scenarios that applications need to handle, in a controlled manner. 
+In this demo we have simulated several highly chaotic scenarios that applications need to handle, in a controlled manner.
 
-Be that latency, message quality, infrastructure issues or human error, all can be simulated.  
+Be that latency, message quality, infrastructure issues or human error, all can be simulated.
 
-These are a sample of the types of situations that can be simulated, if you have others or more detailed scenarios you'd want to simulate then [get in touch](https://www.conduktor.io/contact/demo), we'd love to speak with you. 
+These are a sample of the types of situations that can be simulated, if you have others or more detailed scenarios you'd want to simulate then [get in touch](https://www.conduktor.io/contact/demo), we'd love to speak with you.

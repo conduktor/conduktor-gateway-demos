@@ -140,7 +140,7 @@ docker compose exec kafka-client \
     --max-messages 1
 ```
 
-You could see how the message `testMessageLondon` cannot be consumed from the `Paris` virtual cluster client due to cluster isolation. 
+You could see how the message `testMessageLondon` cannot be consumed from the `Paris` virtual cluster client due to cluster isolation.
 It is not aware of this topic as it's in a different "cluster".
 
 If you tried to, you would get the `{parisTopic=UNKNOWN_TOPIC_OR_PARTITION}` error until timeout(default 5 minutes).
@@ -151,8 +151,8 @@ WARN [Consumer clientId=console-consumer, groupId=console-consumer-68780] Error 
 
 ### Step 7: Applying Multi-tenancy to existing topics (topic mapping)
 
-During migration to Conduktor Gateway you may want to make up a virtual cluster population from existing topics in your Kafka cluster. 
-Conduktor Gateway allows this via the administration APIs through **topic mapping**. 
+During migration to Conduktor Gateway you may want to make up a virtual cluster population from existing topics in your Kafka cluster.
+Conduktor Gateway allows this via the administration APIs through **topic mapping**.
 For more detail on the APIs check the Conduktor docs site.
 
 In this next section we will create topics on the backing Kafka cluster and add them to vclusters within Conduktor Gateway.
@@ -206,9 +206,9 @@ We'll create the following mappings:
 * virtualCluster: `London` can see `existingLondonTopic` and `existingSharedTopic`
 * virtualCluster: `Paris` can see only `existingSharedTopic`
 
-First we create a topic mapping for each topic. 
-These map a topic name for the virtual cluster to a topic name in the backing Kafka cluster. 
-These names do not have to match but they match here for clarity.  
+First we create a topic mapping for each topic.
+These map a topic name for the virtual cluster to a topic name in the backing Kafka cluster.
+These names do not have to match but they match here for clarity.
 
 
 First let's add the mapping of the topic name for the London virtual cluster and place in the url parameter,`.../existingLondonTopic`, to the topic name in the backing cluster which is what we have in the payload `"physicalTopicName": "existingLondonTopic"`.
@@ -219,7 +219,7 @@ docker compose exec kafka-client \
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingLondonTopic \
     --user "admin:conduktor" \
     --header "Content-Type: application/json" \
-    --data-raw '{ 
+    --data-raw '{
         "physicalTopicName": "existingLondonTopic",
         "readOnly": false,
         "concentrated": false
@@ -234,7 +234,7 @@ docker compose exec kafka-client \
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingSharedTopic \
     --user "admin:conduktor" \
     --header "Content-Type: application/json" \
-    --data-raw '{ 
+    --data-raw '{
         "physicalTopicName": "existingSharedTopic",
         "readOnly": false,
         "concentrated": false
@@ -249,7 +249,7 @@ docker compose exec kafka-client \
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/paris/topics/existingSharedTopic \
     --user "admin:conduktor" \
     --header "Content-Type: application/json" \
-    --data-raw '{ 
+    --data-raw '{
         "physicalTopicName": "existingSharedTopic",
         "readOnly": false,
         "concentrated": false
@@ -277,12 +277,12 @@ docker compose exec kafka-client \
     --list
 ```
 
-You should see that the Paris tenant can only see `existingSharedTopic` whereas London can see `existingSharedTopic` and `existingLondonTopic` 
+You should see that the Paris tenant can only see `existingSharedTopic` whereas London can see `existingSharedTopic` and `existingLondonTopic`
 (as well as our previously created topics earlier in the demo).
 
 ### Step 10: Consume from the topics
 
-Let's consume the underlying `existingLondonTopic` from the `london` virtual cluster 
+Let's consume the underlying `existingLondonTopic` from the `london` virtual cluster
 
 ```bash
 docker compose exec kafka-client \
