@@ -81,6 +81,8 @@ services:
     image: conduktor/conduktor-platform:1.14.0
     hostname: conduktor-console
     container_name: conduktor-console
+    profiles:
+      - platform
     ports:
       - "8080:8080"
     volumes:

@@ -148,8 +148,7 @@ license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 To start the Conduktor Platform container:
 
 ```bash
-docker compose up --wait --detach
- conduktor-platform
+docker compose --profile platform up --wait --detach
 ```
 
 From a browser, navigate to `http://localhost:8080` and use the following to log in (as specified in `platform-config.yaml`):
