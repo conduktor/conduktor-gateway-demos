@@ -110,7 +110,7 @@ Or just leave it as is to continue.
 Verify your saved changes look similar to the below:
 
 ```bash
-cat /clientConfig/gateway.properties
+cat clientConfig/gateway.properties
 ```
 
 ```properties
