@@ -122,19 +122,19 @@ We can send and query the data in the concentrated topics
 echo '{"type": "Sports", "price": 75, "color": "blue"}' | \
   docker compose exec -T kafka-client \
     kafka-console-producer \
-        --bootstrap-server conduktor-gateway:6969 \
-        --producer.config /clientConfig/gateway.properties \
-        --topic concentrated-topic-with-10-partitions
+      --bootstrap-server conduktor-gateway:6969 \
+      --producer.config /clientConfig/gateway.properties \
+      --topic concentrated-topic-with-10-partitions
 ```
 
 ```bash
 docker-compose exec kafka-client \
-    kafka-console-consumer  \
-        --bootstrap-server conduktor-gateway:6969 \
-        --consumer.config /clientConfig/gateway.properties \
-        --topic concentrated-topic-with-10-partitions \
-        --from-beginning \
-        --max-messages 1 | jq
+  kafka-console-consumer  \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
+    --topic concentrated-topic-with-10-partitions \
+    --from-beginning \
+    --max-messages 1 | jq
 ```
 
 Same for `concentrated-topic-with-100-partitions`
@@ -143,19 +143,19 @@ Same for `concentrated-topic-with-100-partitions`
 echo '{"msg": "hello world"}' | \
   docker compose exec -T kafka-client \
     kafka-console-producer \
-        --bootstrap-server conduktor-gateway:6969 \
-        --producer.config /clientConfig/gateway.properties \
-        --topic concentrated-topic-with-100-partitions
+      --bootstrap-server conduktor-gateway:6969 \
+      --producer.config /clientConfig/gateway.properties \
+      --topic concentrated-topic-with-100-partitions
 ```
 
 ```bash
 docker-compose exec kafka-client \
-    kafka-console-consumer  \
-        --bootstrap-server conduktor-gateway:6969 \
-        --consumer.config /clientConfig/gateway.properties \
-        --topic concentrated-topic-with-100-partitions \
-        --from-beginning \
-        --max-messages 1 | jq
+  kafka-console-consumer  \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway.properties \
+    --topic concentrated-topic-with-100-partitions \
+    --from-beginning \
+    --max-messages 1 | jq
 ```
 
 ### Step 7: View the underlying concentrated topic

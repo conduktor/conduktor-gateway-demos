@@ -14,8 +14,10 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -23,12 +25,14 @@ execute """docker compose exec kafka-client \\
     --create --if-not-exists \\
     --topic encryptedTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/gateway.properties \\
     --list
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -62,12 +66,14 @@ execute """docker compose exec kafka-client \\
         }
     }' 
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
     --user \"admin:conduktor\" \\
     conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -85,12 +91,14 @@ execute """docker compose exec kafka-client \\
         }
     }'
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
     --user \"admin:conduktor\" \\
     conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptors | jq
 """
+
 execute """echo '{ 
     \"name\": \"conduktor\",
     \"username\": \"test@conduktor.io\",
@@ -114,6 +122,7 @@ execute """echo '{
             } 
         }'
 """
+
 execute """docker compose exec schema-registry \\
   kafka-json-schema-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -122,6 +131,7 @@ execute """docker compose exec schema-registry \\
     --from-beginning \\
     --max-messages 1 | jq
 """
+
 execute """docker compose exec schema-registry \\
   kafka-json-schema-console-consumer \\
     --bootstrap-server kafka1:9092 \\
@@ -129,13 +139,15 @@ execute """docker compose exec schema-registry \\
     --from-beginning \\
     --max-messages 1 | jq
 """
+
 execute """docker compose exec kafka-client \\
-    kafka-topics \\
-        --bootstrap-server conduktor-gateway:6969 \\
-        --command-config /clientConfig/gateway.properties \\
-        --create --if-not-exists \\
-        --topic encryption-performance
+  kafka-topics \\
+    --bootstrap-server conduktor-gateway:6969 \\
+    --command-config /clientConfig/gateway.properties \\
+    --create --if-not-exists \\
+    --topic encryption-performance
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -166,16 +178,20 @@ execute """docker compose exec kafka-client \\
         }
     }'
 """
+
 execute """cat customers.json
 """
+
 execute """docker compose cp customers.json kafka-client:/home/appuser
 """
+
 execute """docker compose exec kafka-client \\
-    kafka-producer-perf-test \\
-        --topic encryption-performance \\
-        --throughput -1 \\
-        --num-records 1000000 \\
-        --producer-props bootstrap.servers=conduktor-gateway:6969 linger.ms=100 \\
-        --producer.config /clientConfig/gateway.properties \\
-        --payload-file customers.json
+  kafka-producer-perf-test \\
+    --topic encryption-performance \\
+    --throughput -1 \\
+    --num-records 1000000 \\
+    --producer-props bootstrap.servers=conduktor-gateway:6969 linger.ms=100 \\
+    --producer.config /clientConfig/gateway.properties \\
+    --payload-file customers.json
 """
+

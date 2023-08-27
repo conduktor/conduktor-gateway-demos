@@ -14,9 +14,11 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
-execute """docker-compose exec kafka-client \\
+
+execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
     --user \"admin:conduktor\" \\
@@ -41,6 +43,7 @@ execute """docker-compose exec kafka-client \\
         }
     }'
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -50,9 +53,7 @@ execute """docker compose exec kafka-client \\
     --replication-factor 1 \\
     --partitions 10
 """
-execute """Error while executing topic command : Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
-[2023-08-26 11:27:14,206] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
-"""
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -62,3 +63,4 @@ execute """docker compose exec kafka-client \\
     --replication-factor 2 \\
     --partitions 3
 """
+

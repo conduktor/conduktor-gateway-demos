@@ -14,9 +14,10 @@ function execute() {
     fi
     eval "$*"
 }
-execute """docker compose up --wait --detach
 
+execute """docker compose up --wait --detach
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -24,12 +25,14 @@ execute """docker compose exec kafka-client \\
     --create --if-not-exists \\
     --topic sr-topic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/gateway.properties \\
     --list
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --user admin:conduktor \\
@@ -44,20 +47,23 @@ execute """docker compose exec kafka-client \\
         }
     }'
 """
+
 execute """docker compose exec kafka-client \\
-    curl \\
-        --silent \\
-        --user admin:conduktor \\
-        --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required\" \\
-        --header 'Content-Type: application/json' | jq
+  curl \\
+    --silent \\
+    --user admin:conduktor \\
+    --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required\" \\
+    --header 'Content-Type: application/json' | jq
 """
+
 execute """echo '{\"msg\": \"hello world\"}' | 
   docker compose exec -T kafka-client \\
-      kafka-console-producer \\
-          --bootstrap-server conduktor-gateway:6969 \\
-          --producer.config /clientConfig/gateway.properties \\
-          --topic sr-topic
+    kafka-console-producer \\
+      --bootstrap-server conduktor-gateway:6969 \\
+      --producer.config /clientConfig/gateway.properties \\
+      --topic sr-topic
 """
+
 execute """echo '{ 
     \"name\": \"conduktor\",
     \"username\": \"test@conduktor.io\",
@@ -66,22 +72,23 @@ execute """echo '{
     \"address\": \"Conduktor Towers, London\" 
 }' | jq -c | docker compose exec -T schema-registry \\
     kafka-json-schema-console-producer  \\
-        --bootstrap-server conduktor-gateway:6969 \\
-        --producer.config /clientConfig/gateway.properties \\
-        --topic sr-topic \\
-        --property schema.registry.url=http://schema-registry-dev:8081 \\
-        --property value.schema='{ 
-            \"title\": \"User\",
-            \"type\": \"object\",
-            \"properties\": { 
-                \"name\": { \"type\": \"string\" },
-                \"username\": { \"type\": \"string\" },
-                \"password\": { \"type\": \"string\" },
-                \"visa\": { \"type\": \"string\" },
-                \"address\": { \"type\": \"string\" } 
-            } 
-        }'
+      --bootstrap-server conduktor-gateway:6969 \\
+      --producer.config /clientConfig/gateway.properties \\
+      --topic sr-topic \\
+      --property schema.registry.url=http://schema-registry-dev:8081 \\
+      --property value.schema='{ 
+          \"title\": \"User\",
+          \"type\": \"object\",
+          \"properties\": { 
+              \"name\": { \"type\": \"string\" },
+              \"username\": { \"type\": \"string\" },
+              \"password\": { \"type\": \"string\" },
+              \"visa\": { \"type\": \"string\" },
+              \"address\": { \"type\": \"string\" } 
+          } 
+      }'
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --user admin:conduktor \\
@@ -100,13 +107,15 @@ execute """docker compose exec kafka-client \\
         }
     }'
 """
+
 execute """docker compose exec kafka-client \\
-    curl \\
-        --silent \\
-        --user admin:conduktor \\
-        --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required\" \\
-        --header 'Content-Type: application/json' | jq
+  curl \\
+    --silent \\
+    --user admin:conduktor \\
+    --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required\" \\
+    --header 'Content-Type: application/json' | jq
 """
+
 execute """echo '{ 
     \"name\": \"conduktor\",
     \"username\": \"test@conduktor.io\",
@@ -115,11 +124,11 @@ execute """echo '{
     \"address\": \"Conduktor Towers, London\" 
 }' | jq -c | docker compose exec -T schema-registry \\
     kafka-json-schema-console-producer  \\
-        --bootstrap-server conduktor-gateway:6969 \\
-        --producer.config /clientConfig/gateway.properties \\
-        --topic sr-topic \\
-        --property schema.registry.url=http://schema-registry-dev:8081 \\
-        --property value.schema='{ 
+      --bootstrap-server conduktor-gateway:6969 \\
+      --producer.config /clientConfig/gateway.properties \\
+      --topic sr-topic \\
+      --property schema.registry.url=http://schema-registry-dev:8081 \\
+      --property value.schema='{ 
             \"title\": \"User\",
             \"type\": \"object\",
             \"properties\": { 
@@ -131,12 +140,16 @@ execute """echo '{
             } 
         }'
 """
+
 execute """docker compose exec kafka-client \\
   curl --silent http://schema-registry:8081/subjects/ | jq
 """
+
 execute """docker compose exec kafka-client \\
   curl --silent http://schema-registry-dev:8081/subjects/ | jq
 """
+
 execute """docker compose exec kafka-client \\
   curl --silent http://schema-registry-dev:8081/subjects/sr-topic-value/versions/1 | jq
 """
+

@@ -91,7 +91,8 @@ docker compose exec kafka-client \
   kafka-configs \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
-    --alter --topic safeguardTopic \
+    --alter \
+    --topic safeguardTopic \
     --add-config retention.ms=10000
 ```
 
@@ -130,7 +131,8 @@ docker compose exec kafka-client \
 ```
 
 You should see an output similar to the following:
-```bash
+
+```
 Dynamic configs for topic safeguardTopic are:
   retention.ms=86400001 sensitive=false synonyms={DYNAMIC_TOPIC_CONFIG:retention.ms=86400001}
 ```

@@ -77,7 +77,7 @@ docker compose exec kafka-client \
 
 This should return a JWT, an output similar to:
 
-```bash
+```json
 {
   "token" : "eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM"
 }

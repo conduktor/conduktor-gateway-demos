@@ -70,7 +70,7 @@ For `london`
 
 ```bash
 docker compose exec kafka-client \
-    kafka-topics \
+  kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/london.properties \
     --list
@@ -145,7 +145,9 @@ It is not aware of this topic as it's in a different "cluster".
 
 If you tried to, you would get the `{parisTopic=UNKNOWN_TOPIC_OR_PARTITION}` error until timeout(default 5 minutes).
 
-`WARN [Consumer clientId=console-consumer, groupId=console-consumer-68780] Error while fetching metadata with correlation id 921 : {parisTopic=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)`
+```
+WARN [Consumer clientId=console-consumer, groupId=console-consumer-68780] Error while fetching metadata with correlation id 921 : {parisTopic=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)
+```
 
 ### Step 7: Applying Multi-tenancy to existing topics (topic mapping)
 
@@ -163,7 +165,7 @@ Let's create `existingLondonTopic` on the underlying kafka.
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server kafka1:9092 \
-    --create --if-not-exists \ 
+    --create --if-not-exists \
     --topic existingLondonTopic \
 ```
 
@@ -173,7 +175,8 @@ Let's create `existingSharedTopic` on the underlying kafka.
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server kafka1:9092 \
-    --create --topic existingSharedTopic
+    --create --if-not-exists \
+    --topic existingSharedTopic
 ```
 
 Let's create a message in `existingLondonTopic`
@@ -182,8 +185,8 @@ Let's create a message in `existingLondonTopic`
 echo existingLondonMessage | \
   docker compose exec -T kafka-client \
     kafka-console-producer \
-    --bootstrap-server kafka1:9092 \
-    --topic existingLondonTopic \
+      --bootstrap-server kafka1:9092 \
+      --topic existingLondonTopic \
 ```
 
 Let's create a message in `existingSharedTopic`
@@ -192,8 +195,8 @@ Let's create a message in `existingSharedTopic`
 echo existingSharedMessage | \
   docker compose exec -T kafka-client \
     kafka-console-producer \
-    --bootstrap-server kafka1:9092 \
-    --topic existingSharedTopic
+      --bootstrap-server kafka1:9092 \
+      --topic existingSharedTopic
 ```
 
 ### Step 8: Configuring vclusters for existing topics
@@ -243,8 +246,8 @@ and finally to add the mapping `existingSharedTopic` also into the Paris virtual
 ```bash
 docker compose exec kafka-client \
  curl \
-    --user admin:conduktor \
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/paris/topics/existingSharedTopic \
+    --user admin:conduktor \
     --header 'Content-Type: application/json' \
     --data-raw '{ 
         "physicalTopicName": "existingSharedTopic",

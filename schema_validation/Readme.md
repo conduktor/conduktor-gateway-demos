@@ -29,7 +29,6 @@ Start the environment with
 
 ```bash
 docker compose up --wait --detach
-
 ```
 
 ### Step 3: Create topics
@@ -82,11 +81,11 @@ Verify it exists.
 
 ```bash
 docker compose exec kafka-client \
-    curl \
-        --silent \
-        --user admin:conduktor \
-        --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required" \
-        --header 'Content-Type: application/json' | jq
+  curl \
+    --silent \
+    --user admin:conduktor \
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/sr-id-required" \
+    --header 'Content-Type: application/json' | jq
 ```
 
 ### Step 5: Produce bad data to the topic
@@ -96,10 +95,10 @@ Let's produce a simple record to the topic.
 ```bash
 echo '{"msg": "hello world"}' | 
   docker compose exec -T kafka-client \
-      kafka-console-producer \
-          --bootstrap-server conduktor-gateway:6969 \
-          --producer.config /clientConfig/gateway.properties \
-          --topic sr-topic
+    kafka-console-producer \
+      --bootstrap-server conduktor-gateway:6969 \
+      --producer.config /clientConfig/gateway.properties \
+      --topic sr-topic
 ```
 
 The result is 
@@ -120,21 +119,21 @@ echo '{
     "address": "Conduktor Towers, London" 
 }' | jq -c | docker compose exec -T schema-registry \
     kafka-json-schema-console-producer  \
-        --bootstrap-server conduktor-gateway:6969 \
-        --producer.config /clientConfig/gateway.properties \
-        --topic sr-topic \
-        --property schema.registry.url=http://schema-registry-dev:8081 \
-        --property value.schema='{ 
-            "title": "User",
-            "type": "object",
-            "properties": { 
-                "name": { "type": "string" },
-                "username": { "type": "string" },
-                "password": { "type": "string" },
-                "visa": { "type": "string" },
-                "address": { "type": "string" } 
-            } 
-        }'
+      --bootstrap-server conduktor-gateway:6969 \
+      --producer.config /clientConfig/gateway.properties \
+      --topic sr-topic \
+      --property schema.registry.url=http://schema-registry-dev:8081 \
+      --property value.schema='{ 
+          "title": "User",
+          "type": "object",
+          "properties": { 
+              "name": { "type": "string" },
+              "username": { "type": "string" },
+              "password": { "type": "string" },
+              "visa": { "type": "string" },
+              "address": { "type": "string" } 
+          } 
+      }'
 ```
 
 ### Step 6: Bringing the big guns: validating the schemas for real
@@ -166,11 +165,11 @@ Verify it exists.
 
 ```bash
 docker compose exec kafka-client \
-    curl \
-        --silent \
-        --user admin:conduktor \
-        --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required" \
-        --header 'Content-Type: application/json' | jq
+  curl \
+    --silent \
+    --user admin:conduktor \
+    --request GET "conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/valid-schema-is-required" \
+    --header 'Content-Type: application/json' | jq
 ```
 
 Send data with a schema id Gateway does not know.
@@ -187,11 +186,11 @@ echo '{
     "address": "Conduktor Towers, London" 
 }' | jq -c | docker compose exec -T schema-registry \
     kafka-json-schema-console-producer  \
-        --bootstrap-server conduktor-gateway:6969 \
-        --producer.config /clientConfig/gateway.properties \
-        --topic sr-topic \
-        --property schema.registry.url=http://schema-registry-dev:8081 \
-        --property value.schema='{ 
+      --bootstrap-server conduktor-gateway:6969 \
+      --producer.config /clientConfig/gateway.properties \
+      --topic sr-topic \
+      --property schema.registry.url=http://schema-registry-dev:8081 \
+      --property value.schema='{ 
             "title": "User",
             "type": "object",
             "properties": { 

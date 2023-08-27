@@ -14,32 +14,38 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/london.properties \\
     --create --topic londonTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/paris.properties \\
     --create --topic parisTopic
 """
+
 execute """docker compose exec kafka-client \\
-    kafka-topics \\
+  kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/london.properties \\
     --list
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/paris.properties \\
     --list
 """
+
 execute """echo testMessageLondon | \\
   docker compose exec -T kafka-client \\
     kafka-console-producer \\
@@ -47,6 +53,7 @@ execute """echo testMessageLondon | \\
       --producer.config /clientConfig/london.properties \\
       --topic londonTopic
 """
+
 execute """echo testMessageParis | \\
   docker compose exec -T kafka-client \\
     kafka-console-producer \\
@@ -54,6 +61,7 @@ execute """echo testMessageParis | \\
       --producer.config /clientConfig/paris.properties \\
       --topic parisTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -62,6 +70,7 @@ execute """docker compose exec kafka-client \\
     --from-beginning \\
     --max-messages 1
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -70,29 +79,35 @@ execute """docker compose exec kafka-client \\
     --from-beginning \\
     --max-messages 1
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server kafka1:9092 \\
-    --create --if-not-exists \ 
+    --create --if-not-exists \\
     --topic existingLondonTopic \\
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server kafka1:9092 \\
-    --create --topic existingSharedTopic
+    --create --if-not-exists \\
+    --topic existingSharedTopic
 """
+
 execute """echo existingLondonMessage | \\
   docker compose exec -T kafka-client \\
     kafka-console-producer \\
-    --bootstrap-server kafka1:9092 \\
-    --topic existingLondonTopic \\
+      --bootstrap-server kafka1:9092 \\
+      --topic existingLondonTopic \\
 """
+
 execute """echo existingSharedMessage | \\
   docker compose exec -T kafka-client \\
     kafka-console-producer \\
-    --bootstrap-server kafka1:9092 \\
-    --topic existingSharedTopic
+      --bootstrap-server kafka1:9092 \\
+      --topic existingSharedTopic
 """
+
 execute """docker compose exec kafka-client \\
  curl \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingLondonTopic \\
@@ -104,6 +119,7 @@ execute """docker compose exec kafka-client \\
         \"concentrated\": false
         }'
 """
+
 execute """docker compose exec kafka-client \\
  curl \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/existingSharedTopic \\
@@ -115,10 +131,11 @@ execute """docker compose exec kafka-client \\
         \"concentrated\": false
         }'
 """
+
 execute """docker compose exec kafka-client \\
  curl \\
-    --user admin:conduktor \\
     --request POST conduktor-gateway:8888/admin/vclusters/v1/vcluster/paris/topics/existingSharedTopic \\
+    --user admin:conduktor \\
     --header 'Content-Type: application/json' \\
     --data-raw '{ 
         \"physicalTopicName\": \"existingSharedTopic\",
@@ -126,18 +143,21 @@ execute """docker compose exec kafka-client \\
         \"concentrated\": false
         }'
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/london.properties \\
     --list
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/paris.properties \\
     --list
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -146,6 +166,7 @@ execute """docker compose exec kafka-client \\
     --from-beginning \\
     --max-messages 1
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -154,6 +175,7 @@ execute """docker compose exec kafka-client \\
     --from-beginning \\
     --max-messages 1
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -162,3 +184,4 @@ execute """docker compose exec kafka-client \\
     --from-beginning \\
     --max-messages 1
 """
+

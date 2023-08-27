@@ -14,8 +14,10 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -25,6 +27,7 @@ execute """docker compose exec kafka-client \\
     --replication-factor 1 \\
     --partitions 1
 """
+
 execute """echo '{ 
     \"type\": \"Sports\",
     \"price\": 75,
@@ -35,6 +38,7 @@ execute """echo '{
         --producer.config /clientConfig/gateway.properties \\
         --topic cars
 """
+
 execute """echo '{ 
     \"type\": \"SUV\",
     \"price\": 55,
@@ -45,6 +49,7 @@ execute """echo '{
         --producer.config /clientConfig/gateway.properties \\
         --topic cars
 """
+
 execute """docker compose exec kafka-client \\
     kafka-console-consumer  \\
         --bootstrap-server conduktor-gateway:6969 \\
@@ -53,6 +58,7 @@ execute """docker compose exec kafka-client \\
         --from-beginning  \\
         --max-messages 2 | jq
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -68,12 +74,14 @@ execute """docker compose exec kafka-client \\
         }
     }'
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
     --user \"admin:conduktor\" \\
     --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/red-cars-virtual-topic\" | jq
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer  \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -82,9 +90,11 @@ execute """docker compose exec kafka-client \\
     --from-beginning \\
     --max-messages 1 | jq
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
     --user \"admin:conduktor\" \\
     --request DELETE \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/interceptor/red-cars-virtual-topic\"
 """
+

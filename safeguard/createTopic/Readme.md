@@ -39,7 +39,7 @@ Conduktor gateway provides a REST API used to configure the interceptors.
 The command below will instruct Conduktor Gateway to enforce a minimum of 2 replicas and 3 partitions for any newly created topics. Leaving `topic` blank applies this to all topics on the tenant.
 
 ```bash
-docker-compose exec kafka-client \
+docker compose exec kafka-client \
   curl \
     --silent \
     --user "admin:conduktor" \
@@ -82,7 +82,7 @@ docker compose exec kafka-client \
 
 You should see an output similar to the following:
 
-```bash
+```
 Error while executing topic command : Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
 [2023-08-26 11:27:14,206] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
 ```

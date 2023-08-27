@@ -14,8 +14,10 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -23,12 +25,14 @@ execute """docker compose exec kafka-client \\
     --create --if-not-exists \\
     --topic safeguardTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/gateway.properties \\
     --list
 """
+
 execute """docker-compose exec kafka-client \\
   curl \\
     --user \"admin:conduktor\" \\
@@ -46,13 +50,16 @@ execute """docker-compose exec kafka-client \\
         }  
     }'
 """
+
 execute """docker compose exec kafka-client \\
   kafka-configs \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/gateway.properties \\
-    --alter --topic safeguardTopic \\
+    --alter \\
+    --topic safeguardTopic \\
     --add-config retention.ms=10000
 """
+
 execute """docker compose exec kafka-client \\
   kafka-configs \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -61,6 +68,7 @@ execute """docker compose exec kafka-client \\
     --topic safeguardTopic \\
     --add-config retention.ms=86400001
 """
+
 execute """docker compose exec kafka-client \\
   kafka-configs \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -68,8 +76,7 @@ execute """docker compose exec kafka-client \\
     --describe \\
     --topic safeguardTopic
 """
-execute """Dynamic configs for topic safeguardTopic are:
-  retention.ms=86400001 sensitive=false synonyms={DYNAMIC_TOPIC_CONFIG:retention.ms=86400001}
-"""
+
 execute """docker compose --profile platform up --wait --detach
 """
+

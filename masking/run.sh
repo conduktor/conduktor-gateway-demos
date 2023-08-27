@@ -14,8 +14,10 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -23,12 +25,14 @@ execute """docker compose exec kafka-client \\
     --create --if-not-exists \\
     --topic maskedTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/gateway.properties \\
     --list
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -67,6 +71,7 @@ execute """docker compose exec kafka-client \\
           }
         }'
 """
+
 execute """echo '{ 
     \"name\": \"conduktor\",
     \"username\": \"test@conduktor.io\",
@@ -91,6 +96,7 @@ execute """echo '{
             } 
         }'
 """
+
 execute """docker compose exec schema-registry \\
    kafka-json-schema-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -100,6 +106,7 @@ execute """docker compose exec schema-registry \\
     --from-beginning \\
     --max-messages 1 | jq
 """
+
 execute """docker compose exec schema-registry \\
   kafka-json-schema-console-consumer \\
     --bootstrap-server kafka1:9092 \\
@@ -108,3 +115,4 @@ execute """docker compose exec schema-registry \\
     --from-beginning \\
     --max-messages 1 | jq
 """
+

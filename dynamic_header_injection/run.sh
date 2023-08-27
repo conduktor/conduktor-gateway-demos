@@ -14,8 +14,10 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -23,6 +25,7 @@ execute """docker compose exec kafka-client \\
     --create --if-not-exists \\
     --topic injectHeaderTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -30,6 +33,7 @@ execute """docker compose exec kafka-client \\
     --create --if-not-exists \\
     --topic removeHeaderKeyPatternTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -37,6 +41,7 @@ execute """docker compose exec kafka-client \\
     --create --if-not-exists \\
     --topic removeHeaderValuePatternTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -44,12 +49,14 @@ execute """docker compose exec kafka-client \\
     --create --if-not-exists \\
     --topic removeHeaderKeyValuePatternTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/gateway.properties \\
     --list
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -70,6 +77,7 @@ execute """docker compose exec kafka-client \\
         }
     }'
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -77,6 +85,7 @@ execute """docker compose exec kafka-client \\
     --request GET \"conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptors\" \\
     --header 'Content-Type: application/json' | jq
 """
+
 execute """echo '{\"message\": \"hello world\"}' | \\
   docker compose exec -T kafka-client \\
     kafka-console-producer \\
@@ -84,6 +93,7 @@ execute """echo '{\"message\": \"hello world\"}' | \\
       --producer.config /clientConfig/gateway.properties \\
       --topic injectHeaderTopic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -93,6 +103,7 @@ execute """docker compose exec kafka-client \\
     --max-messages 1 \\
     --property print.headers=true
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server kafka1:9092 \\
@@ -101,6 +112,7 @@ execute """docker compose exec kafka-client \\
     --max-messages 1 \\
     --property print.headers=true
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -116,6 +128,7 @@ execute """docker compose exec kafka-client \\
           }
     }'
 """
+
 execute """echo 'k0:v0,k1:v1^key_pattern' | docker compose exec -T kafka-client \\
     kafka-console-producer \\
         --bootstrap-server conduktor-gateway:6969 \\
@@ -127,6 +140,7 @@ execute """echo 'k0:v0,k1:v1^key_pattern' | docker compose exec -T kafka-client 
         --property headers.separator=, \\
         --property headers.key.separator=:
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -136,6 +150,7 @@ execute """docker compose exec kafka-client \\
     --max-messages 1 \\
     --property print.headers=true
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server kafka1:9092 \\
@@ -144,3 +159,4 @@ execute """docker compose exec kafka-client \\
     --max-messages 1 \\
     --property print.headers=true
 """
+

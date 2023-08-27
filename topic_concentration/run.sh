@@ -14,8 +14,10 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
+
 execute """docker-compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server kafka1:9092 \\
@@ -24,6 +26,7 @@ execute """docker-compose exec kafka-client \\
     --replication-factor 1 \\
     --partitions 10
 """
+
 execute """docker-compose exec kafka-client \\
   curl \\
     --silent \\
@@ -36,6 +39,7 @@ execute """docker-compose exec kafka-client \\
         \"concentrated\": true
     }'
 """
+
 execute """docker-compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -45,6 +49,7 @@ execute """docker-compose exec kafka-client \\
     --replication-factor 1 \\
     --partitions 10
 """
+
 execute """docker-compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -54,47 +59,54 @@ execute """docker-compose exec kafka-client \\
     --replication-factor 1 \\
     --partitions 100
 """
+
 execute """docker-compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server kafka1:9092 \\
     --list
 """
+
 execute """docker-compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/gateway.properties \\
     --list
 """
+
 execute """echo '{\"type\": \"Sports\", \"price\": 75, \"color\": \"blue\"}' | \\
   docker compose exec -T kafka-client \\
     kafka-console-producer \\
-        --bootstrap-server conduktor-gateway:6969 \\
-        --producer.config /clientConfig/gateway.properties \\
-        --topic concentrated-topic-with-10-partitions
+      --bootstrap-server conduktor-gateway:6969 \\
+      --producer.config /clientConfig/gateway.properties \\
+      --topic concentrated-topic-with-10-partitions
 """
+
 execute """docker-compose exec kafka-client \\
-    kafka-console-consumer  \\
-        --bootstrap-server conduktor-gateway:6969 \\
-        --consumer.config /clientConfig/gateway.properties \\
-        --topic concentrated-topic-with-10-partitions \\
-        --from-beginning \\
-        --max-messages 1 | jq
+  kafka-console-consumer  \\
+    --bootstrap-server conduktor-gateway:6969 \\
+    --consumer.config /clientConfig/gateway.properties \\
+    --topic concentrated-topic-with-10-partitions \\
+    --from-beginning \\
+    --max-messages 1 | jq
 """
+
 execute """echo '{\"msg\": \"hello world\"}' | \\
   docker compose exec -T kafka-client \\
     kafka-console-producer \\
-        --bootstrap-server conduktor-gateway:6969 \\
-        --producer.config /clientConfig/gateway.properties \\
-        --topic concentrated-topic-with-100-partitions
+      --bootstrap-server conduktor-gateway:6969 \\
+      --producer.config /clientConfig/gateway.properties \\
+      --topic concentrated-topic-with-100-partitions
 """
+
 execute """docker-compose exec kafka-client \\
-    kafka-console-consumer  \\
-        --bootstrap-server conduktor-gateway:6969 \\
-        --consumer.config /clientConfig/gateway.properties \\
-        --topic concentrated-topic-with-100-partitions \\
-        --from-beginning \\
-        --max-messages 1 | jq
+  kafka-console-consumer  \\
+    --bootstrap-server conduktor-gateway:6969 \\
+    --consumer.config /clientConfig/gateway.properties \\
+    --topic concentrated-topic-with-100-partitions \\
+    --from-beginning \\
+    --max-messages 1 | jq
 """
+
 execute """docker-compose exec kafka-client \\
   kafka-console-consumer  \\
     --bootstrap-server kafka1:9092 \\
@@ -102,6 +114,7 @@ execute """docker-compose exec kafka-client \\
     --from-beginning \\
     --max-messages 2 | jq
 """
+
 execute """docker-compose exec kafka-client \\
   kafka-console-consumer  \\
     --bootstrap-server kafka1:9092 \\
@@ -111,3 +124,4 @@ execute """docker-compose exec kafka-client \\
     --from-beginning \\
     --max-messages 2
 """
+

@@ -258,13 +258,14 @@ Encryption won't come without some trade-off elsewhere and you might be worried 
 [![asciicast](https://asciinema.org/a/IDVSYFYL2xjAQSN2cPhZ7Hfih.svg)](https://asciinema.org/a/IDVSYFYL2xjAQSN2cPhZ7Hfih)
 
 Create a performance topic
+
 ```bash
 docker compose exec kafka-client \
-    kafka-topics \
-        --bootstrap-server conduktor-gateway:6969 \
-        --command-config /clientConfig/gateway.properties \
-        --create --if-not-exists \
-        --topic encryption-performance
+  kafka-topics \
+    --bootstrap-server conduktor-gateway:6969 \
+    --command-config /clientConfig/gateway.properties \
+    --create --if-not-exists \
+    --topic encryption-performance
 ```
 
 Let's apply the encryption on this topic
@@ -317,13 +318,13 @@ Then run the benchmark
 
 ```bash
 docker compose exec kafka-client \
-    kafka-producer-perf-test \
-        --topic encryption-performance \
-        --throughput -1 \
-        --num-records 1000000 \
-        --producer-props bootstrap.servers=conduktor-gateway:6969 linger.ms=100 \
-        --producer.config /clientConfig/gateway.properties \
-        --payload-file customers.json
+  kafka-producer-perf-test \
+    --topic encryption-performance \
+    --throughput -1 \
+    --num-records 1000000 \
+    --producer-props bootstrap.servers=conduktor-gateway:6969 linger.ms=100 \
+    --producer.config /clientConfig/gateway.properties \
+    --payload-file customers.json
 ```
 
 # Conclusion

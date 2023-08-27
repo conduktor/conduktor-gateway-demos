@@ -14,8 +14,10 @@ function execute() {
     fi
     eval "$*"
 }
+
 execute """docker compose up --wait --detach
 """
+
 execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
@@ -24,14 +26,13 @@ execute """docker compose exec kafka-client \\
     --header \"content-type:application/json\" \\
     --data-raw '{\"lifeTimeSeconds\":7776000}' | jq 
 """
-execute """{
-  \"token\" : \"eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoiY2x1c3RlcjEiLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.XhB1e_ZXvgZ8zIfr28UQ33S8VA7yfWyfdM561Em9lrM\"
-}
-"""
+
 execute """cat clientConfig/gateway.properties
 """
+
 execute """cat clientConfig/gateway.properties
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -39,12 +40,14 @@ execute """docker compose exec kafka-client \\
     --create \\
     --topic my-topic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server conduktor-gateway:6969 \\
     --command-config /clientConfig/gateway.properties \\
     --list
 """
+
 execute """echo '{\"message\": \"hello world\"}' | \\
   docker compose exec -T kafka-client \\
     kafka-console-producer \\
@@ -52,6 +55,7 @@ execute """echo '{\"message\": \"hello world\"}' | \\
       --producer.config /clientConfig/gateway.properties \\
       --topic my-topic
 """
+
 execute """docker compose exec kafka-client \\
   kafka-console-consumer \\
     --bootstrap-server conduktor-gateway:6969 \\
@@ -60,3 +64,4 @@ execute """docker compose exec kafka-client \\
     --from-beginning \\
     --max-messages 1 | jq
 """
+
