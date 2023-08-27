@@ -100,6 +100,7 @@ docker compose exec kafka-client \
     --replication-factor 2 \
     --partitions 3
 ```
+
 ### Step 7: Visualise the workflow
 
 > To take part in the remaining steps in this demo require a Conduktor Console license. For more information on this visit the [Console page](https://www.conduktor.io/console/) or [contact us](https://www.conduktor.io/contact/). 

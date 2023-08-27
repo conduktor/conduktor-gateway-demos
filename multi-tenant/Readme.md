@@ -39,7 +39,6 @@ Start the environment with
 
 ```bash
 docker compose up --wait --detach
-
 ```
 
 ### Step 4: Create topics

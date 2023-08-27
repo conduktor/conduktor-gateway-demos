@@ -29,9 +29,7 @@ In this case the backing Kafka is PLAINTEXT but the gateway is SASL_PLAIN.
 Start the environment with
 
 ```bash
-# setup environment
 docker compose up --wait --detach
-
 ```
 
 ### Step 4: Create a topic
@@ -39,7 +37,6 @@ docker compose up --wait --detach
 We create topics using the Kafka console tools, the below creates a topic named `safeguardTopic`
 
 ```bash
-# Create a topic
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
@@ -48,10 +45,9 @@ docker compose exec kafka-client \
     --topic safeguardTopic
 ```
 
-List the created topic
+Check it has been created
 
 ```bash
-# Check it has been created
 docker compose exec kafka-client \
   kafka-topics \
     --bootstrap-server conduktor-gateway:6969 \
@@ -63,11 +59,11 @@ docker compose exec kafka-client \
 
 Conduktor gateway provides a REST API used to add interceptors.
 
+Add alter topic config policy
 
 ```bash
-# Add alter topic config policy
 docker-compose exec kafka-client \
-curl \
+  curl \
     --user "admin:conduktor" \
     --request POST conduktor-gateway:8888/admin/interceptors/v1/vcluster/someCluster/username/someUsername/interceptor/guard-alter-configs \
     --header 'Content-Type: application/json' \
@@ -88,8 +84,9 @@ curl \
 
 Next we try to alter configs of safeguardTopic with a specification that does not match the above.
 
+Now, alter topic with invalid configs
+
 ```bash
-# Now, alter topic with invalid configs
 docker compose exec kafka-client \
   kafka-configs \
     --bootstrap-server conduktor-gateway:6969 \
@@ -100,7 +97,7 @@ docker compose exec kafka-client \
 
 You should see an output similar to the following:
 
-```bash
+```
 Error while executing config command with args '--bootstrap-server conduktor-gateway:6969 --command-config /clientConfig/gateway.properties --alter --topic test --add-config retention.ms=10000
 
 Caused by: org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Resource 'safeguardTopic' with retention.ms is '10000', must not be less than '8640000'
@@ -109,19 +106,21 @@ Caused by: org.apache.kafka.common.errors.PolicyViolationException: Request para
 
 If we modify our command to meet the criteria the configuration is altered.
 
+alter topic with valid configs
+
 ```bash
-# alter topic with valid configs
 docker compose exec kafka-client \
   kafka-configs \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --alter \
-    --alter --topic safeguardTopic \
+    --topic safeguardTopic \
     --add-config retention.ms=86400001
 ```
 
+Check configs has altered
+
 ```bash
-# check configs has altered
 docker compose exec kafka-client \
   kafka-configs \
     --bootstrap-server conduktor-gateway:6969 \
@@ -146,7 +145,7 @@ Once you have a license key, place it in `platform-config.yaml` under the key: `
 license: "eyJhbGciOiJFUzI1NiIsInR5cCI6I..."
 ```
 
-the start the Conduktor Platform container:
+To start the Conduktor Platform container:
 
 ```bash
 docker compose up --wait --detach
