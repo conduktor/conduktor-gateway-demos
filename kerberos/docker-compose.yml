@@ -13,7 +13,7 @@ services:
       start_period: 20s  
 
   zookeeper:
-    image: confluentinc/cp-zookeeper
+    image: confluentinc/cp-zookeeper:7.4.1
     hostname: zookeeper.kerberos-demo.local
     container_name: zookeeper
     environment:
@@ -37,7 +37,7 @@ services:
       interval: 10s       
 
   kafka-1:
-    image: confluentinc/cp-kafka
+    image: confluentinc/cp-kafka:7.4.1
     hostname: kafka-1
     container_name: kafka-1
     environment:
@@ -49,7 +49,7 @@ services:
       KAFKA_BROKER_ID: "1"
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/kafka-1_server_jaas.conf 
         -Djava.security.krb5.conf=/etc/krb5.conf
-        -Dsun.security.krb5.debug=true 
+        -Dsun.security.krb5.debug=true
       KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
@@ -85,7 +85,7 @@ services:
         condition: service_healthy
 
   kafka-2:
-    image: confluentinc/cp-kafka
+    image: confluentinc/cp-kafka:7.4.1
     hostname: kafka-2
     container_name: kafka-2
     environment:
@@ -97,7 +97,7 @@ services:
       KAFKA_BROKER_ID: "2"
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/kafka-2_server_jaas.conf 
         -Djava.security.krb5.conf=/etc/krb5.conf
-        -Dsun.security.krb5.debug=true 
+        -Dsun.security.krb5.debug=true
       KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
@@ -130,10 +130,10 @@ services:
       start_period: 20s
     depends_on:
       zookeeper:
-        condition: service_healthy    
- 
+        condition: service_healthy
+
   kafka-3:
-    image: confluentinc/cp-kafka
+    image: confluentinc/cp-kafka:7.4.1
     hostname: kafka-3
     container_name: kafka-3
     environment:
@@ -182,7 +182,7 @@ services:
         condition: service_healthy
 
   gateway:
-    image: ghcr.io/conduktor/conduktor-gateway-distro
+    image: conduktor/conduktor-gateway:2.1.0
     hostname: gateway
     container_name: gateway
     environment:
