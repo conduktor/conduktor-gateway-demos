@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.1
     hostname: zookeeper
     container_name: zookeeper
     environment:
@@ -13,7 +13,7 @@ services:
       retries: 25
 
   kafka1:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.1
     hostname: kafka1
     container_name: kafka1
     ports:
@@ -38,7 +38,7 @@ services:
       retries: 25
 
   kafka2:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.1
     hostname: kafka2
     container_name: kafka2
     ports:
@@ -83,7 +83,7 @@ services:
 
 
   kafka-client:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.1
     hostname: kafka-client
     container_name: kafka-client
     command: sleep infinity

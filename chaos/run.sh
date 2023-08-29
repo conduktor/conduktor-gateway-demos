@@ -232,9 +232,6 @@ execute """docker compose exec kafka-client \\
       --max-messages 1
 """
 
-execute """{\"message\": \"hello world\"}T[�   �X�{�
-"""
-
 execute """docker-compose exec kafka-client \\
   curl \\
     --user \"admin:conduktor\" \\

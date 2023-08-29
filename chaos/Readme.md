@@ -397,7 +397,7 @@ docker compose exec kafka-client \
 
 This should produce output similar to this:
 
-```bash
+```json
 {"message": "hello world"}T[�   �X�{�
 ```
 
