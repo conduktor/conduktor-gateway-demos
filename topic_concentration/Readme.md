@@ -95,7 +95,7 @@ docker-compose exec kafka-client \
     --partitions 100
 ```
 
-If we list topics from the backend cluster, not from Gateway perspective, we do not see the concentrated topics.
+If we list topics from the backend cluster, not from Gateway perspective, we do not see the concentrated topics, just the undelying one.
 
 ```bash
 docker-compose exec kafka-client \
@@ -104,7 +104,7 @@ docker-compose exec kafka-client \
     --list
 ```
 
-From the Gateway side, or client perspective, we also see 2 topics but these are the logical topics.
+From the Gateway side, or client perspective, we see 2 topics but these are the logical topics instead.
 
 ```bash
 docker-compose exec kafka-client \
@@ -116,7 +116,7 @@ docker-compose exec kafka-client \
 
 ### Step 4: Confirm they are regular topics
 
-We can send and query the data in the concentrated topics
+We can send and query the data in the concentrated topics.
 
 ```bash
 echo '{"type": "Sports", "price": 75, "color": "blue"}' | \
@@ -186,7 +186,7 @@ docker-compose exec kafka-client \
     --max-messages 2
 ```
 
-We are saving information as metadata in headers to be able to honor kafka semantic when vclusters request data.
+We are saving information as metadata in headers to be able to honor Kafka semantic when vclusters request data.
 
 
 # Conclusion
