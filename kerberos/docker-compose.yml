@@ -182,7 +182,7 @@ services:
         condition: service_healthy
 
   gateway:
-    image: conduktor/conduktor-gateway:2.1.0
+    image: conduktor/conduktor-gateway:2.1.2
     hostname: gateway
     container_name: gateway
     environment:
