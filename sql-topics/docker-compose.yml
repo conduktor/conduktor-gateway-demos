@@ -17,7 +17,8 @@ services:
     hostname: kafka1
     container_name: kafka1
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -48,7 +49,8 @@ services:
     hostname: kafka2
     container_name: kafka2
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -75,7 +77,7 @@ services:
       retries: 25
 
   conduktor-gateway:
-    image: conduktor/conduktor-gateway:2.1.0
+    image: conduktor/conduktor-gateway:2.1.2
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
