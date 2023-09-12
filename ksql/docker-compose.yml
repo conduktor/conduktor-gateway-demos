@@ -105,6 +105,19 @@ services:
       KSQL_SASL_MECHANISM: PLAIN
       KSQL_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="london" password="eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvbmRvbiIsInZjbHVzdGVyIjoibG9uZG9uIiwiZXhwIjoyMDA4MTM4NzkyfQ.u-q2cY-ISl9JBSieJumt7yAjypCCkygbN8MH9bu500w";
 
+  ksqldb-server-kafka:
+    image: confluentinc/ksqldb-server:0.29.0
+    hostname: ksqldb-server-kafka
+    container_name: ksqldb-server-kafka
+    depends_on:
+      - kafka1
+      - kafka2
+    environment:
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+
   ksqldb-cli:
     image: confluentinc/ksqldb-cli:0.29.0
     container_name: ksqldb-cli
