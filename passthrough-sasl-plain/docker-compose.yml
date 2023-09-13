@@ -21,7 +21,15 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SECURED:SASL_PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:19092,SECURED://kafka1:9092
+      KAFKA_LISTENER_NAME_SECURED_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_LISTENER_NAME_SECURED_PLAIN_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username="admin" \
+        password="admin-secret" \
+        user_admin="admin-secret" \
+        user_conduktor="conduktor-secret";
       KAFKA_REPLICATION_FACTOR: 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
@@ -44,7 +52,15 @@ services:
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SECURED:SASL_PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:19092,SECURED://kafka2:9092
+      KAFKA_LISTENER_NAME_SECURED_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_LISTENER_NAME_SECURED_PLAIN_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username="admin" \
+        password="admin-secret" \
+        user_admin="admin-secret" \
+        user_conduktor="conduktor-secret";
       KAFKA_REPLICATION_FACTOR: 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
@@ -54,37 +70,19 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
     healthcheck:
-      test: nc -zv kafka2 9093 || exit 1
+      test: nc -zv kafka2 9092 || exit 1
       interval: 5s
       retries: 25
-  
-  schema-registry:
-    image: confluentinc/cp-schema-registry:7.4.1
-    hostname: schema-registry
-    container_name: schema-registry
-    depends_on:
-      - kafka1
-    ports:
-      - "8081:8081"
-    volumes:
-      - type: bind
-        source: "./clientConfig"
-        target: /clientConfig
-        read_only: true
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
-      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
-      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
 
   conduktor-gateway:
     image: conduktor/conduktor-gateway:2.1.4
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093
-      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092
+      KAFKA_SASL_MECHANISM: PLAIN
+      KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret";
     healthcheck:
       test: curl localhost:8888/health
       interval: 5s
@@ -94,36 +92,6 @@ services:
         condition: service_healthy
       kafka2:
         condition: service_healthy
-
-  conduktor-console:
-    image: conduktor/conduktor-platform:1.14.0
-    hostname: conduktor-console
-    container_name: conduktor-console
-    profiles:
-      - platform
-    ports:
-      - "8080:8080"
-    volumes:
-      - type: bind
-        source: "./platform-config.yaml"
-        target: /opt/conduktor/platform-config.yaml
-        read_only: true
-    depends_on:
-      - kafka1
-    environment:
-      CDK_IN_CONF_FILE: /opt/conduktor/platform-config.yaml
-      KAFKA_BOOTSTRAP_SERVER: kafka1:9092
-      ORGANISATION_NAME: "conduktor"
-      ADMIN_EMAIL: "bob@conduktor.io"
-      ADMIN_PSW: "admin"
-      # LICENSE_KEY:
-      PROXY_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoxLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.Eb94MxCyesPeVdQmm0EDBGvhwcx8j-ST-mvmdAId_j0
-    healthcheck:
-      test: curl -f http://localhost:8080/platform/api/modules/health/live || exit 1
-      interval: 10s
-      start_period: 10s
-      timeout: 5s
-      retries: 3
 
   kafka-client:
     image: confluentinc/cp-kafka:7.4.1
