@@ -37,10 +37,11 @@ Start the environment with
 
 ```bash
 docker compose up --wait --detach
-
 ```
 
 We have already created a `username`, called `someUsername`, for our virtual cluster which is provided in the definition of `clientConfig/gateway.properties`, we will use this to interact with Gateway throughout this demo.
+
+(If you don't want to be useing virtual cluster, please go [here](../passthrough-sasl-plain/Readme.md))
 
 ```bash
 cat clientConfig/gateway.properties
