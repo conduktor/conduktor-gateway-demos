@@ -2,7 +2,7 @@
 
 ## What is Passthrough mode?
 
-This is the default mode, it's when you want to complement your existing kafka, without having the multi-tenancy features of Conduktor Gateway
+This is the default mode, it's when you want to complement your existing kafka, without having the multi-tenancy features of Conduktor Gateway.
 
 ## Running the demo
 
