@@ -52,7 +52,7 @@ docker compose exec kafka-client \
             "topic": "",
             "numPartition": {
               "min": 3,
-              "max":3,
+              "max": 3,
               "whatToDo": "BLOCK"
             },
               "replicationFactor": {
