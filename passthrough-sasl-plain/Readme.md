@@ -25,7 +25,7 @@ docker compose up --wait --detach
 
 ### Step 3: Configure plugin
 
-Please note that the `vcluster` is the username
+Please note that the `vcluster` is the SASL username, in this case, `admin`.
 
 ```bash
 docker compose exec kafka-client \
