@@ -32,12 +32,12 @@ execute """docker compose exec kafka-client \\
             \"numPartition\": {
               \"min\": 3,
               \"max\":3,
-              \"whatToDo\": \"BLOCK\"
+              \"action\": \"BLOCK\"
             },
               \"replicationFactor\": {
                 \"min\": 2,
                 \"max\": 2,
-                \"whatToDo\": \"OVERRIDE\",
+                \"action\": \"OVERRIDE\",
                 \"overrideValue\": 2
             }
         }

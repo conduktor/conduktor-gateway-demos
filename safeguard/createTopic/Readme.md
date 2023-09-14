@@ -49,17 +49,18 @@ docker compose exec kafka-client \
         "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin",
         "priority": 100,
         "config": {
-            "topic": "",
             "numPartition": {
               "min": 3,
-              "max": 3,
-              "whatToDo": "BLOCK"
+              "max": 3
             },
-              "replicationFactor": {
-                "min": 2,
-                "max": 2,
-                "whatToDo": "OVERRIDE",
-                "overrideValue": 2
+            "namingConvention": {
+              "value": "project-.*"
+            },
+            "replicationFactor": {
+              "min": 2,
+              "max": 2,
+              "action": "OVERRIDE",
+              "overrideValue": 2
             }
         }
     }'
@@ -83,9 +84,9 @@ docker compose exec kafka-client \
 You should see an output similar to the following:
 
 ```
-Error while executing topic command : Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
-[2023-08-26 11:27:14,206] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
+[2023-09-14 07:50:20,998] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'invalidTopic' is invalid, naming convention must match with regular expression 'project-.*'. Topic 'invalidTopic' with number partitions is '10', must not be greater than 3
 ```
+
 ### Step 6: Create a valid topic
 
 If we modify our command to meet the criteria the topic is created.
@@ -96,7 +97,7 @@ docker compose exec kafka-client \
     --bootstrap-server conduktor-gateway:6969 \
     --command-config /clientConfig/gateway.properties \
     --create \
-    --topic validTopic \
+    --topic project-foo \
     --replication-factor 2 \
     --partitions 3
 ```
