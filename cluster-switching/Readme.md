@@ -1,25 +1,25 @@
 # What is cluster switching?
 
-Conduktor Gateway's cluster switching allows to hot-switch the backend Kafka cluster without having to change your client configuration or restart Gateway.
+Conduktor Gateway's cluster switching allows hot-switch the backend Kafka cluster without having to change your client configuration, or restart Gateway.
 
-This features enables to build a seamless disaster recovery strategy for your Kafka cluster when Gateway is deployed in combination with a replication solution (like MirrorMaker, Confluent replicator, Cluster Linking, etc.).
+This features enables you to build a seamless disaster recovery strategy for your Kafka cluster, when Gateway is deployed in combination with a replication solution (like MirrorMaker, Confluent replicator, Cluster Linking, etc.).
 
 ## Limitations to consider when designing a disaster recovery strategy
 
-* Cluster switching does not replicate data between clusters. You need to use a replication solution like MirrorMaker to replicate data between clusters.
-* Because of their asynchronous nature, replication solutions may lead to data loss in case of a disaster.
-* Cluster switching is manual process - automatic failover is not supported yet.
-* Concentrated topics offsets: Gateway stores client offsets of concentrated topics in a regular kafka topic. When replicating this topic, there will be no adjustments of potential offsets shifts between the source and failover cluster.
-* When switching, Kafka consumers will perform a group rebalance. They will not be able to commit their offset before the rebalance. This may lead to a some messages being consumed twice.
+* Cluster switching does not replicate data between clusters. You need to use a replication solution like MirrorMaker to replicate data between clusters
+* Because of their asynchronous nature, such replication solutions may lead to data loss in case of a disaster
+* Cluster switching is a manual process - automatic failover is not supported, yet
+* Concentrated topics offsets: Gateway stores client offsets of concentrated topics in a regular Kafka topic. When replicating this topic, there will be no adjustments of potential offsets shifts between the source and failover cluster
+* When switching, Kafka consumers will perform a group rebalance. They will not be able to commit their offset before the rebalance. This may lead to a some messages being consumed twice
 
 ### Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following:
 
 * A single Zookeeper Server
-* A main 3 nodes Kafka cluster
-* A failover 3 nodes Kafka cluster
-* A 2 nodes Conduktor Gateway server
+* A main 3 node Kafka cluster
+* A failover 3 node Kafka cluster
+* A 2 node Conduktor Gateway server
 * A MirrorMaker container
 
 ```sh
@@ -361,9 +361,9 @@ networks:
 
 ### Review the Gateway configuration
 
-The Kafka brokers used by Gateway are stored in `clusters.yaml` and is mounted into the Gateway container. 
+The Kafka brokers used by Gateway are stored in `clusters.yaml` and this is mounted into the Gateway container. 
 The failover cluster is configured with the `gateway.role` property set to `failover`. 
-This cluster is not used by Gateway in nominal mode.
+This cluster is not used by Gateway in normal mode.
 
 ```sh
 cat clusters.yaml
@@ -427,7 +427,7 @@ replication.factor=1
 
 ############################# Internal Topic Settings  #############################
 # The replication factor for mm2 internal topics "heartbeats", "B.checkpoints.internal" and "mm2-offset-syncs.B.internal"
-# For anything other than development testing, a value greater than 1 is recommended to ensure availability such as 3.
+# For anything other than development testing, a value greater than 1 is recommended to ensure availability, such as 3.
 checkpoints.topic.replication.factor=1
 heartbeats.topic.replication.factor=1
 offset-syncs.topic.replication.factor=1
