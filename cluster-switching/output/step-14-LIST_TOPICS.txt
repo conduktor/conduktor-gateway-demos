@@ -1,0 +1,18 @@
++ kafka-topics --bootstrap-server localhost:39092,localhost:39093,localhost:39094 --list
+A.checkpoints.internal
+A.heartbeats
+__consumer_offsets
+_acls
+_auditLogs
+_consumerGroupSubscriptionBackingTopic
+_interceptorConfigs
+_license
+_offsetStore
+_schemas
+_topicMappings
+_topicRegistry
+heartbeats
+mm2-configs.A.internal
+mm2-offsets.A.internal
+mm2-status.A.internal
+teamAusers

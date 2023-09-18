@@ -1,0 +1,24 @@
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic users --from-beginning --max-messages 3 --timeout-ms 5000
++ jq
+Processed a total of 3 messages
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "motorhead",
+  "visa": "#abc123",
+  "address": "Chancery lane, London"
+}
+{
+  "name": "florent",
+  "username": "florent@conduktor.io",
+  "password": "kitesurf",
+  "visa": "#888999XZ",
+  "address": "Dubai, UAE"
+}
+{
+  "name": "thibaut",
+  "username": "thibaut@conduktor.io",
+  "password": "youpi",
+  "visa": "#812SSS",
+  "address": "Les ifs"
+}

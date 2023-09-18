@@ -1,0 +1,10 @@
++ kafka-console-consumer --bootstrap-server localhost:39092,localhost:39093,localhost:39094 --topic teamAusers --from-beginning --max-messages 1
++ jq
+Processed a total of 1 messages
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "motorhead",
+  "visa": "#abc123",
+  "address": "Chancery lane, London"
+}

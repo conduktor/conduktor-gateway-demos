@@ -1,0 +1,7 @@
+config:
+  main:
+    bootstrap.servers: kafka1:9092,kafka2:9093,kafka3:9094
+
+  failover:
+    bootstrap.servers: failover-kafka1:9092,failover-kafka2:9093,failover-kafka3:9094
+    gateway.roles: failover

@@ -1,0 +1,19 @@
++ kafka-console-consumer --bootstrap-server localhost:29092,localhost:29093,localhost:29094 --topic teamAusers --from-beginning --timeout-ms 5000
++ jq
+[2023-09-18 11:58:31,244] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 2 messages
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "motorhead",
+  "visa": "#abc123",
+  "address": "Chancery lane, London"
+}
+{
+  "name": "florent",
+  "username": "florent@conduktor.io",
+  "password": "kitesurf",
+  "visa": "#888999XZ",
+  "address": "Dubai, UAE"
+}
