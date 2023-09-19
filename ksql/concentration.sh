@@ -16,8 +16,6 @@ function execute() {
     eval "$*"
 }
 
-#execute """docker compose up --wait --detach"""
-#
 execute """docker compose exec kafka-client \\
   kafka-topics \\
     --bootstrap-server kafka1:9092 \\
@@ -31,7 +29,7 @@ execute """docker compose exec kafka-client \\
   curl \\
     --silent \\
     --user \"admin:conduktor\" \\
-    --request POST 'conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/.%2A' \\
+    --request POST 'conduktor-gateway:8888/admin/vclusters/v1/vcluster/london/topics/topic.%2A' \\
     --header \"Content-Type: application/json\" \\
     --data-raw '{
         \"physicalTopicName\": \"real-topic\",
@@ -39,6 +37,7 @@ execute """docker compose exec kafka-client \\
         \"concentrated\": true
     }'
 """
+echo ""
 
 execute """echo \"CREATE STREAM IF NOT EXISTS \
                 filmRatings (name VARCHAR, rating INTEGER) \
@@ -63,39 +62,50 @@ execute """echo \"CREATE STREAM IF NOT EXISTS \
                 WITH (kafka_topic='topic-b', value_format='json', partitions=4, replicas=1);\" | \\
   docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
 """
-#
-#execute """echo \"CREATE TABLE IF NOT EXISTS \
-#                currentRating AS SELECT name, LATEST_BY_OFFSET(rating) AS rating \
-#                FROM ratings GROUP BY name EMIT CHANGES;\" | \\
-#  docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
-#"""
-#
+
+execute """echo \"CREATE TABLE IF NOT EXISTS \
+                currentFilmRating AS SELECT name, LATEST_BY_OFFSET(rating) AS rating \
+                FROM filmRatings GROUP BY name EMIT CHANGES;\" | \\
+  docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
+"""
+
+execute """echo \"CREATE TABLE IF NOT EXISTS \
+                currentRestaurantRating AS SELECT name, LATEST_BY_OFFSET(rating) AS rating \
+                FROM restaurantRatings GROUP BY name EMIT CHANGES;\" | \\
+  docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
+"""
+
 execute """echo \"INSERT INTO filmRatings (name, rating) VALUES ('film 1', 1);\
                   INSERT INTO filmRatings (name, rating) VALUES ('film 1', 5);\
-                  INSERT INTO filmComments (name, comment) VALUES ('film 1', 'comment film 1');\
-                  INSERT INTO filmComments (name, comment) VALUES ('film 1', 'comment film 2');\" | \\
-  docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
-"""
-
-execute """echo \"INSERT INTO restaurantRatings (name, rating) VALUES ('restaurant 1', 1);\
+                  INSERT INTO filmComments (name, comment) VALUES ('film 1', 'comment 1');\
+                  INSERT INTO filmComments (name, comment) VALUES ('film 1', 'comment 2');
+                  INSERT INTO restaurantRatings (name, rating) VALUES ('restaurant 1', 3);\
                   INSERT INTO restaurantRatings (name, rating) VALUES ('restaurant 1', 5);\
-                  INSERT INTO restaurantComments (name, comment) VALUES ('restaurant 1', 'restaurant film 1');\
-                  INSERT INTO restaurantComments (name, comment) VALUES ('restaurant 1', 'restaurant film 2');\" | \\
+                  INSERT INTO restaurantComments (name, comment) VALUES ('restaurant 1', 'comment 1');\
+                  INSERT INTO restaurantComments (name, comment) VALUES ('restaurant 1', 'comment 2');\" | \\
   docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
 """
 
-execute """echo \"SELECT * FROM filmRatings;\" | \\
+execute """echo \"SELECT * FROM filmRatings LIMIT 4;\" | \\
   docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
 """
 
-execute """echo \"SELECT * FROM filmComments;\" | \\
+execute """echo \"SELECT * FROM filmComments LIMIT 4;\" | \\
   docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
 """
 
-execute """echo \"SELECT * FROM restaurantRatings;\" | \\
+execute """echo \"SELECT * FROM restaurantRatings LIMIT 4;\" | \\
   docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
 """
 
-execute """echo \"SELECT * FROM restaurantComments;\" | \\
+execute """echo \"SELECT * FROM restaurantComments LIMIT 4;\" | \\
+  docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
+"""
+
+execute """echo \"SELECT * FROM currentFilmRating;\" | \\
+  docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
+"""
+
+execute """echo \"SELECT * FROM currentRestaurantRating;\" | \\
   docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
 """

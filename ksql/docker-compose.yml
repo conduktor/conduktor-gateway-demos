@@ -61,7 +61,7 @@ services:
       retries: 25
 
   conduktor-gateway:
-    image: conduktor/conduktor-gateway:2.1.2
+    image: ghcr.io/conduktor/conduktor-gateway-distro:2.1.4
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
@@ -101,22 +101,15 @@ services:
       KSQL_BOOTSTRAP_SERVERS: conduktor-gateway:6969
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      # For Demo purposes: improve resource utilization and avoid timeouts
+      KSQL_KSQL_STREAMS_NUM_STREAM_THREADS: 1
+      KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 2
+      KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 2
+      KSQL_PRODUCER_ENABLE_IDEMPOTENCE: 'true'
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
       KSQL_SECURITY_PROTOCOL: SASL_PLAINTEXT
       KSQL_SASL_MECHANISM: PLAIN
-      KSQL_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="london" password="eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvbmRvbiIsInZjbHVzdGVyIjoibG9uZG9uIiwiZXhwIjoyMDA4MTM4NzkyfQ.u-q2cY-ISl9JBSieJumt7yAjypCCkygbN8MH9bu500w";
-
-  ksqldb-server-kafka:
-    image: confluentinc/ksqldb-server:0.29.0
-    hostname: ksqldb-server-kafka
-    container_name: ksqldb-server-kafka
-    depends_on:
-      - kafka1
-      - kafka2
-    environment:
-      KSQL_LISTENERS: http://0.0.0.0:8088
-      KSQL_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092
-      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="london" password="eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvbmRvbiIsInZjbHVzdGVyIjoibG9uZG9uIiwiZXhwIjoxNzAyNzg2MTU4fQ.05R3EbbkCIlu7gkCo9bhEuVmimhD11oka_ldAHupaeo";
 
   ksqldb-cli:
     image: confluentinc/ksqldb-cli:0.29.0

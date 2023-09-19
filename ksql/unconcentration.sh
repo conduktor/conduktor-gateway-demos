@@ -16,8 +16,6 @@ function execute() {
     eval "$*"
 }
 
-execute """docker compose up --wait --detach"""
-
 execute """echo \"CREATE STREAM IF NOT EXISTS \
                 ratings (name VARCHAR, rating INTEGER) \
                 WITH (kafka_topic='topic-test', value_format='json', partitions=4, replicas=1);\" | \\
