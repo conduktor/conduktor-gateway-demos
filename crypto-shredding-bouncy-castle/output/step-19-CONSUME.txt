@@ -1,8 +1,6 @@
-+ kafka-console-consumer --bootstrap-server localhost:6969,localhost:7969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
 + jq
-[2023-09-19 09:57:41,520] WARN [Consumer clientId=console-consumer, groupId=console-consumer-18701] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:41,521] WARN [Consumer clientId=console-consumer, groupId=console-consumer-18701] Bootstrap broker localhost:7969 (id: -2 rack: null) disconnected (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:47,075] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+[2023-09-19 10:26:22,519] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
@@ -15,7 +13,7 @@ Processed a total of 2 messages
 {
   "name": "florent",
   "username": "florent@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MTprVjVMc3puaWdIUTI2YXZ4Q0lnOStvbUI1eklBRHdRS0tpbkNWNUxLdW8zNFcvbVBOR0JWeGJPeisydUNGQT09TgCCtFCF6US8Az5ZYqsgJVqfRPmCmcZovTdc3kFQm1nyHo2Oov9MChx2Xg==",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTpsaTN3NEZHRWxhTnZDVDdpMUJmRmo1VnZZVzN5dHZaSkdZWGFPeFdRS1FWRUFPdE5pV1F3TUlwOXB0L1l4Zz09tSLePvuRaTkr8hOtfaBoAoevUgtNQWJFvoVJwsujXE1S80gcNZiShyTJKe8=",
+  "password": "AAAABQAAAEl2YXVsdDp2MTpaSloxeGJqWE5tM2dIeFdNNlZZaEg3SlY5YXdXMGRSZkNuejEwRmZhaEVMM2ZYa0VSY2s5UE9wSU8wWmRpdz09jS10eOaSQdNr5EpKuXPO6PoD5gHCvSgxqMVDfmFtyXaCOIhVIjTa4nqVUA==",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTpaZXZVSDRGVjgwN05ZYlBYN2hlb3ZvejcxckY3a2NTZlEvNVBKTVRnV1k4b1M3QVBXV1JtdjJqRVRsQUprdz09xqi1mr2/tYRXsXlDzN/RdzcjsaVxnzAfiys8vMb3tJjk6Qq13gaGVFzJ9iQ=",
   "address": "Dubai, UAE"
 }

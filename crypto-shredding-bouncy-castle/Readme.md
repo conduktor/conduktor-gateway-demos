@@ -1,5 +1,6 @@
 # A full field level crypto shredding walkthrough
 
+
 ### Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following:
@@ -281,83 +282,83 @@ docker compose up -d --wait
  Container cli-kcat  Creating
  Container zookeeper  Creating
  Container vault  Creating
- Container vault  Created
  Container cli-kcat  Created
+ Container vault  Created
  Container zookeeper  Created
  Container kafka3  Creating
  Container kafka2  Creating
  Container kafka1  Creating
+ Container kafka1  Created
  Container kafka3  Created
  Container kafka2  Created
- Container kafka1  Created
- Container schema-registry  Creating
- Container gateway1  Creating
  Container gateway2  Creating
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
+ Container gateway1  Creating
+ Container schema-registry  Creating
  gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- Container schema-registry  Created
- Container gateway1  Created
+ gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
  Container gateway2  Created
- Container zookeeper  Starting
+ Container gateway1  Created
+ Container schema-registry  Created
  Container vault  Starting
  Container cli-kcat  Starting
+ Container zookeeper  Starting
+ Container cli-kcat  Started
+ Container vault  Started
  Container zookeeper  Started
  Container zookeeper  Waiting
- Container vault  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
- Container cli-kcat  Started
  Container zookeeper  Healthy
  Container kafka2  Starting
  Container zookeeper  Healthy
  Container kafka1  Starting
  Container zookeeper  Healthy
  Container kafka3  Starting
- Container kafka3  Started
  Container kafka1  Started
+ Container kafka3  Started
  Container kafka2  Started
+ Container kafka3  Waiting
+ Container kafka1  Waiting
+ Container kafka2  Waiting
+ Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
- Container kafka2  Waiting
  Container kafka3  Waiting
- Container kafka3  Waiting
- Container kafka1  Waiting
- Container kafka1  Waiting
- Container kafka3  Healthy
- Container kafka3  Healthy
- Container kafka3  Healthy
- Container kafka2  Healthy
  Container kafka1  Healthy
- Container gateway2  Starting
- Container kafka2  Healthy
- Container kafka2  Healthy
+ Container kafka3  Healthy
  Container kafka1  Healthy
+ Container kafka1  Healthy
+ Container kafka2  Healthy
+ Container kafka2  Healthy
+ Container kafka2  Healthy
+ Container kafka3  Healthy
+ Container kafka3  Healthy
  Container gateway1  Starting
- Container kafka1  Healthy
  Container schema-registry  Starting
+ Container gateway2  Starting
  Container schema-registry  Started
- Container gateway1  Started
  Container gateway2  Started
+ Container gateway1  Started
+ Container schema-registry  Waiting
+ Container gateway2  Waiting
  Container vault  Waiting
- Container kafka1  Waiting
  Container kafka3  Waiting
  Container gateway1  Waiting
- Container gateway2  Waiting
- Container zookeeper  Waiting
  Container cli-kcat  Waiting
+ Container zookeeper  Waiting
  Container kafka2  Waiting
- Container schema-registry  Waiting
+ Container kafka1  Waiting
+ Container kafka1  Healthy
  Container vault  Healthy
  Container kafka3  Healthy
- Container zookeeper  Healthy
- Container cli-kcat  Healthy
  Container kafka2  Healthy
- Container kafka1  Healthy
+ Container cli-kcat  Healthy
+ Container zookeeper  Healthy
  Container schema-registry  Healthy
- Container gateway2  Healthy
  Container gateway1  Healthy
+ Container gateway2  Healthy
 
 ```
 
@@ -384,20 +385,20 @@ docker logs  gateway1 2>&1  | grep "Security Provider"
 ```sh
 + docker logs gateway1
 + grep 'Security Provider'
-2023-09-19T08:56:57.278+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:213[m] - Enabling Bouncy Castle as Security Provider
-2023-09-19T08:56:57.381+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider BCJSSE at position 0
-2023-09-19T08:56:57.383+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SUN at position 1
-2023-09-19T08:56:57.384+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunRsaSign at position 2
-2023-09-19T08:56:57.384+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunEC at position 3
-2023-09-19T08:56:57.384+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJSSE at position 4
-2023-09-19T08:56:57.385+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJCE at position 5
-2023-09-19T08:56:57.387+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJGSS at position 6
-2023-09-19T08:56:57.387+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunSASL at position 7
-2023-09-19T08:56:57.388+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider XMLDSig at position 8
-2023-09-19T08:56:57.388+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunPCSC at position 9
-2023-09-19T08:56:57.388+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider JdkLDAP at position 10
-2023-09-19T08:56:57.389+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider JdkSASL at position 11
-2023-09-19T08:56:57.389+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunPKCS11 at position 12
+2023-09-19T09:25:29.068+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:213[m] - Enabling Bouncy Castle as Security Provider
+2023-09-19T09:25:29.252+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider BCJSSE at position 0
+2023-09-19T09:25:29.253+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SUN at position 1
+2023-09-19T09:25:29.253+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunRsaSign at position 2
+2023-09-19T09:25:29.255+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunEC at position 3
+2023-09-19T09:25:29.255+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJSSE at position 4
+2023-09-19T09:25:29.255+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJCE at position 5
+2023-09-19T09:25:29.256+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJGSS at position 6
+2023-09-19T09:25:29.256+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunSASL at position 7
+2023-09-19T09:25:29.256+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider XMLDSig at position 8
+2023-09-19T09:25:29.264+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunPCSC at position 9
+2023-09-19T09:25:29.264+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider JdkLDAP at position 10
+2023-09-19T09:25:29.265+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider JdkSASL at position 11
+2023-09-19T09:25:29.265+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunPKCS11 at position 12
 
 ```
 
@@ -445,7 +446,7 @@ token=$(curl \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
 echo  """
-bootstrap.servers=localhost:6969,localhost:7969
+bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
@@ -465,12 +466,12 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 ```sh
 ++ curl --silent --request POST http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa --user admin:conduktor --header 'Content-Type: application/json' --data-raw '{"lifeTimeSeconds": 7776000}'
 ++ jq -r .token
-+ token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg4OTgzNn0.yRGvZza6a6etC_LYX0LNvu6_MSWS_A-d2M-6yj7oE68
++ token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg5MTU0Nn0.hUMKvpIrGlYbyhfaN5MR7z-fc1ga8yVF1lHWWFk6jRo
 + echo '
-bootstrap.servers=localhost:6969,localhost:7969
+bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='\''sa'\'' password='\''eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg4OTgzNn0.yRGvZza6a6etC_LYX0LNvu6_MSWS_A-d2M-6yj7oE68'\'';
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='\''sa'\'' password='\''eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg5MTU0Nn0.hUMKvpIrGlYbyhfaN5MR7z-fc1ga8yVF1lHWWFk6jRo'\'';
 '
 
 ```
@@ -483,7 +484,7 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 
 ```sh
 kafka-topics \
-    --bootstrap-server localhost:6969,localhost:7969 \
+    --bootstrap-server localhost:6969 \
     --command-config teamA-sa.properties \
     --replication-factor 1 \
     --partitions 1 \
@@ -502,8 +503,7 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-+ kafka-topics --bootstrap-server localhost:6969,localhost:7969 --command-config teamA-sa.properties --replication-factor 1 --partitions 1 --create --if-not-exists --topic customers-shredding
-[2023-09-19 09:57:17,567] WARN [AdminClient clientId=adminclient-1] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
++ kafka-topics --bootstrap-server localhost:6969 --command-config teamA-sa.properties --replication-factor 1 --partitions 1 --create --if-not-exists --topic customers-shredding
 Created topic customers-shredding.
 
 ```
@@ -516,7 +516,7 @@ Created topic customers-shredding.
 
 ```sh
 kafka-topics \
-    --bootstrap-server localhost:6969,localhost:7969 \
+    --bootstrap-server localhost:6969 \
     --command-config teamA-sa.properties \
     --list
 ```
@@ -532,8 +532,7 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-+ kafka-topics --bootstrap-server localhost:6969,localhost:7969 --command-config teamA-sa.properties --list
-[2023-09-19 09:57:19,674] WARN [AdminClient clientId=adminclient-1] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
++ kafka-topics --bootstrap-server localhost:6969 --command-config teamA-sa.properties --list
 customers-shredding
 
 ```
@@ -637,9 +636,7 @@ curl \
 + jq
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-100   620  100   620    0     0  15613      0 --:--:-- --:--:-- --:--:-- 17714
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   620  100   620    0     0   7731      0 --:--:-- --:--:-- --:--:--  8266
 {
   "interceptors": [
     {
@@ -691,13 +688,13 @@ curl \
 ```sh
 echo '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}' | \
     kafka-console-producer \
-        --bootstrap-server localhost:6969,localhost:7969 \
+        --bootstrap-server localhost:6969 \
         --producer.config teamA-sa.properties \
         --topic customers-shredding
 
 echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}' | \
     kafka-console-producer \
-        --bootstrap-server localhost:6969,localhost:7969 \
+        --bootstrap-server localhost:6969 \
         --producer.config teamA-sa.properties \
         --topic customers-shredding
 ```
@@ -714,13 +711,9 @@ echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf",
 
 ```sh
 + echo '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
-+ kafka-console-producer --bootstrap-server localhost:6969,localhost:7969 --producer.config teamA-sa.properties --topic customers-shredding
-[2023-09-19 09:57:22,412] WARN [Producer clientId=console-producer] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:22,412] WARN [Producer clientId=console-producer] Bootstrap broker localhost:7969 (id: -2 rack: null) disconnected (org.apache.kafka.clients.NetworkClient)
++ kafka-console-producer --bootstrap-server localhost:6969 --producer.config teamA-sa.properties --topic customers-shredding
 + echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
-+ kafka-console-producer --bootstrap-server localhost:6969,localhost:7969 --producer.config teamA-sa.properties --topic customers-shredding
-[2023-09-19 09:57:24,776] WARN [Producer clientId=console-producer] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:24,777] WARN [Producer clientId=console-producer] Bootstrap broker localhost:7969 (id: -2 rack: null) disconnected (org.apache.kafka.clients.NetworkClient)
++ kafka-console-producer --bootstrap-server localhost:6969 --producer.config teamA-sa.properties --topic customers-shredding
 
 ```
 
@@ -732,7 +725,7 @@ echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf",
 
 ```sh
 kafka-console-consumer \
-    --bootstrap-server localhost:6969,localhost:7969 \
+    --bootstrap-server localhost:6969 \
     --consumer.config teamA-sa.properties \
     --topic customers-shredding \
     --from-beginning \
@@ -750,25 +743,23 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-+ kafka-console-consumer --bootstrap-server localhost:6969,localhost:7969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
 + jq
-[2023-09-19 09:57:26,549] WARN [Consumer clientId=console-consumer, groupId=console-consumer-7705] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:26,549] WARN [Consumer clientId=console-consumer, groupId=console-consumer-7705] Bootstrap broker localhost:7969 (id: -2 rack: null) disconnected (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:32,209] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+[2023-09-19 10:26:07,141] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
   "name": "tom",
   "username": "tom@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MTpsWEtXQjIzNmhiYXZhZXM2U2NvR0krUUpFc0s0RXlGc0VzMWh4WlAxdTlzaDMzcUJITUtkK1E5YUs4bG94dz09mtrXY/2mcyRaSjWBuxk1awBXa5l9xeuKkEAeOj4Ti5VtNw6h5NYHoE7hjXM=",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTptcWxUUDM3ZzZKb3ZCbVc1SEFXeWV5SHEvYUgwaG9TNjdFQnJiN3c1NXd0RWpIWTBlYlE0dmhGR0J3bi95UT09pLpZWguExiJprGo4O2N2HzRSfD0mOuWFJj6tohEjB0WwkefFoIAXQpKZ",
+  "password": "AAAABQAAAEl2YXVsdDp2MTpTUDB0TlFMZnZmbjBSOVp2ZUZJVHptZE5wREM5ZE01b2VLWVBNR2JvdDhvOWw1TFN0VkY4clFmVUE4eDhOQT09Gn/8h+RKmaMvjWmFT9B9jAnc4yteLJqRUOz22I6njkLkLtqK0V9c6hMYeHw=",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTp0ZDRQK3dTQVdDTy94WGdmbllldUQxWHdGcTVxUS9LNnYxdU9udkdUQmtRRTVHZTRMUzFZcE1HSjB5bGc1QT09HY9o+ye6AGp2FmVxXRM6T0uqEDYTKmqHcHeBMM7kNYIZfEk2Td8M8lyI",
   "address": "Chancery lane, London"
 }
 {
   "name": "florent",
   "username": "florent@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MTprVjVMc3puaWdIUTI2YXZ4Q0lnOStvbUI1eklBRHdRS0tpbkNWNUxLdW8zNFcvbVBOR0JWeGJPeisydUNGQT09TgCCtFCF6US8Az5ZYqsgJVqfRPmCmcZovTdc3kFQm1nyHo2Oov9MChx2Xg==",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTpsaTN3NEZHRWxhTnZDVDdpMUJmRmo1VnZZVzN5dHZaSkdZWGFPeFdRS1FWRUFPdE5pV1F3TUlwOXB0L1l4Zz09tSLePvuRaTkr8hOtfaBoAoevUgtNQWJFvoVJwsujXE1S80gcNZiShyTJKe8=",
+  "password": "AAAABQAAAEl2YXVsdDp2MTpaSloxeGJqWE5tM2dIeFdNNlZZaEg3SlY5YXdXMGRSZkNuejEwRmZhaEVMM2ZYa0VSY2s5UE9wSU8wWmRpdz09jS10eOaSQdNr5EpKuXPO6PoD5gHCvSgxqMVDfmFtyXaCOIhVIjTa4nqVUA==",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTpaZXZVSDRGVjgwN05ZYlBYN2hlb3ZvejcxckY3a2NTZlEvNVBKTVRnV1k4b1M3QVBXV1JtdjJqRVRsQUprdz09xqi1mr2/tYRXsXlDzN/RdzcjsaVxnzAfiys8vMb3tJjk6Qq13gaGVFzJ9iQ=",
   "address": "Dubai, UAE"
 }
 
@@ -858,9 +849,7 @@ curl \
 + jq
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-100   905  100   905    0     0  64216      0 --:--:-- --:--:-- --:--:-- 82272
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   905  100   905    0     0  47320      0 --:--:-- --:--:-- --:--:-- 60333
 {
   "interceptors": [
     {
@@ -928,7 +917,7 @@ curl \
 
 ```sh
 kafka-console-consumer \
-    --bootstrap-server localhost:6969,localhost:7969 \
+    --bootstrap-server localhost:6969 \
     --consumer.config teamA-sa.properties \
     --topic customers-shredding \
     --from-beginning \
@@ -946,11 +935,9 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-+ kafka-console-consumer --bootstrap-server localhost:6969,localhost:7969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
 + jq
-[2023-09-19 09:57:33,992] WARN [Consumer clientId=console-consumer, groupId=console-consumer-54135] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:33,994] WARN [Consumer clientId=console-consumer, groupId=console-consumer-54135] Bootstrap broker localhost:7969 (id: -2 rack: null) disconnected (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:39,604] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+[2023-09-19 10:26:14,597] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
@@ -1047,7 +1034,7 @@ curl \
 
 ```sh
 kafka-console-consumer \
-    --bootstrap-server localhost:6969,localhost:7969 \
+    --bootstrap-server localhost:6969 \
     --consumer.config teamA-sa.properties \
     --topic customers-shredding \
     --from-beginning \
@@ -1065,11 +1052,9 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-+ kafka-console-consumer --bootstrap-server localhost:6969,localhost:7969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
 + jq
-[2023-09-19 09:57:41,520] WARN [Consumer clientId=console-consumer, groupId=console-consumer-18701] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:41,521] WARN [Consumer clientId=console-consumer, groupId=console-consumer-18701] Bootstrap broker localhost:7969 (id: -2 rack: null) disconnected (org.apache.kafka.clients.NetworkClient)
-[2023-09-19 09:57:47,075] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+[2023-09-19 10:26:22,519] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
@@ -1082,8 +1067,8 @@ Processed a total of 2 messages
 {
   "name": "florent",
   "username": "florent@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MTprVjVMc3puaWdIUTI2YXZ4Q0lnOStvbUI1eklBRHdRS0tpbkNWNUxLdW8zNFcvbVBOR0JWeGJPeisydUNGQT09TgCCtFCF6US8Az5ZYqsgJVqfRPmCmcZovTdc3kFQm1nyHo2Oov9MChx2Xg==",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTpsaTN3NEZHRWxhTnZDVDdpMUJmRmo1VnZZVzN5dHZaSkdZWGFPeFdRS1FWRUFPdE5pV1F3TUlwOXB0L1l4Zz09tSLePvuRaTkr8hOtfaBoAoevUgtNQWJFvoVJwsujXE1S80gcNZiShyTJKe8=",
+  "password": "AAAABQAAAEl2YXVsdDp2MTpaSloxeGJqWE5tM2dIeFdNNlZZaEg3SlY5YXdXMGRSZkNuejEwRmZhaEVMM2ZYa0VSY2s5UE9wSU8wWmRpdz09jS10eOaSQdNr5EpKuXPO6PoD5gHCvSgxqMVDfmFtyXaCOIhVIjTa4nqVUA==",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTpaZXZVSDRGVjgwN05ZYlBYN2hlb3ZvejcxckY3a2NTZlEvNVBKTVRnV1k4b1M3QVBXV1JtdjJqRVRsQUprdz09xqi1mr2/tYRXsXlDzN/RdzcjsaVxnzAfiys8vMb3tJjk6Qq13gaGVFzJ9iQ=",
   "address": "Dubai, UAE"
 }
 
@@ -1111,38 +1096,38 @@ docker compose down -v
 
 ```sh
 + docker compose down -v
- Container gateway1  Stopping
  Container vault  Stopping
- Container gateway2  Stopping
+ Container gateway1  Stopping
  Container cli-kcat  Stopping
+ Container gateway2  Stopping
  Container schema-registry  Stopping
  Container vault  Stopped
  Container vault  Removing
  Container vault  Removed
- Container schema-registry  Stopped
- Container schema-registry  Removing
- Container schema-registry  Removed
  Container gateway2  Stopped
  Container gateway2  Removing
  Container gateway1  Stopped
  Container gateway1  Removing
- Container gateway2  Removed
  Container gateway1  Removed
- Container kafka2  Stopping
- Container kafka3  Stopping
+ Container gateway2  Removed
+ Container schema-registry  Stopped
+ Container schema-registry  Removing
+ Container schema-registry  Removed
  Container kafka1  Stopping
- Container kafka1  Stopped
- Container kafka1  Removing
+ Container kafka3  Stopping
+ Container kafka2  Stopping
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
- Container kafka1  Removed
- Container cli-kcat  Stopped
- Container cli-kcat  Removing
- Container cli-kcat  Removed
  Container kafka2  Stopped
  Container kafka2  Removing
  Container kafka2  Removed
+ Container cli-kcat  Stopped
+ Container cli-kcat  Removing
+ Container cli-kcat  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing

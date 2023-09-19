@@ -19,7 +19,7 @@ services:
         GATEWAY_SECURITY_PROVIDER: BOUNCY_CASTLE
         GATEWAY_FEATURE_FLAGS_ANALYTICS: false
     properties:
-      bootstrap.servers: localhost:6969,localhost:7969
+      bootstrap.servers: localhost:6969
       gateway.host: http://localhost:8888
   gateway2:
     docker:
