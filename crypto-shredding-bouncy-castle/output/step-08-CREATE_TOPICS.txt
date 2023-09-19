@@ -1,0 +1,3 @@
++ kafka-topics --bootstrap-server localhost:6969,localhost:7969 --command-config teamA-sa.properties --replication-factor 1 --partitions 1 --create --if-not-exists --topic customers-shredding
+[2023-09-19 09:57:17,567] WARN [AdminClient clientId=adminclient-1] Connection to node -2 (localhost/127.0.0.1:7969) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue. (org.apache.kafka.clients.NetworkClient)
+Created topic customers-shredding.

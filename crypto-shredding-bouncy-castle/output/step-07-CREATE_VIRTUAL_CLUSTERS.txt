@@ -1,0 +1,9 @@
+++ curl --silent --request POST http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa --user admin:conduktor --header 'Content-Type: application/json' --data-raw '{"lifeTimeSeconds": 7776000}'
+++ jq -r .token
++ token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg4OTgzNn0.yRGvZza6a6etC_LYX0LNvu6_MSWS_A-d2M-6yj7oE68
++ echo '
+bootstrap.servers=localhost:6969,localhost:7969
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='\''sa'\'' password='\''eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg4OTgzNn0.yRGvZza6a6etC_LYX0LNvu6_MSWS_A-d2M-6yj7oE68'\'';
+'
