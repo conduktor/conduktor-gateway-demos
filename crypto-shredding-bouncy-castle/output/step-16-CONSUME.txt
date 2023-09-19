@@ -1,7 +1,5 @@
-+ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --max-messages 2 --timeout-ms 5000
 + jq
-[2023-09-19 10:26:14,597] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
-org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
   "name": "tom",

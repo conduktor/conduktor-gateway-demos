@@ -1,9 +1,3 @@
-svg-term \
-  --in asciinema/all.asciinema \
-  --width 140 --height 20 \
-  --out images/all.svg \
-  --window true
-
 for stepSh in $(ls step*sh | sort ) ; do
     echo "Processing asciinema for $stepSh"
     step=$(echo "$stepSh" | sed "s/.sh$//" )
@@ -40,6 +34,12 @@ asciinema rec \
   --cols 140 --rows 40 \
   --command "sh run.sh" \
   asciinema/all.asciinema
+
+svg-term \
+  --in asciinema/all.asciinema \
+  --width 140 --height 20 \
+  --out images/all.svg \
+  --window true
 
 asciinemaUid=$(asciinema upload asciinema/all.asciinema 2>&1 | grep http | awk '{print $1}' | cut -d '/' -f 5)
 gsed -i "s/ASCIINEMA_UID/$asciinemaUid/g" Readme.md

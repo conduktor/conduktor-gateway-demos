@@ -175,6 +175,7 @@ actions:
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers-shredding
+    maxMessages: 2
     assertSize: 2
     assertions:
       - description: Confirm password is encrypted for tom
@@ -230,6 +231,7 @@ actions:
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers-shredding
+    maxMessages: 2
     assertSize: 2
     assertions:
       - description: Confirm password is decrypted for tom
@@ -283,6 +285,7 @@ actions:
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers-shredding
+    maxMessages: 2
     assertSize: 2
     assertions:
       - description: Confirm password is decrypted for tom

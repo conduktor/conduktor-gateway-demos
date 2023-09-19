@@ -29,20 +29,20 @@ function execute() {
 
 
 header 'Crypto Shredding with fips'
-execute 'step-04-DOCKER' 'Start the docker environment.sh'
-execute 'step-05-SH' 'Verify the security provider setup.sh'
-execute 'step-06-SH' 'Verify the disabled algorithms.sh'
-execute 'step-07-CREATE_VIRTUAL_CLUSTERS' 'Let's create the virtual cluster `teamA`.sh'
-execute 'step-08-CREATE_TOPICS' 'Create the `customer-shredding` topic.sh'
-execute 'step-09-LIST_TOPICS' 'List topics.sh'
-execute 'step-10-ADD_INTERCEPTORS' 'Let's ask gateway to encrypt messages using vault and dynamic keys.sh'
-execute 'step-11-LIST_INTERCEPTORS' 'List gateway interceptors.sh'
-execute 'step-12-PRODUCE' 'Let's produce sample data for `tom` and `florent`.sh'
-execute 'step-13-CONSUME' 'Let's consume the message, and confirm `tom` and `florent` are encrypted.sh'
-execute 'step-14-ADD_INTERCEPTORS' 'Let's add the decrypt interceptor to decipher messages.sh'
-execute 'step-15-LIST_INTERCEPTORS' 'List gateway interceptors.sh'
-execute 'step-16-CONSUME' 'Confirm message from `tom` and `florent` are encrypted.sh'
-execute 'step-17-SH' 'Listing keys created in Vault.sh'
-execute 'step-18-SH' 'Remove `florent` related keys.sh'
-execute 'step-19-CONSUME' 'Let's make sure `florent` data are no more readable!.sh'
-execute 'step-20-DOCKER' 'Cleanup the docker environment.sh'
+execute "step-04-DOCKER.sh" "Start the docker environment"
+execute "step-05-SH.sh" "Verify the security provider setup"
+execute "step-06-SH.sh" "Verify the disabled algorithms"
+execute "step-07-CREATE_VIRTUAL_CLUSTERS.sh" "Let's create the virtual cluster \`teamA\`"
+execute "step-08-CREATE_TOPICS.sh" "Create the \`customer-shredding\` topic"
+execute "step-09-LIST_TOPICS.sh" "List topics"
+execute "step-10-ADD_INTERCEPTORS.sh" "Let's ask gateway to encrypt messages using vault and dynamic keys"
+execute "step-11-LIST_INTERCEPTORS.sh" "List gateway interceptors"
+execute "step-12-PRODUCE.sh" "Let's produce sample data for \`tom\` and \`florent\`"
+execute "step-13-CONSUME.sh" "Let's consume the message, and confirm \`tom\` and \`florent\` are encrypted"
+execute "step-14-ADD_INTERCEPTORS.sh" "Let's add the decrypt interceptor to decipher messages"
+execute "step-15-LIST_INTERCEPTORS.sh" "List gateway interceptors"
+execute "step-16-CONSUME.sh" "Confirm message from \`tom\` and \`florent\` are encrypted"
+execute "step-17-SH.sh" "Listing keys created in Vault"
+execute "step-18-SH.sh" "Remove \`florent\` related keys"
+execute "step-19-CONSUME.sh" "Let's make sure \`florent\` data are no more readable!"
+execute "step-20-DOCKER.sh" "Cleanup the docker environment"

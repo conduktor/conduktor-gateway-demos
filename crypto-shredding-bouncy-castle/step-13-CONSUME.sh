@@ -3,4 +3,5 @@ kafka-console-consumer \
     --consumer.config teamA-sa.properties \
     --topic customers-shredding \
     --from-beginning \
+    --max-messages 2 \
     --timeout-ms 5000 | jq

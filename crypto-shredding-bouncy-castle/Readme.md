@@ -1,6 +1,13 @@
 # A full field level crypto shredding walkthrough
 
 
+
+## View the full demo in realtime
+
+You can either follow all the steps manually, or just enjoy the recording
+
+[![asciicast](https://asciinema.org/a/8WSFYuzP6tXYrcBUEqlUATsLi.svg)](https://asciinema.org/a/8WSFYuzP6tXYrcBUEqlUATsLi)
+
 ### Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following:
@@ -279,28 +286,28 @@ docker compose up -d --wait
 + docker compose up -d --wait
  Network crypto-shredding-bouncy-castle_default  Creating
  Network crypto-shredding-bouncy-castle_default  Created
- Container cli-kcat  Creating
  Container zookeeper  Creating
+ Container cli-kcat  Creating
  Container vault  Creating
- Container cli-kcat  Created
  Container vault  Created
+ Container cli-kcat  Created
  Container zookeeper  Created
- Container kafka3  Creating
- Container kafka2  Creating
  Container kafka1  Creating
- Container kafka1  Created
- Container kafka3  Created
+ Container kafka2  Creating
+ Container kafka3  Creating
  Container kafka2  Created
+ Container kafka3  Created
+ Container kafka1  Created
  Container gateway2  Creating
- Container gateway1  Creating
  Container schema-registry  Creating
+ Container gateway1  Creating
  gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
  Container gateway2  Created
+ gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
  Container gateway1  Created
  Container schema-registry  Created
- Container vault  Starting
  Container cli-kcat  Starting
+ Container vault  Starting
  Container zookeeper  Starting
  Container cli-kcat  Started
  Container vault  Started
@@ -309,56 +316,56 @@ docker compose up -d --wait
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Healthy
+ Container kafka3  Starting
+ Container zookeeper  Healthy
  Container kafka2  Starting
  Container zookeeper  Healthy
  Container kafka1  Starting
- Container zookeeper  Healthy
- Container kafka3  Starting
- Container kafka1  Started
  Container kafka3  Started
  Container kafka2  Started
+ Container kafka1  Started
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
- Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
+ Container kafka1  Waiting
+ Container kafka3  Healthy
+ Container kafka2  Healthy
  Container kafka1  Healthy
+ Container kafka2  Healthy
  Container kafka3  Healthy
  Container kafka1  Healthy
- Container kafka1  Healthy
+ Container gateway2  Starting
  Container kafka2  Healthy
- Container kafka2  Healthy
- Container kafka2  Healthy
- Container kafka3  Healthy
  Container kafka3  Healthy
  Container gateway1  Starting
+ Container kafka1  Healthy
  Container schema-registry  Starting
- Container gateway2  Starting
  Container schema-registry  Started
- Container gateway2  Started
  Container gateway1  Started
- Container schema-registry  Waiting
- Container gateway2  Waiting
- Container vault  Waiting
- Container kafka3  Waiting
+ Container gateway2  Started
  Container gateway1  Waiting
- Container cli-kcat  Waiting
- Container zookeeper  Waiting
- Container kafka2  Waiting
  Container kafka1  Waiting
+ Container zookeeper  Waiting
+ Container kafka3  Waiting
+ Container cli-kcat  Waiting
+ Container vault  Waiting
+ Container kafka2  Waiting
+ Container gateway2  Waiting
+ Container schema-registry  Waiting
+ Container cli-kcat  Healthy
+ Container zookeeper  Healthy
+ Container kafka2  Healthy
  Container kafka1  Healthy
  Container vault  Healthy
  Container kafka3  Healthy
- Container kafka2  Healthy
- Container cli-kcat  Healthy
- Container zookeeper  Healthy
  Container schema-registry  Healthy
- Container gateway1  Healthy
  Container gateway2  Healthy
+ Container gateway1  Healthy
 
 ```
 
@@ -385,20 +392,20 @@ docker logs  gateway1 2>&1  | grep "Security Provider"
 ```sh
 + docker logs gateway1
 + grep 'Security Provider'
-2023-09-19T09:25:29.068+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:213[m] - Enabling Bouncy Castle as Security Provider
-2023-09-19T09:25:29.252+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider BCJSSE at position 0
-2023-09-19T09:25:29.253+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SUN at position 1
-2023-09-19T09:25:29.253+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunRsaSign at position 2
-2023-09-19T09:25:29.255+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunEC at position 3
-2023-09-19T09:25:29.255+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJSSE at position 4
-2023-09-19T09:25:29.255+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJCE at position 5
-2023-09-19T09:25:29.256+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJGSS at position 6
-2023-09-19T09:25:29.256+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunSASL at position 7
-2023-09-19T09:25:29.256+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider XMLDSig at position 8
-2023-09-19T09:25:29.264+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunPCSC at position 9
-2023-09-19T09:25:29.264+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider JdkLDAP at position 10
-2023-09-19T09:25:29.265+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider JdkSASL at position 11
-2023-09-19T09:25:29.265+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunPKCS11 at position 12
+2023-09-19T10:27:15.560+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:213[m] - Enabling Bouncy Castle as Security Provider
+2023-09-19T10:27:15.611+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider BCJSSE at position 0
+2023-09-19T10:27:15.611+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SUN at position 1
+2023-09-19T10:27:15.614+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunRsaSign at position 2
+2023-09-19T10:27:15.614+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunEC at position 3
+2023-09-19T10:27:15.614+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJSSE at position 4
+2023-09-19T10:27:15.615+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJCE at position 5
+2023-09-19T10:27:15.617+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunJGSS at position 6
+2023-09-19T10:27:15.617+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunSASL at position 7
+2023-09-19T10:27:15.618+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider XMLDSig at position 8
+2023-09-19T10:27:15.618+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunPCSC at position 9
+2023-09-19T10:27:15.618+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider JdkLDAP at position 10
+2023-09-19T10:27:15.619+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider JdkSASL at position 11
+2023-09-19T10:27:15.619+0000 [[31m      main[m] [[32mINFO [m] [[34mProxyConfiguration:229[m] - Security Provider SunPKCS11 at position 12
 
 ```
 
@@ -466,12 +473,12 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 ```sh
 ++ curl --silent --request POST http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa --user admin:conduktor --header 'Content-Type: application/json' --data-raw '{"lifeTimeSeconds": 7776000}'
 ++ jq -r .token
-+ token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg5MTU0Nn0.hUMKvpIrGlYbyhfaN5MR7z-fc1ga8yVF1lHWWFk6jRo
++ token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg5NTI1NH0.FRPNmiN9mqnBsAQzogK0NQgZOf8Dnq0tAXwK4KtI0x8
 + echo '
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='\''sa'\'' password='\''eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg5MTU0Nn0.hUMKvpIrGlYbyhfaN5MR7z-fc1ga8yVF1lHWWFk6jRo'\'';
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='\''sa'\'' password='\''eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjg5NTI1NH0.FRPNmiN9mqnBsAQzogK0NQgZOf8Dnq0tAXwK4KtI0x8'\'';
 '
 
 ```
@@ -636,7 +643,7 @@ curl \
 + jq
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   620  100   620    0     0   7731      0 --:--:-- --:--:-- --:--:--  8266
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   620  100   620    0     0  13626      0 --:--:-- --:--:-- --:--:-- 15121
 {
   "interceptors": [
     {
@@ -729,6 +736,7 @@ kafka-console-consumer \
     --consumer.config teamA-sa.properties \
     --topic customers-shredding \
     --from-beginning \
+    --max-messages 2 \
     --timeout-ms 5000 | jq
 ```
 
@@ -743,23 +751,21 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-+ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --max-messages 2 --timeout-ms 5000
 + jq
-[2023-09-19 10:26:07,141] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
-org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
   "name": "tom",
   "username": "tom@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MTpTUDB0TlFMZnZmbjBSOVp2ZUZJVHptZE5wREM5ZE01b2VLWVBNR2JvdDhvOWw1TFN0VkY4clFmVUE4eDhOQT09Gn/8h+RKmaMvjWmFT9B9jAnc4yteLJqRUOz22I6njkLkLtqK0V9c6hMYeHw=",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTp0ZDRQK3dTQVdDTy94WGdmbllldUQxWHdGcTVxUS9LNnYxdU9udkdUQmtRRTVHZTRMUzFZcE1HSjB5bGc1QT09HY9o+ye6AGp2FmVxXRM6T0uqEDYTKmqHcHeBMM7kNYIZfEk2Td8M8lyI",
+  "password": "AAAABQAAAEl2YXVsdDp2MTpjdWV5WDVqc2RiWnlLWDE5VE1ZVE8vdnc2RUN2Tkx1RHpEOHkrci9WTWFrd3BNQ2huTU0wZ2hvU3V0NC8zQT09mgefc9TQhylzVxcsemgZRds83uO0f8ksqG0Xv4mU1JNU3i8fJtp9aU8zWRs=",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTo3bXdaaUliZ0ZxRyt1enUyRnJRb1FlbWJVNVFuYnhib3BxOFBFNTkyMEFBZlArZGFMRVJFTjdkbEFpV2tnQT09lUtyyTfZLT0y8NBTBTbGrbeJMYP2G9uPr1DJN78JkMJsdF/h7jD4N+wt",
   "address": "Chancery lane, London"
 }
 {
   "name": "florent",
   "username": "florent@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MTpaSloxeGJqWE5tM2dIeFdNNlZZaEg3SlY5YXdXMGRSZkNuejEwRmZhaEVMM2ZYa0VSY2s5UE9wSU8wWmRpdz09jS10eOaSQdNr5EpKuXPO6PoD5gHCvSgxqMVDfmFtyXaCOIhVIjTa4nqVUA==",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTpaZXZVSDRGVjgwN05ZYlBYN2hlb3ZvejcxckY3a2NTZlEvNVBKTVRnV1k4b1M3QVBXV1JtdjJqRVRsQUprdz09xqi1mr2/tYRXsXlDzN/RdzcjsaVxnzAfiys8vMb3tJjk6Qq13gaGVFzJ9iQ=",
+  "password": "AAAABQAAAEl2YXVsdDp2MTpTTWlCZnhoWUJmcjkvU2ZJSW85VmJrbHFRaUcxc1lMekU2eHcrVlYxcldYR0pzWTNBeHFCbmpZZlRna2RzUT093iOt6cYzw2C4O0A6O6OcspU8CKU/aQ/AHQ+EcC+eKEJjR5ejuvysSOslyg==",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTpJWWJwZkF5bmk2UXFUa1YvcHJ0b2VFWHhyaHFwUFJBbzFOdFBmRForWG5vcTRYT1FDMTIvZFVTTmFTUWc1QT09EeE9mA/iH/NHddVlgXjj1JmLWg7WPmw+sV+LmfG6ocHbw8S3r5SB000AIDA=",
   "address": "Dubai, UAE"
 }
 
@@ -849,7 +855,7 @@ curl \
 + jq
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   905  100   905    0     0  47320      0 --:--:-- --:--:-- --:--:-- 60333
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   905  100   905    0     0  41000      0 --:--:-- --:--:-- --:--:-- 47631
 {
   "interceptors": [
     {
@@ -921,6 +927,7 @@ kafka-console-consumer \
     --consumer.config teamA-sa.properties \
     --topic customers-shredding \
     --from-beginning \
+    --max-messages 2 \
     --timeout-ms 5000 | jq
 ```
 
@@ -935,10 +942,8 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-+ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --max-messages 2 --timeout-ms 5000
 + jq
-[2023-09-19 10:26:14,597] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
-org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
   "name": "tom",
@@ -1038,6 +1043,7 @@ kafka-console-consumer \
     --consumer.config teamA-sa.properties \
     --topic customers-shredding \
     --from-beginning \
+    --max-messages 2 \
     --timeout-ms 5000 | jq
 ```
 
@@ -1052,10 +1058,8 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-+ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --timeout-ms 5000
++ kafka-console-consumer --bootstrap-server localhost:6969 --consumer.config teamA-sa.properties --topic customers-shredding --from-beginning --max-messages 2 --timeout-ms 5000
 + jq
-[2023-09-19 10:26:22,519] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
-org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
   "name": "tom",
@@ -1067,8 +1071,8 @@ Processed a total of 2 messages
 {
   "name": "florent",
   "username": "florent@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MTpaSloxeGJqWE5tM2dIeFdNNlZZaEg3SlY5YXdXMGRSZkNuejEwRmZhaEVMM2ZYa0VSY2s5UE9wSU8wWmRpdz09jS10eOaSQdNr5EpKuXPO6PoD5gHCvSgxqMVDfmFtyXaCOIhVIjTa4nqVUA==",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTpaZXZVSDRGVjgwN05ZYlBYN2hlb3ZvejcxckY3a2NTZlEvNVBKTVRnV1k4b1M3QVBXV1JtdjJqRVRsQUprdz09xqi1mr2/tYRXsXlDzN/RdzcjsaVxnzAfiys8vMb3tJjk6Qq13gaGVFzJ9iQ=",
+  "password": "AAAABQAAAEl2YXVsdDp2MTpTTWlCZnhoWUJmcjkvU2ZJSW85VmJrbHFRaUcxc1lMekU2eHcrVlYxcldYR0pzWTNBeHFCbmpZZlRna2RzUT093iOt6cYzw2C4O0A6O6OcspU8CKU/aQ/AHQ+EcC+eKEJjR5ejuvysSOslyg==",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTpJWWJwZkF5bmk2UXFUa1YvcHJ0b2VFWHhyaHFwUFJBbzFOdFBmRForWG5vcTRYT1FDMTIvZFVTTmFTUWc1QT09EeE9mA/iH/NHddVlgXjj1JmLWg7WPmw+sV+LmfG6ocHbw8S3r5SB000AIDA=",
   "address": "Dubai, UAE"
 }
 
@@ -1096,38 +1100,38 @@ docker compose down -v
 
 ```sh
 + docker compose down -v
+ Container cli-kcat  Stopping
+ Container schema-registry  Stopping
+ Container gateway2  Stopping
  Container vault  Stopping
  Container gateway1  Stopping
- Container cli-kcat  Stopping
- Container gateway2  Stopping
- Container schema-registry  Stopping
  Container vault  Stopped
  Container vault  Removing
  Container vault  Removed
- Container gateway2  Stopped
- Container gateway2  Removing
  Container gateway1  Stopped
  Container gateway1  Removing
+ Container gateway2  Stopped
+ Container gateway2  Removing
  Container gateway1  Removed
  Container gateway2  Removed
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
- Container kafka1  Stopping
  Container kafka3  Stopping
+ Container kafka1  Stopping
  Container kafka2  Stopping
- Container kafka3  Stopped
- Container kafka3  Removing
- Container kafka3  Removed
- Container kafka2  Stopped
- Container kafka2  Removing
- Container kafka2  Removed
- Container cli-kcat  Stopped
- Container cli-kcat  Removing
- Container cli-kcat  Removed
  Container kafka1  Stopped
  Container kafka1  Removing
  Container kafka1  Removed
+ Container kafka3  Stopped
+ Container kafka3  Removing
+ Container kafka3  Removed
+ Container cli-kcat  Stopped
+ Container cli-kcat  Removing
+ Container cli-kcat  Removed
+ Container kafka2  Stopped
+ Container kafka2  Removing
+ Container kafka2  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing

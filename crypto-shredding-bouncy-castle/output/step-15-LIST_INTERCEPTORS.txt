@@ -2,7 +2,7 @@
 + jq
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   905  100   905    0     0  47320      0 --:--:-- --:--:-- --:--:-- 60333
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   905  100   905    0     0  41000      0 --:--:-- --:--:-- --:--:-- 47631
 {
   "interceptors": [
     {
