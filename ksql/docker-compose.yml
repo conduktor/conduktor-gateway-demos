@@ -61,7 +61,7 @@ services:
       retries: 25
 
   conduktor-gateway:
-    image: ghcr.io/conduktor/conduktor-gateway-distro:2.1.4
+    image: conduktor/conduktor-gateway:2.1.2
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
