@@ -1,0 +1,14 @@
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "AAAABQEi3LfVAg9Ki5jSxfCfIWWtnnVHZe/gPbIDZefsmX2WqYRlSfPK6mn++rYVFQlgb9c=",
+  "visa": "AAAABQFgy28ypEyMhWqF4+iATIGPQGWvUePVBKkYAj5kVb7GqzmqNbluZIONIY0kZOVw",
+  "address": "Chancery lane, London"
+}
+{
+  "name": "florent",
+  "username": "florent@conduktor.io",
+  "password": "AAAABQEi3LfV790V03hPrmpbO2VsUCdpl6U3LcuKN7R4gnF9mrpLvQbBlKioLYieWUB5+g==",
+  "visa": "AAAABQFgy28ytXth/Z/YE1ScvGQpETUAes78l9ZYysyJ8acpzlRpocF9aIhSCEqLwxNA1mcM",
+  "address": "Dubai, UAE"
+}

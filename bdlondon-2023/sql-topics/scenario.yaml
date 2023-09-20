@@ -1,0 +1,172 @@
+title: SQL topics
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: What is a safeguard?
+    markdown: |
+      Enforce your rules where it matters
+      
+      Safeguard ensures that your teams follow your rules and can't break convention. 
+      
+      Enable your teams, prevent common mistakes, protect your infra. 
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: cars
+        replicationFactor: 1
+        partitions: 1
+
+  - type: PRODUCE
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    messages:
+      - value: '{"type":"Sports","price":75,"color":"blue"}'
+      - value: '{"type":"SUV","price":55,"color":"red"}'
+    markdown: |
+      Produce 2 records to the cars topic: our mock car data for cars.
+      
+      * A blue car
+      * A red car
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    maxMessages: 2
+    assertSize: 2
+    assertions:
+      - description: Confirm Sport
+        value:
+          operator: containsIgnoreCase
+          expected: 'Sports'
+      - description: Confirm SUV
+        value:
+          operator: containsIgnoreCase
+          expected: 'SUV'
+    markdown: |
+      Let's confirm the 2 records are there by consuming from the `cars` topic.
+
+  - type: ADD_INTERCEPTORS
+    markdown: |
+      Let's create the interceptor to filter out the red cars from the `cars` topic.
+    gateway: gateway1
+    interceptors:
+      teamA:
+        red-cars:
+          "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin"
+          "priority": "100"
+          "config": {
+            "virtualTopic": "red-cars",
+            "statement": "SELECT type, price as money FROM cars WHERE color = 'red'"
+          }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - red-cars
+
+  - type: CONSUME
+    title: Consume from the virtual topic `red-cars`
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: red-cars
+    assertSize: 1
+    assertions:
+      - description: Confirm Sport is not there because it's not red
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'Sports'
+      - description: Confirm SUV is there because it's red
+        value:
+          operator: containsIgnoreCase
+          expected: 'SUV'
+    markdown: |
+      Let's consume from our virtual topic `red-cars`.
+
+      You now see only one car, the red one, please note that its format changed according to our SQL statement's projection.
+
+      If you are wondering if you can be a bit more fancy, the answer is ... yes!
+
+  - type: STEP
+    title: Can we do more with SQL?
+    markdown: |
+      Yes! We sure can.
+      
+      ```sql
+      SELECT
+        type,
+        price as newPriceName,
+        color,
+        CASE
+          WHEN color = 'red' AND price > 1000 THEN 'Exceptional'
+          WHEN price > 8000 THEN 'Luxury'
+          ELSE 'Regular'
+        END as quality,
+        record.offset as record_offset,
+        record.partition as record_partition
+      FROM cars
+      ```
+      
+      is an example where you mix projection, case, renaming, and kafka metadata.
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      SQL topic is really a game changer!

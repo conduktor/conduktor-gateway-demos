@@ -1,0 +1,2 @@
+Created topic concentrated-topic-with-10-partitions.
+Created topic concentrated-topic-with-100-partitions.

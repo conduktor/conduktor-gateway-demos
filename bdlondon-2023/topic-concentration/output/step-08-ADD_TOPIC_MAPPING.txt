@@ -1,0 +1,6 @@
+{
+  "logicalTopicName": "concentrated-.*",
+  "physicalTopicName": "hold-many-concentrated-topics",
+  "readOnly": false,
+  "concentrated": true
+}

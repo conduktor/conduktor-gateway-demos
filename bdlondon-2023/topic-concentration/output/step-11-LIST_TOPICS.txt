@@ -1,0 +1,13 @@
+__consumer_offsets
+_acls
+_auditLogs
+_consumerGroupSubscriptionBackingTopic
+_interceptorConfigs
+_license
+_offsetStore
+_schemas
+_topicMappings
+_topicRegistry
+hold-many-concentrated-topics
+hold-many-concentrated-topics_compacted
+hold-many-concentrated-topics_compactedAndDeleted

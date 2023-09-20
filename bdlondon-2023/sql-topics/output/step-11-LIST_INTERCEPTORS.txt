@@ -1,0 +1,15 @@
+{
+  "interceptors": [
+    {
+      "name": "red-cars",
+      "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "virtualTopic": "red-cars",
+        "statement": "SELECT type, price as money FROM cars WHERE color = red"
+      }
+    }
+  ]
+}

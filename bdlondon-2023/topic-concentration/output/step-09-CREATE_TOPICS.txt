@@ -1,0 +1,7 @@
+Created topic concentrated-normal.
+Created topic concentrated-delete.
+Created topic concentrated-compact.
+Created topic concentrated-delete-compact.
+Created topic concentrated-compact-delete.
+Created topic concentrated-small-retention.
+Created topic concentrated-large-retention.

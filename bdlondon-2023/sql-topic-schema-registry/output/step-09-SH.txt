@@ -1,0 +1,10 @@
+{
+  "type": "Sports",
+  "price": 75,
+  "color": "blue"
+}
+{
+  "type": "SUV",
+  "price": 55,
+  "color": "red"
+}

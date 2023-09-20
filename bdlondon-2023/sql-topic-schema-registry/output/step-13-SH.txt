@@ -1,0 +1,5 @@
+{
+  "type": "SUV",
+  "price": 55,
+  "color": "red"
+}

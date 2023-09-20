@@ -1,0 +1,18 @@
+{
+  "interceptors": [
+    {
+      "name": "red-cars",
+      "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "virtualTopic": "red-cars",
+        "statement": "SELECT * FROM cars WHERE color = red",
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        }
+      }
+    }
+  ]
+}

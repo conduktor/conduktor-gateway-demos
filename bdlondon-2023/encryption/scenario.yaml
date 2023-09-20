@@ -1,0 +1,204 @@
+title: Encryption
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: Field level encryption
+    markdown: |
+      Let's demonstrate field level encryption 
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTORS
+    markdown: |
+      We want to encrypt only two fields, with an in memory KMS.
+    gateway: gateway1
+    interceptors:
+      teamA:
+        encrypt:
+          "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin"
+          "priority": "100"
+          "config": {
+            "fields": [ {
+              "fieldName": "password",
+              "keySecretId": "password-secret",
+              "algorithm": {
+                "type": "AES_GCM",
+                "kms": "IN_MEMORY"
+              }
+            },{
+              "fieldName": "visa",
+              "keySecretId": "visa-secret",
+              "algorithm": {
+                "type": "AES_GCM",
+                "kms": "IN_MEMORY"
+              }
+            } ]
+          }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - encrypt
+
+  - type: PRODUCE
+    title: Let's send unencrypted json
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    messages:
+      - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+    markdown: |
+      We are using regular kafka tools
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm `tom` and `florent` data is encrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm password is encrypted for `tom`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'motorhead'
+      - description: Confirm visa is encrypted for `tom`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#abc123'
+      - description: Confirm password is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'kitesurf'
+      - description: Confirm visa is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#888999XZ'
+
+  - type: ADD_INTERCEPTORS
+    markdown: |
+      Let's add the decrypt interceptor to decipher messages
+    gateway: gateway1
+    interceptors: {
+      "teamA": {
+        "decrypt": {
+          "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+          "priority": 100,
+          "config": {
+            "topic": "customers",
+            "kmsConfig": {
+              "vault": {
+                "uri": "http://vault:8200",
+                "token": "vault-plaintext-root-token",
+                "version": 1
+              }
+            }
+          }
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 2
+    assertNames:
+      - encrypt
+      - decrypt
+
+  - type: CONSUME
+    title: Confirm message from `tom` and `florent` are encrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    showHeaders: true
+    assertions:
+      - description: Confirm password is decrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: 'motorhead'
+      - description: Confirm visa is decrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: '#abc123'
+      - description: Confirm password is decrypted for `florent`
+        value:
+          operator: containsIgnoreCase
+          expected: 'kitesurf'
+      - description: Confirm visa is decrypted for `florent`
+        value:
+          operator: containsIgnoreCase
+          expected: '#888999XZ'
+
+  - type: CONSUME
+    title: Read the underlying kafka data to reveal the magic
+    kafka: kafka1
+    topic: teamAcustomers
+    assertSize: 2
+    showHeaders: true
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, encryption in the Kafka world can be simple!

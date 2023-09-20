@@ -1,0 +1,225 @@
+title: Topic Concentration
+
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Infinite Partitions with Topic Concentration
+    markdown: |
+      Conduktor Gateway's topic concentration feature allows you to store multiple topics's data on a single underlying Kafka topic. 
+      
+      To clients, it appears that there are multiple topics and these can be read from as normal but in the underlying Kafka cluster there is a lot less resource required.
+
+      In this demo we are going to create a concentrated topic for powering several virtual topics. 
+      
+      Create the virtual topics, produce and consume data to them, and explore how this works.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    title: Create the topic that will hold virtual topics
+    kafka: kafka1
+    topics:
+      - name: hold-many-concentrated-topics
+        replicationFactor: 1
+        partitions: 5
+
+  - type: ADD_TOPIC_MAPPING
+    gateway: gateway1
+    vcluster: teamA
+    physicalTopicName: hold-many-concentrated-topics
+    topicPattern: concentrated-.*
+
+  - type: CREATE_TOPICS
+    title: Create concentrated topics
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: concentrated-normal
+        replicationFactor: 1
+        partitions: 1
+      - name: concentrated-delete
+        replicationFactor: 1
+        partitions: 1
+        config:
+          cleanup.policy: delete
+      - name: concentrated-compact
+        replicationFactor: 1
+        partitions: 1
+        config:
+          cleanup.policy: compact
+      - name: concentrated-delete-compact
+        replicationFactor: 1
+        partitions: 1
+        config:
+          cleanup.policy: delete,compact
+      - name: concentrated-compact-delete
+        replicationFactor: 1
+        partitions: 1
+        config:
+          cleanup.policy: compact,delete
+      - name: concentrated-small-retention
+        replicationFactor: 1
+        partitions: 1
+        config:
+          retention.ms: 10000
+      - name: concentrated-large-retention
+        replicationFactor: 1
+        partitions: 1
+        config:
+          retention.ms: 6048000000
+
+  - type: LIST_TOPICS
+    title: Assert the topics have been created
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    assertExists:
+      - concentrated-normal
+      - concentrated-delete
+      - concentrated-compact
+      - concentrated-delete-compact
+      - concentrated-compact-delete
+      - concentrated-small-retention
+      - concentrated-large-retention
+
+  - type: LIST_TOPICS
+    title: Assert the topics have not been created in the underlying kafka cluster
+    kafka: kafka1
+    assertExists:
+      - hold-many-concentrated-topics
+    assertDoesNotExist:
+      - concentrated-normal
+      - concentrated-delete
+      - concentrated-compact
+      - concentrated-delete-compact
+      - concentrated-compact-delete
+      - concentrated-small-retention
+      - concentrated-large-retention
+    markdown: |
+      If we list topics from the backend cluster, not from Gateway perspective, we do not see the concentrated topics.
+
+  - type: CREATE_TOPICS
+    title: Let's continue created virtual topics, but now with many partitions
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: concentrated-topic-with-10-partitions
+        replicationFactor: 1
+        partitions: 10
+      - name: concentrated-topic-with-100-partitions
+        replicationFactor: 1
+        partitions: 100
+
+  - type: LIST_TOPICS
+    title: Assert they exist in `teamA` cluster
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    assertExists:
+      - concentrated-topic-with-10-partitions
+      - concentrated-topic-with-100-partitions
+
+  - type: PRODUCE
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: concentrated-topic-with-10-partitions
+    messages:
+      - value: '{"type": "Sports", "price": 75, "color": "blue"}'
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: concentrated-topic-with-10-partitions
+    assertSize: 1
+    showHeaders: true
+    assertions:
+      - description: Assert expected message
+        value:
+          operator: contains
+          expected: '{"type": "Sports", "price": 75, "color": "blue"}'
+
+  - type: PRODUCE
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: concentrated-topic-with-100-partitions
+    messages:
+      - value: '{"msg":"hello world"}'
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: concentrated-topic-with-100-partitions
+    showHeaders: true
+    assertSize: 1
+
+  - type: CONSUME
+    enabled: false
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: concentrated-topic-with-100-partitions
+    showHeaders: true
+    assertSize: 1
+    assertions:
+      - description: Assert expected message
+        value:
+          operator: contains
+          expected: '{"msg":"hello world"}'
+        headers:
+          "PDK_originalPartitions":
+            operator: isNotBlank
+          "PDK_originalTopic":
+            operator: isNotBlank
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Infinite partitions with topic concentration is really a game changer!
+

@@ -1,0 +1,31 @@
+{
+  "interceptors": [
+    {
+      "name": "encrypt",
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "fields": [
+          {
+            "fieldName": "password",
+            "keySecretId": "password-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          },
+          {
+            "fieldName": "visa",
+            "keySecretId": "visa-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
