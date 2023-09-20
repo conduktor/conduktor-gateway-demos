@@ -1,0 +1,16 @@
+{
+  "interceptors": [
+    {
+      "name": "schema-id",
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.TopicRequiredSchemaIdPolicyPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "topic": "users",
+        "schemaIdRequired": true
+      }
+    }
+  ]
+}
+ 

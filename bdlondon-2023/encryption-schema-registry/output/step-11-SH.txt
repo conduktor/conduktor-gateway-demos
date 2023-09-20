@@ -1,0 +1,23 @@
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "AAAABQEMTAaRvo6/VjRsoki3i09m+Lj6c9QnRczhX4XN1eKk4BCtwqwLIw70l66H7Rv1U74=",
+  "visa": "AAAABQFqxxDb6pptM8Dj1w12utk4gnBlvefBJKDA7wBK6zC1LeT9zl+F9f4pljswWHDr",
+  "address": {
+    "location": "AAAABQFW9ArFXUAtH1COjUktbjz9T12cFn+8NeR3pmNkGtRKaUE/1fXow78f/3SHT/e0/DVZkR/To5he",
+    "town": "London",
+    "country": "UK"
+  }
+}
+{
+  "name": "florent",
+  "username": "florent@conduktor.io",
+  "password": "AAAABQEMTAaRjRUo59opJBA9bhObRvJbyl7UoYtdGgkzK55slp41gwnZU7JlbYxFu0/nVA==",
+  "visa": "AAAABQFqxxDbglJkJs7fTSV7sgomcpVjk2s7BOTv6vrRGyGgXBjX/mACDjNDfXF3ilHubh0m",
+  "address": {
+    "location": "AAAABQFW9ArFWfo7zeaLPIaFBH3w6HTYpdqwpPJUZoAfHOq/1J5UumDrTYy37R2IUxnlmi6W9oihsiH8XBh7/w==",
+    "town": "Dubai",
+    "country": "UAE"
+  }
+}
+ 

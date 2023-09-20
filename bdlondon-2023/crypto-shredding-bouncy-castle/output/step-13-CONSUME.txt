@@ -1,0 +1,15 @@
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "AAAABQAAAEl2YXVsdDp2MTovYVV6aHcwR0RURkVMdDg4Z0E3WURXL01ZejB2YzMxY2ZzVCtkSUJSNVZQZERlSzZYUFJ5dHlXSXNGZzRMdz092N6vMEJV8KfUYtabSRZpV213pYeGc3r//lYGrROG9H5G6iXYXjZXe3bOPO4=",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTpDR1E2b0JZbE9xK1J1eG9URHBnWWwxcllPZFZJeDBrM3Q1Vk5BNHV0dHIxNGNHV2F3TG5kd01jS243VVRJUT09or9RnV5oSMGvQ3/XDrFq2cAc8hDqQMjkn0Cb+sBGlZR5NrbngwcmFtC+",
+  "address": "Chancery lane, London"
+}
+{
+  "name": "florent",
+  "username": "florent@conduktor.io",
+  "password": "AAAABQAAAEl2YXVsdDp2MTpvWEw1bkhGNytBVnV5LzVNUUZ1Tlgrd2JoeUtGeXZTU09UenhNT3E5SHVSWDZYRUZQa1pVYjZ2ODF0eHdXZz09XL9/lM3zyY3qXb/2t7mRvf8h5AvsXvDxfWyKwXKP297C82z37e2fCRDlFw==",
+  "visa": "AAAABQAAAEl2YXVsdDp2MTplUjFRMUU2YTh2S1V0OWNtNFQ1L05nYVFXZUdMS1lsMHd4NWhZMU00cm5xeCtwVjNyNWtueWF3b0JOUEY2dz09tn2IJ8Vd54GKNDbiNL6axzv4zPbfzhIhuO2OPuRzQmlieD/22mD+VNQ7fUc=",
+  "address": "Dubai, UAE"
+}
+ 

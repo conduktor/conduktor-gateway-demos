@@ -1,0 +1,28 @@
+{
+  "users": {
+    "clusterId": "main",
+    "name": "teamAusers",
+    "isConcentrated": false,
+    "compactedName": "teamAusers",
+    "isCompacted": false,
+    "compactedAndDeletedName": "teamAusers",
+    "isCompactedAndDeleted": false,
+    "createdAt": [
+      2023,
+      9,
+      20,
+      10,
+      12,
+      2,
+      861
+    ],
+    "isDeleted": false,
+    "configuration": {
+      "numPartitions": 1,
+      "replicationFactor": 1,
+      "properties": {}
+    },
+    "isVirtual": false
+  }
+}
+ 

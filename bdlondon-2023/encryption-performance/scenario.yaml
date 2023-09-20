@@ -1,0 +1,151 @@
+title: Encryption performance
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: Field level encryption and performance
+    markdown: |
+      Let's demonstrate field level encryption and performance
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTORS
+    markdown: |
+      We want to encrypt only two fields, with an in memory KMS.
+    gateway: gateway1
+    interceptors:
+      teamA:
+        encrypt:
+          "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin"
+          "priority": "100"
+          "config": {
+            "fields": [ {
+              "fieldName": "password",
+              "keySecretId": "password-secret",
+              "algorithm": {
+                "type": "AES_GCM",
+                "kms": "IN_MEMORY"
+              }
+            },{
+              "fieldName": "visa",
+              "keySecretId": "visa-secret",
+              "algorithm": {
+                "type": "AES_GCM",
+                "kms": "IN_MEMORY"
+              }
+            } ]
+          }
+
+  - type: ADD_INTERCEPTORS
+    markdown: |
+      Let's add the decrypt interceptor to decipher messages
+    gateway: gateway1
+    interceptors: {
+      "teamA": {
+        "decrypt": {
+          "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+          "priority": 100,
+          "config": {
+            "topic": "customers",
+            "kmsConfig": {
+              "vault": {
+                "uri": "http://vault:8200",
+                "token": "vault-plaintext-root-token",
+                "version": 1
+              }
+            }
+          }
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 2
+    assertNames:
+      - encrypt
+      - decrypt
+
+  - type: SH
+    title: Running `kafka-producer-perf-test` bundled with Apache Kafka
+    kafka: teamA
+    iteration: 3
+    kafkaConfig: teamA-sa.properties
+    script: |      
+      kafka-producer-perf-test \
+        --topic customers \
+        --throughput -1 \
+        --num-records 1000000 \
+        --producer-props \
+            bootstrap.servers=${BOOTSTRAP_SERVERS} \
+            linger.ms=100 \
+            compression.type=lz4 \
+        --producer.config ${KAFKA_CONFIG_FILE} \
+        --payload-file examples.json
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, encryption in the Kafka world can be simple ... and efficient!
+      
+      > [!NOTE]
+      > The best part is that this performance level is with the default security provider.
+      > You can use Bouncy Castle, Conscrypt etc to boost both your performance and compliancy!

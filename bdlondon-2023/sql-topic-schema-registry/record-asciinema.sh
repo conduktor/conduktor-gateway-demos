@@ -1,3 +1,6 @@
+docker rm -f $(docker ps -aq)
+docker compose up -d --wait
+
 for stepSh in $(ls step*sh | sort ) ; do
     echo "Processing asciinema for $stepSh " `date`
     step=$(echo "$stepSh" | sed "s/.sh$//" )

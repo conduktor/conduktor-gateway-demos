@@ -1,0 +1,17 @@
+__consumer_offsets
+_acls
+_auditLogs
+_consumerGroupSubscriptionBackingTopic
+_interceptorConfigs
+_license
+_offsetStore
+_schemas
+_topicMappings
+_topicRegistry
+heartbeats
+mm2-configs.failover.internal
+mm2-offset-syncs.failover.internal
+mm2-offsets.failover.internal
+mm2-status.failover.internal
+teamAusers
+ 

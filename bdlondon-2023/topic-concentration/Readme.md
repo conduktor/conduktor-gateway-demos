@@ -12,7 +12,7 @@ Create the virtual topics, produce and consume data to them, and explore how thi
 
 You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/ASCIINEMA_UID.svg)](https://asciinema.org/a/ASCIINEMA_UID)
+[![asciicast](https://asciinema.org/a/ChuQj19vMFCswItp5XdT71ocr.svg)](https://asciinema.org/a/ChuQj19vMFCswItp5XdT71ocr)
 
 ### Review the docker compose environment
 
@@ -273,7 +273,8 @@ docker compose up --detach --wait
   <summary>Command output</summary>
 
 ```sh
-step-04-DOCKER-OUTPUT
+ 
+
 ```
 
 </details>
@@ -309,7 +310,8 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
   <summary>Command output</summary>
 
 ```sh
-step-05-CREATE_VIRTUAL_CLUSTERS-OUTPUT
+ 
+
 ```
 
 </details>
@@ -328,7 +330,7 @@ cat teamA-sa.properties
 ```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjk2ODMwOX0.vdQ8iwOGKWLiEe0TRtbZjIkNnGHl7JuqQUT4RmYVAX8';
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjk3Njg3M30.qeLJoln-ELte8d5Kyc36VeRMm6X_RSZHIrgD3y9tHCk';
 bootstrap.servers=localhost:6969
 ```
 
@@ -359,7 +361,9 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-07-CREATE_TOPICS-OUTPUT
+Created topic hold-many-concentrated-topics.
+ 
+
 ```
 
 </details>
@@ -395,7 +399,14 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-08-ADD_TOPIC_MAPPING-OUTPUT
+{
+  "logicalTopicName": "concentrated-.*",
+  "physicalTopicName": "hold-many-concentrated-topics",
+  "readOnly": false,
+  "concentrated": true
+}
+ 
+
 ```
 
 </details>
@@ -474,7 +485,15 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-09-CREATE_TOPICS-OUTPUT
+Created topic concentrated-normal.
+Created topic concentrated-delete.
+Created topic concentrated-compact.
+Created topic concentrated-delete-compact.
+Created topic concentrated-compact-delete.
+Created topic concentrated-small-retention.
+Created topic concentrated-large-retention.
+ 
+
 ```
 
 </details>
@@ -501,7 +520,15 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-10-LIST_TOPICS-OUTPUT
+concentrated-compact
+concentrated-compact-delete
+concentrated-delete
+concentrated-delete-compact
+concentrated-large-retention
+concentrated-normal
+concentrated-small-retention
+ 
+
 ```
 
 </details>
@@ -527,7 +554,21 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-11-LIST_TOPICS-OUTPUT
+__consumer_offsets
+_acls
+_auditLogs
+_consumerGroupSubscriptionBackingTopic
+_interceptorConfigs
+_license
+_offsetStore
+_schemas
+_topicMappings
+_topicRegistry
+hold-many-concentrated-topics
+hold-many-concentrated-topics_compacted
+hold-many-concentrated-topics_compactedAndDeleted
+ 
+
 ```
 
 </details>
@@ -565,7 +606,10 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-12-CREATE_TOPICS-OUTPUT
+Created topic concentrated-topic-with-10-partitions.
+Created topic concentrated-topic-with-100-partitions.
+ 
+
 ```
 
 </details>
@@ -592,7 +636,17 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-13-LIST_TOPICS-OUTPUT
+concentrated-compact
+concentrated-compact-delete
+concentrated-delete
+concentrated-delete-compact
+concentrated-large-retention
+concentrated-normal
+concentrated-small-retention
+concentrated-topic-with-10-partitions
+concentrated-topic-with-100-partitions
+ 
+
 ```
 
 </details>
@@ -620,7 +674,8 @@ echo '{"type": "Sports", "price": 75, "color": "blue"}' | \
   <summary>Command output</summary>
 
 ```sh
-step-14-PRODUCE-OUTPUT
+ 
+
 ```
 
 </details>
@@ -650,7 +705,9 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-step-15-CONSUME-OUTPUT
+PDK_originalPartition:5,PDK_originalTopic:concentrated-topic-with-10-partitions	{"type": "Sports", "price": 75, "color": "blue"}
+ 
+
 ```
 
 </details>
@@ -678,7 +735,8 @@ echo '{"msg":"hello world"}' | \
   <summary>Command output</summary>
 
 ```sh
-step-16-PRODUCE-OUTPUT
+ 
+
 ```
 
 </details>
@@ -708,7 +766,9 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-step-17-CONSUME-OUTPUT
+PDK_originalPartition:89,PDK_originalTopic:concentrated-topic-with-100-partitions	{"msg":"hello world"}
+ 
+
 ```
 
 </details>
@@ -734,7 +794,8 @@ docker compose down --volumes
   <summary>Command output</summary>
 
 ```sh
-step-19-DOCKER-OUTPUT
+ 
+
 ```
 
 </details>

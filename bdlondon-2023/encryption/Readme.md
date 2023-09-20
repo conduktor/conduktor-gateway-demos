@@ -6,7 +6,7 @@ Let's demonstrate field level encryption
 
 You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/ASCIINEMA_UID.svg)](https://asciinema.org/a/ASCIINEMA_UID)
+[![asciicast](https://asciinema.org/a/7VEBQ5qCJe4l3Rmf9tzN4x52t.svg)](https://asciinema.org/a/7VEBQ5qCJe4l3Rmf9tzN4x52t)
 
 ### Review the docker compose environment
 
@@ -267,7 +267,8 @@ docker compose up --detach --wait
   <summary>Command output</summary>
 
 ```sh
-step-04-DOCKER-OUTPUT
+ 
+
 ```
 
 </details>
@@ -303,7 +304,8 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
   <summary>Command output</summary>
 
 ```sh
-step-05-CREATE_VIRTUAL_CLUSTERS-OUTPUT
+ 
+
 ```
 
 </details>
@@ -322,7 +324,7 @@ cat teamA-sa.properties
 ```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjk2ODIzN30.LBRExeX4-chIzoCOjz-mmpjuBG0dEc9h5xHH174oHDY';
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjk3NjM1Mn0.VBtH4TsBsrQb4Ls4STASB4ZtIxMWhMarHs_pkbPks88';
 bootstrap.servers=localhost:6969
 ```
 
@@ -354,7 +356,9 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-07-CREATE_TOPICS-OUTPUT
+Created topic customers.
+ 
+
 ```
 
 </details>
@@ -412,7 +416,11 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-08-ADD_INTERCEPTORS-OUTPUT
+{
+  "message": "encrypt is created"
+}
+ 
+
 ```
 
 </details>
@@ -440,7 +448,39 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-09-LIST_INTERCEPTORS-OUTPUT
+{
+  "interceptors": [
+    {
+      "name": "encrypt",
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "fields": [
+          {
+            "fieldName": "password",
+            "keySecretId": "password-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          },
+          {
+            "fieldName": "visa",
+            "keySecretId": "visa-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+ 
+
 ```
 
 </details>
@@ -474,7 +514,8 @@ echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf",
   <summary>Command output</summary>
 
 ```sh
-step-10-PRODUCE-OUTPUT
+ 
+
 ```
 
 </details>
@@ -503,7 +544,22 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-step-11-CONSUME-OUTPUT
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "AAAABQE8XYWFVk5cxK5LqzH9xXGCo42fKsKE54Bqi+YmKpa18++qr/U7wZVZf4RsQqaBRCs=",
+  "visa": "AAAABQEVAYo7h+RH1s4MqIeydYaBhFIhZgZd6ct1uOa4QJh9nCAyBTGkJfCR0dvU+B1J",
+  "address": "Chancery lane, London"
+}
+{
+  "name": "florent",
+  "username": "florent@conduktor.io",
+  "password": "AAAABQE8XYWFVza2QZ9QmP/T5FxkYEWb69xazp8cYM9ZxhDstc2iXhT/UY6YSxJsCCe3fg==",
+  "visa": "AAAABQEVAYo7ac6oGzUFE8CnZEySCTvLUHK8ccoGbICW5mAoqPtAfkscsW4Qz9OdvMjNQrbV",
+  "address": "Dubai, UAE"
+}
+ 
+
 ```
 
 </details>
@@ -554,7 +610,11 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-12-ADD_INTERCEPTORS-OUTPUT
+{
+  "message": "decrypt is created"
+}
+ 
+
 ```
 
 </details>
@@ -582,7 +642,56 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-13-LIST_INTERCEPTORS-OUTPUT
+{
+  "interceptors": [
+    {
+      "name": "decrypt",
+      "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "topic": "customers",
+        "kmsConfig": {
+          "vault": {
+            "uri": "http://vault:8200",
+            "token": "vault-plaintext-root-token",
+            "version": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "encrypt",
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "fields": [
+          {
+            "fieldName": "password",
+            "keySecretId": "password-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          },
+          {
+            "fieldName": "visa",
+            "keySecretId": "visa-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+ 
+
 ```
 
 </details>
@@ -612,7 +721,10 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-step-14-CONSUME-OUTPUT
+NO_HEADERS	{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}
+NO_HEADERS	{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}
+ 
+
 ```
 
 </details>
@@ -641,7 +753,10 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-step-15-CONSUME-OUTPUT
+gateway_encrypted:
+gateway_encrypted:
+ 
+
 ```
 
 </details>
@@ -667,7 +782,8 @@ docker compose down --volumes
   <summary>Command output</summary>
 
 ```sh
-step-16-DOCKER-OUTPUT
+ 
+
 ```
 
 </details>

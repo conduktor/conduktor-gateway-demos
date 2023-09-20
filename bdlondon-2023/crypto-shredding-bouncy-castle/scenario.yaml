@@ -1,0 +1,305 @@
+title: Crypto Shredding with fips
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_SECURITY_PROVIDER: BOUNCY_CASTLE
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+        GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+        GATEWAY_SECURITY_PROVIDER: BOUNCY_CASTLE
+        GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+  vault:
+    docker:
+      image: hashicorp/vault
+      hostname: vault
+      container_name: vault
+      ports:
+        - "8200:8200"
+      command: [
+        "sh",
+        "-c",
+        "(while ! nc -z 127.0.0.1 8200; \
+                  do \
+                  sleep 1; \
+                  echo 'waiting for vault service ...'; \
+                  done; \
+                  export VAULT_ADDR='http://0.0.0.0:8200';\
+                  vault secrets enable transit; \
+                  vault secrets enable -version=1 kv; \
+                  vault secrets enable totp \
+                  ) & vault server -dev -dev-listen-address=0.0.0.0:8200",
+      ]
+      environment:
+        VAULT_ADDR: "http://0.0.0.0:8200"
+        VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
+      healthcheck:
+        test: nc -zv 0.0.0.0 8200
+        interval: 5s
+        retries: 25
+
+actions:
+  - type: INTRODUCTION
+    title: A full field level crypto shredding walkthrough
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: SH
+    title: Verify the security provider setup
+    script: docker logs  gateway1 2>&1  | grep "Security Provider"
+
+  - type: SH
+    title: Verify the disabled algorithms
+    script: docker logs  gateway1 2>&1  | grep "disabledAlgorithms"
+    showOutput: true
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers-shredding
+        replicationFactor: 1
+        partitions: 1
+
+  - type: LIST_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    assertExists:
+      - customers-shredding
+
+  - type: ADD_INTERCEPTORS
+    markdown: |
+      Let's ask gateway to encrypt messages using vault and dynamic keys
+    gateway: gateway1
+    interceptors: {
+      "teamA": {
+        "crypto-shredding-encrypt": {
+          "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+          "priority": 100,
+          "config": {
+            "topic": "customers-shredding",
+            "kmsConfig": {
+              "vault": {
+                "uri": "http://vault:8200",
+                "token": "vault-plaintext-root-token",
+                "version": 1
+              }
+            },
+            "fields": [
+              {
+                "fieldName": "password",
+                "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
+                "algorithm": {
+                  "type": "AES_GCM",
+                  "kms": "VAULT"
+                }
+              },
+              {
+                "fieldName": "visa",
+                "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
+                "algorithm": {
+                  "type": "AES_GCM",
+                  "kms": "VAULT"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - crypto-shredding-encrypt
+
+  - type: PRODUCE
+    title: Let's produce sample data for `tom` and `florent`
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-shredding
+    messages:
+      - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm `tom` and `florent` are encrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-shredding
+    maxMessages: 2
+    assertSize: 2
+    assertions:
+      - description: Confirm password is encrypted for `tom`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'motorhead'
+      - description: Confirm visa is encrypted for `tom`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#abc123'
+      - description: Confirm password is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'kitesurf'
+      - description: Confirm visa is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#888999XZ'
+
+  - type: ADD_INTERCEPTORS
+    markdown: |
+      Let's add the decrypt interceptor to decipher messages
+    gateway: gateway1
+    interceptors: {
+      "teamA": {
+        "crypto-shredding-decrypt": {
+          "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+          "priority": 100,
+          "config": {
+            "topic": "customers-shredding",
+            "kmsConfig": {
+              "vault": {
+                "uri": "http://vault:8200",
+                "token": "vault-plaintext-root-token",
+                "version": 1
+              }
+            }
+          }
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 2
+    assertNames:
+      - crypto-shredding-encrypt
+      - crypto-shredding-decrypt
+
+  - type: CONSUME
+    title: Confirm message from `tom` and `florent` are encrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-shredding
+    maxMessages: 2
+    assertSize: 2
+    assertions:
+      - description: Confirm password is decrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: 'motorhead'
+      - description: Confirm visa is decrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: '#abc123'
+      - description: Confirm password is decrypted for `florent`
+        value:
+          operator: containsIgnoreCase
+          expected: 'kitesurf'
+      - description: Confirm visa is decrypted for `florent`
+        value:
+          operator: containsIgnoreCase
+          expected: '#888999XZ'
+
+  - type: SH
+    title: Listing keys created in Vault
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      curl \
+        --request GET 'http://localhost:8200/v1/transit/keys/?list=true' \
+        --silent \
+        --header "X-Vault-Token: vault-plaintext-root-token" | jq -r ".data.keys"
+
+  - type: SH
+    title: Remove `florent` related keys
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      curl \
+        --request POST 'http://localhost:8200/v1/transit/keys/secret-for-florent/config' \
+        --silent \
+        --header "X-Vault-Token: vault-plaintext-root-token" \
+        --header "content-type: application/json" \
+        --data-raw '{"min_decryption_version":"1","min_encryption_version":1,"deletion_allowed":true,"auto_rotate_period":0}' > /dev/null
+     
+      curl \
+        --request DELETE http://localhost:8200/v1/transit/keys/secret-for-florent \
+        --silent \
+        --header "X-Vault-Token: vault-plaintext-root-token"
+
+  - type: CONSUME
+    title: Let's make sure `florent` data are no more readable!
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-shredding
+    maxMessages: 2
+    assertSize: 2
+    assertions:
+      - description: Confirm password is decrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: 'motorhead'
+      - description: Confirm visa is decrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: '#abc123'
+      - description: Confirm password is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'kitesurf'
+      - description: Confirm visa is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#888999XZ'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Crypto shredding help you protect your most precious information

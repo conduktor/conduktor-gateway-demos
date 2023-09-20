@@ -1,0 +1,16 @@
+{
+  "type": "Ferrari",
+  "color": "red",
+  "price": 10000
+}
+{
+  "type": "RollsRoyce",
+  "color": "black",
+  "price": 9000
+}
+{
+  "type": "Mercedes",
+  "color": "black",
+  "price": 6000
+}
+ 

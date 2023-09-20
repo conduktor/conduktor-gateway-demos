@@ -1,0 +1,43 @@
+{
+  "interceptors": [
+    {
+      "name": "encrypt",
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        },
+        "fields": [
+          {
+            "fieldName": "password",
+            "keySecretId": "password-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          },
+          {
+            "fieldName": "visa",
+            "keySecretId": "visa-scret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          },
+          {
+            "fieldName": "address.location",
+            "keySecretId": "location-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+ 

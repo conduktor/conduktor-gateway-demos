@@ -6,7 +6,7 @@
 
 You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/ASCIINEMA_UID.svg)](https://asciinema.org/a/ASCIINEMA_UID)
+[![asciicast](https://asciinema.org/a/Y8VPASRA32kbIiCck3v0S1wY2.svg)](https://asciinema.org/a/Y8VPASRA32kbIiCck3v0S1wY2)
 
 ### Review the docker compose environment
 
@@ -267,7 +267,8 @@ docker compose up --detach --wait
   <summary>Command output</summary>
 
 ```sh
-step-04-DOCKER-OUTPUT
+ 
+
 ```
 
 </details>
@@ -303,7 +304,8 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
   <summary>Command output</summary>
 
 ```sh
-step-05-CREATE_VIRTUAL_CLUSTERS-OUTPUT
+ 
+
 ```
 
 </details>
@@ -334,7 +336,9 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-06-CREATE_TOPICS-OUTPUT
+Created topic cars.
+ 
+
 ```
 
 </details>
@@ -361,7 +365,9 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-07-LIST_TOPICS-OUTPUT
+cars
+ 
+
 ```
 
 </details>
@@ -408,7 +414,132 @@ echo '{"type":"SUV","price":55,"color":"red"}' | \
   <summary>Command output</summary>
 
 ```sh
-step-08-SH-OUTPUT
+[2023-09-20 10:19:41,691] INFO KafkaAvroSerializerConfig values: 
+	auto.register.schemas = true
+	avro.reflection.allow.null = false
+	avro.remove.java.properties = false
+	avro.use.logical.type.converters = false
+	basic.auth.credentials.source = URL
+	basic.auth.user.info = [hidden]
+	bearer.auth.cache.expiry.buffer.seconds = 300
+	bearer.auth.client.id = null
+	bearer.auth.client.secret = null
+	bearer.auth.credentials.source = STATIC_TOKEN
+	bearer.auth.custom.provider.class = null
+	bearer.auth.identity.pool.id = null
+	bearer.auth.issuer.endpoint.url = null
+	bearer.auth.logical.cluster = null
+	bearer.auth.scope = null
+	bearer.auth.scope.claim.name = scope
+	bearer.auth.sub.claim.name = sub
+	bearer.auth.token = [hidden]
+	context.name.strategy = class io.confluent.kafka.serializers.context.NullContextNameStrategy
+	http.connect.timeout.ms = 60000
+	http.read.timeout.ms = 60000
+	id.compatibility.strict = true
+	key.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
+	latest.cache.size = 1000
+	latest.cache.ttl.sec = -1
+	latest.compatibility.strict = true
+	max.schemas.per.subject = 1000
+	normalize.schemas = false
+	proxy.host = 
+	proxy.port = -1
+	rule.actions = []
+	rule.executors = []
+	rule.service.loader.enable = true
+	schema.format = null
+	schema.reflection = false
+	schema.registry.basic.auth.user.info = [hidden]
+	schema.registry.ssl.cipher.suites = null
+	schema.registry.ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	schema.registry.ssl.endpoint.identification.algorithm = https
+	schema.registry.ssl.engine.factory.class = null
+	schema.registry.ssl.key.password = null
+	schema.registry.ssl.keymanager.algorithm = SunX509
+	schema.registry.ssl.keystore.certificate.chain = null
+	schema.registry.ssl.keystore.key = null
+	schema.registry.ssl.keystore.location = null
+	schema.registry.ssl.keystore.password = null
+	schema.registry.ssl.keystore.type = JKS
+	schema.registry.ssl.protocol = TLSv1.3
+	schema.registry.ssl.provider = null
+	schema.registry.ssl.secure.random.implementation = null
+	schema.registry.ssl.trustmanager.algorithm = PKIX
+	schema.registry.ssl.truststore.certificates = null
+	schema.registry.ssl.truststore.location = null
+	schema.registry.ssl.truststore.password = null
+	schema.registry.ssl.truststore.type = JKS
+	schema.registry.url = [http://localhost:8081]
+	use.latest.version = false
+	use.latest.with.metadata = null
+	use.schema.id = -1
+	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
+ (io.confluent.kafka.serializers.KafkaAvroSerializerConfig:376)
+[2023-09-20 10:19:43,873] INFO KafkaAvroSerializerConfig values: 
+	auto.register.schemas = true
+	avro.reflection.allow.null = false
+	avro.remove.java.properties = false
+	avro.use.logical.type.converters = false
+	basic.auth.credentials.source = URL
+	basic.auth.user.info = [hidden]
+	bearer.auth.cache.expiry.buffer.seconds = 300
+	bearer.auth.client.id = null
+	bearer.auth.client.secret = null
+	bearer.auth.credentials.source = STATIC_TOKEN
+	bearer.auth.custom.provider.class = null
+	bearer.auth.identity.pool.id = null
+	bearer.auth.issuer.endpoint.url = null
+	bearer.auth.logical.cluster = null
+	bearer.auth.scope = null
+	bearer.auth.scope.claim.name = scope
+	bearer.auth.sub.claim.name = sub
+	bearer.auth.token = [hidden]
+	context.name.strategy = class io.confluent.kafka.serializers.context.NullContextNameStrategy
+	http.connect.timeout.ms = 60000
+	http.read.timeout.ms = 60000
+	id.compatibility.strict = true
+	key.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
+	latest.cache.size = 1000
+	latest.cache.ttl.sec = -1
+	latest.compatibility.strict = true
+	max.schemas.per.subject = 1000
+	normalize.schemas = false
+	proxy.host = 
+	proxy.port = -1
+	rule.actions = []
+	rule.executors = []
+	rule.service.loader.enable = true
+	schema.format = null
+	schema.reflection = false
+	schema.registry.basic.auth.user.info = [hidden]
+	schema.registry.ssl.cipher.suites = null
+	schema.registry.ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	schema.registry.ssl.endpoint.identification.algorithm = https
+	schema.registry.ssl.engine.factory.class = null
+	schema.registry.ssl.key.password = null
+	schema.registry.ssl.keymanager.algorithm = SunX509
+	schema.registry.ssl.keystore.certificate.chain = null
+	schema.registry.ssl.keystore.key = null
+	schema.registry.ssl.keystore.location = null
+	schema.registry.ssl.keystore.password = null
+	schema.registry.ssl.keystore.type = JKS
+	schema.registry.ssl.protocol = TLSv1.3
+	schema.registry.ssl.provider = null
+	schema.registry.ssl.secure.random.implementation = null
+	schema.registry.ssl.trustmanager.algorithm = PKIX
+	schema.registry.ssl.truststore.certificates = null
+	schema.registry.ssl.truststore.location = null
+	schema.registry.ssl.truststore.password = null
+	schema.registry.ssl.truststore.type = JKS
+	schema.registry.url = [http://localhost:8081]
+	use.latest.version = false
+	use.latest.with.metadata = null
+	use.schema.id = -1
+	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
+ (io.confluent.kafka.serializers.KafkaAvroSerializerConfig:376)
+ 
+
 ```
 
 </details>
@@ -438,7 +569,18 @@ kafka-avro-console-consumer  \
   <summary>Command output</summary>
 
 ```sh
-step-09-SH-OUTPUT
+{
+  "type": "Sports",
+  "price": 75,
+  "color": "blue"
+}
+{
+  "type": "SUV",
+  "price": 55,
+  "color": "red"
+}
+ 
+
 ```
 
 </details>
@@ -469,7 +611,9 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-10-CREATE_TOPICS-OUTPUT
+Created topic red-cars.
+ 
+
 ```
 
 </details>
@@ -517,7 +661,11 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-11-ADD_INTERCEPTORS-OUTPUT
+{
+  "message": "red-cars is created"
+}
+ 
+
 ```
 
 </details>
@@ -545,7 +693,26 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-12-LIST_INTERCEPTORS-OUTPUT
+{
+  "interceptors": [
+    {
+      "name": "red-cars",
+      "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "virtualTopic": "red-cars",
+        "statement": "SELECT * FROM cars WHERE color = red",
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        }
+      }
+    }
+  ]
+}
+ 
+
 ```
 
 </details>
@@ -575,7 +742,13 @@ kafka-avro-console-consumer  \
   <summary>Command output</summary>
 
 ```sh
-step-13-SH-OUTPUT
+{
+  "type": "SUV",
+  "price": 55,
+  "color": "red"
+}
+ 
+
 ```
 
 </details>
@@ -601,7 +774,8 @@ docker compose down --volumes
   <summary>Command output</summary>
 
 ```sh
-step-14-DOCKER-OUTPUT
+ 
+
 ```
 
 </details>

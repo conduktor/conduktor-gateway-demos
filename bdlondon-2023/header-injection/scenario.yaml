@@ -1,0 +1,200 @@
+title: Header Injection
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Dynamic Header Injection & Removal
+    markdown: |
+      There are multiple interceptors available for manipulating headers, either injection or regex based removal. 
+      
+      This demo will run you through some of these use cases step-by-step.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: users
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTORS
+    gateway: gateway1
+    interceptors:
+      teamA:
+        inject-headers:
+          "pluginClass": "io.conduktor.gateway.interceptor.DynamicHeaderInjectionPlugin"
+          "priority": 100
+          "config": {
+            "headers": {
+              "X-MY-KEY": "my own value",
+              "X-USER": "{{user}}",
+              "X-INTERPOLATED": "User {{user}} via ip {{userIp}}"
+            }
+          }
+    markdown: |
+      Let's create the interceptor to inject various headers
+
+  - type: PRODUCE
+    title: Send tom and florent into `users`
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    messages:
+      - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
+
+  - type: CONSUME
+    title: Verify tom and florent have the corresponding headers
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    showHeaders: true
+    maxMessages: 2
+    assertSize: 2
+    assertions:
+      - description: Confirm tom has headers
+        value:
+          operator: containsIgnoreCase
+          expected: 'tom'
+        headers:
+          "X-MY-KEY":
+            operator: containsIgnoreCase
+            expected: 'my own value'
+      - description: Confirm florent has headers
+        value:
+          operator: containsIgnoreCase
+          expected: 'florent'
+        headers:
+          "X-MY-KEY":
+            operator: containsIgnoreCase
+            expected: 'my own value'
+
+  - type: ADD_INTERCEPTORS
+    gateway: gateway1
+    interceptors:
+      teamA:
+        remove-headers:
+          "pluginClass": "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin"
+          "priority": 100
+          "config": {
+            "headerKeyRegex": "X-MY-.*"
+          }
+    markdown: |
+      Let's create the interceptor `remove-headers` to remove headers that match `X-MY-.*`
+
+
+  - type: CONSUME
+    title: Verify tom and florent have the corresponding headers
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    showHeaders: true
+    maxMessages: 2
+    assertSize: 2
+    assertions:
+      - description: Confirm `tom` has not the header `X-MY-KEY`
+        value:
+          operator: containsIgnoreCase
+          expected: 'tom'
+        headerKeys:
+          - operator: doesNotContainIgnoringCase
+            expected: 'my own value'
+      - description: Confirm `florent` has not the header `X-MY-KEY`
+        value:
+          operator: containsIgnoreCase
+          expected: 'florent'
+        headerKeys:
+          - operator: doesNotContainIgnoringCase
+            expected: 'my own value'
+
+  - type: REMOVE_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    names:
+      - remove-headers
+    markdown: |
+      Let's delete the interceptor `remove-headers` so we can access all our headers again
+
+  - type: CONSUME
+    title: Verify `tom` and `florent` have `X-MY-KEY` back
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    showHeaders: true
+    maxMessages: 2
+    assertSize: 2
+    assertions:
+      - description: Confirm tom has headers
+        value:
+          operator: containsIgnoreCase
+          expected: 'tom'
+        headers:
+          "X-MY-KEY":
+            operator: containsIgnoreCase
+            expected: 'my own value'
+      - description: Confirm florent has headers
+        value:
+          operator: containsIgnoreCase
+          expected: 'florent'
+        headers:
+          "X-MY-KEY":
+            operator: containsIgnoreCase
+            expected: 'my own value'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Leveraging headers in Kafka is of tremendous help!
+      

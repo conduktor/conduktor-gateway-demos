@@ -1,0 +1,7 @@
+{
+  "logicalTopicName": "existingLondonTopic",
+  "physicalTopicName": "existingLondonTopic",
+  "readOnly": false,
+  "concentrated": false
+}
+ 

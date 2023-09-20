@@ -1,4 +1,4 @@
-[2023-09-20 05:54:50,558] INFO KafkaAvroSerializerConfig values: 
+[2023-09-20 10:19:41,691] INFO KafkaAvroSerializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.remove.java.properties = false
@@ -60,7 +60,7 @@
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
  (io.confluent.kafka.serializers.KafkaAvroSerializerConfig:376)
-[2023-09-20 05:54:52,420] INFO KafkaAvroSerializerConfig values: 
+[2023-09-20 10:19:43,873] INFO KafkaAvroSerializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.remove.java.properties = false
@@ -122,3 +122,4 @@
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
  (io.confluent.kafka.serializers.KafkaAvroSerializerConfig:376)
+ 

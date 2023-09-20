@@ -1,0 +1,14 @@
+WARNING: The 'kafka.tools' package is deprecated and will change to 'org.apache.kafka.tools' in the next major release.
+0	54.734
+1000	2.131708
+2000	8.77625
+3000	1.422875
+4000	2.192375
+5000	7.667292000000001
+6000	1.3366669999999998
+7000	1.07675
+8000	1.23725
+9000	1.520042
+Avg latency: 2,2993 ms
+Percentiles: 50th = 1, 99th = 12, 99.9th = 27
+ 

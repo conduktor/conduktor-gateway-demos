@@ -10,7 +10,7 @@ Enable your teams, prevent common mistakes, protect your infra.
 
 You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/ASCIINEMA_UID.svg)](https://asciinema.org/a/ASCIINEMA_UID)
+[![asciicast](https://asciinema.org/a/3sSxyj42dEG5nsvW8ZLA2OOd7.svg)](https://asciinema.org/a/3sSxyj42dEG5nsvW8ZLA2OOd7)
 
 ### Review the docker compose environment
 
@@ -271,7 +271,8 @@ docker compose up --detach --wait
   <summary>Command output</summary>
 
 ```sh
-step-04-DOCKER-OUTPUT
+ 
+
 ```
 
 </details>
@@ -307,7 +308,8 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
   <summary>Command output</summary>
 
 ```sh
-step-05-CREATE_VIRTUAL_CLUSTERS-OUTPUT
+ 
+
 ```
 
 </details>
@@ -326,7 +328,7 @@ cat teamA-sa.properties
 ```properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjk2ODE2MX0.wL-95eAHhSECMzHtx5yM4k5p-_eUA84gZ4cJ8cNNMeM';
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcwMjk3NTY5MH0.pMTmYnhy4K2DHfdOlLqgSGjcGgTOC6jdsddWdMLV3R0';
 bootstrap.servers=localhost:6969
 ```
 
@@ -358,7 +360,9 @@ kafka-topics \
   <summary>Command output</summary>
 
 ```sh
-step-07-CREATE_TOPICS-OUTPUT
+Created topic cars.
+ 
+
 ```
 
 </details>
@@ -395,7 +399,8 @@ echo '{"type":"SUV","price":55,"color":"red"}' | \
   <summary>Command output</summary>
 
 ```sh
-step-08-PRODUCE-OUTPUT
+ 
+
 ```
 
 </details>
@@ -425,7 +430,18 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-step-09-CONSUME-OUTPUT
+{
+  "type": "Sports",
+  "price": 75,
+  "color": "blue"
+}
+{
+  "type": "SUV",
+  "price": 55,
+  "color": "red"
+}
+ 
+
 ```
 
 </details>
@@ -470,7 +486,11 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-10-ADD_INTERCEPTORS-OUTPUT
+{
+  "message": "red-cars is created"
+}
+ 
+
 ```
 
 </details>
@@ -498,7 +518,23 @@ curl \
   <summary>Command output</summary>
 
 ```sh
-step-11-LIST_INTERCEPTORS-OUTPUT
+{
+  "interceptors": [
+    {
+      "name": "red-cars",
+      "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": null,
+      "config": {
+        "virtualTopic": "red-cars",
+        "statement": "SELECT type, price as money FROM cars WHERE color = red"
+      }
+    }
+  ]
+}
+ 
+
 ```
 
 </details>
@@ -531,7 +567,12 @@ kafka-console-consumer \
   <summary>Command output</summary>
 
 ```sh
-step-12-CONSUME-OUTPUT
+{
+  "type": "SUV",
+  "money": 55
+}
+ 
+
 ```
 
 </details>
@@ -578,7 +619,8 @@ docker compose down --volumes
   <summary>Command output</summary>
 
 ```sh
-step-14-DOCKER-OUTPUT
+ 
+
 ```
 
 </details>

@@ -1,0 +1,151 @@
+title: Schema Id validation
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Schema Id validation
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: users
+        replicationFactor: 1
+        partitions: 1
+
+  - type: LIST_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    assertExists:
+      - users
+
+  - type: ADD_INTERCEPTORS
+    gateway: gateway1
+    interceptors:
+      teamA:
+        schema-id:
+          "pluginClass": "io.conduktor.gateway.interceptor.safeguard.TopicRequiredSchemaIdPolicyPlugin"
+          "priority": 100
+          "config": {
+            "topic": "users",
+            "schemaIdRequired": true
+          }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - schema-id
+
+  - type: PRODUCE
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    assertError: true
+    assertErrorMessages:
+      -  Request parameters do not satisfy the configured policy. Topic 'users' with schemaId is required.
+    messages:
+      - value: '{"msg":"hello world"}'
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    assertSize: 0
+
+  - type: SH
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      echo '{
+          "name": "conduktor",
+          "username": "test@conduktor.io",
+          "password": "password1",
+          "visa": "visa123456",
+          "address": "Conduktor Towers, London"
+      }' | \
+        jq -c | \
+            kafka-json-schema-console-producer  \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic users \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema='{
+                  "title": "User",
+                  "type": "object",
+                  "properties": {
+                      "name": { "type": "string" },
+                      "username": { "type": "string" },
+                      "password": { "type": "string" },
+                      "visa": { "type": "string" },
+                      "address": { "type": "string" }
+                  }
+              }'
+     
+  - type: SH
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      curl --silent http://localhost:8081/subjects/ | jq     
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    assertSize: 1
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      You can now make sure you don't fall because of a wrong message

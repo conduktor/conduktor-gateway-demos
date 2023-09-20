@@ -1,14 +1,15 @@
 {
   "name": "tom",
   "username": "tom@conduktor.io",
-  "password": "AAAABQEi3LfVAg9Ki5jSxfCfIWWtnnVHZe/gPbIDZefsmX2WqYRlSfPK6mn++rYVFQlgb9c=",
-  "visa": "AAAABQFgy28ypEyMhWqF4+iATIGPQGWvUePVBKkYAj5kVb7GqzmqNbluZIONIY0kZOVw",
+  "password": "AAAABQE8XYWFVk5cxK5LqzH9xXGCo42fKsKE54Bqi+YmKpa18++qr/U7wZVZf4RsQqaBRCs=",
+  "visa": "AAAABQEVAYo7h+RH1s4MqIeydYaBhFIhZgZd6ct1uOa4QJh9nCAyBTGkJfCR0dvU+B1J",
   "address": "Chancery lane, London"
 }
 {
   "name": "florent",
   "username": "florent@conduktor.io",
-  "password": "AAAABQEi3LfV790V03hPrmpbO2VsUCdpl6U3LcuKN7R4gnF9mrpLvQbBlKioLYieWUB5+g==",
-  "visa": "AAAABQFgy28ytXth/Z/YE1ScvGQpETUAes78l9ZYysyJ8acpzlRpocF9aIhSCEqLwxNA1mcM",
+  "password": "AAAABQE8XYWFVza2QZ9QmP/T5FxkYEWb69xazp8cYM9ZxhDstc2iXhT/UY6YSxJsCCe3fg==",
+  "visa": "AAAABQEVAYo7ac6oGzUFE8CnZEySCTvLUHK8ccoGbICW5mAoqPtAfkscsW4Qz9OdvMjNQrbV",
   "address": "Dubai, UAE"
 }
+ 

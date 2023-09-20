@@ -1,7 +1,8 @@
 for stepSh in $(ls step*sh | sort ) ; do
     echo "Processing $stepSh " `date`
     step=$(echo "$stepSh" | sed "s/.sh$//" )
-    sh -x $stepSh  2>&1 > output/$step.txt
+    sh -x $stepSh > output/$step.txt
+    echo " " >> output/$step.txt
 
     awk '
       BEGIN { content = ""; tag = "'$step-OUTPUT'" }

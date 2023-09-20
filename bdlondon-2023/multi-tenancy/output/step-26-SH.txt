@@ -1,0 +1,7 @@
+{
+  "logicalTopicName": "existingSharedTopic",
+  "physicalTopicName": "existingSharedTopic",
+  "readOnly": false,
+  "concentrated": false
+}
+ 

@@ -1,0 +1,257 @@
+title: Multi tenancy
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+
+actions:
+
+  - type: INTRODUCTION
+    title: Multi-tenancy, virtual clusters
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: LIST_TOPICS
+    kafka: kafka1
+    assertExists:
+      - _auditLogs
+      - _acls
+      - _license
+      - _topicRegistry
+      - _interceptorConfigs
+      - _schemas
+      - _consumerGroupSubscriptionBackingTopic
+      - _offsetStore
+      - _topicMappings
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: london
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: paris
+
+  - type: CREATE_TOPICS
+    kafka: london
+    kafkaConfig: london-sa.properties
+    topics:
+      - name: londonTopic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: CREATE_TOPICS
+    kafka: paris
+    kafkaConfig: paris-sa.properties
+    topics:
+      - name: parisTopic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: LIST_TOPICS
+    kafka: london
+    kafkaConfig: london-sa.properties
+    assertExists:
+      - londonTopic
+
+  - type: LIST_TOPICS
+    kafka: paris
+    kafkaConfig: paris-sa.properties
+    assertExists:
+      - parisTopic
+
+  - type: PRODUCE
+    kafka: london
+    kafkaConfig: london-sa.properties
+    topic: londonTopic
+    messages:
+      - value: '{"message: "Hello from London"}'
+
+  - type: CONSUME
+    kafka: london
+    kafkaConfig: london-sa.properties
+    topic: londonTopic
+    assertSize: 1
+
+  - type: PRODUCE
+    kafka: paris
+    kafkaConfig: paris-sa.properties
+    topic: parisTopic
+    messages:
+      - value: '{"message: "Bonjour depuis Paris"}'
+
+  - type: CONSUME
+    kafka: paris
+    kafkaConfig: paris-sa.properties
+    topic: parisTopic
+    assertSize: 1
+
+  - type: CREATE_TOPICS
+    kafka: kafka1
+    topics:
+      - name: existingLondonTopic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: PRODUCE
+    kafka: kafka1
+    topic: existingLondonTopic
+    messages:
+      - value: '{"message: "Hello from London"}'
+
+  - type: SH
+    kafka: kafka1
+    showOutput: true
+    script: |
+      curl \
+        --silent \
+        --user admin:conduktor \
+        --request POST localhost:8888/admin/vclusters/v1/vcluster/london/topics/existingLondonTopic \
+        --header 'Content-Type: application/json' \
+        --data-raw '{
+            "physicalTopicName": "existingLondonTopic",
+            "readOnly": false,
+            "concentrated": false
+          }' | jq
+
+  - type: LIST_TOPICS
+    kafka: london
+    kafkaConfig: london-sa.properties
+    assertExists:
+     - londonTopic
+     - existingLondonTopic
+
+  - type: CREATE_TOPICS
+    kafka: kafka1
+    topics:
+      - name: existingSharedTopic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: PRODUCE
+    kafka: kafka1
+    topic: existingSharedTopic
+    messages:
+      - value: '{"message": "Existing shared message"}'
+
+  - type: SH
+    showOutput: true
+    kafka: kafka1
+    script: |
+      curl \
+        --silent \
+        --request POST localhost:8888/admin/vclusters/v1/vcluster/london/topics/existingSharedTopic \
+        --user admin:conduktor \
+        --header 'Content-Type: application/json' \
+        --data-raw '{
+          "physicalTopicName": "existingSharedTopic",
+          "readOnly": false,
+          "concentrated": false
+        }' | jq
+
+  - type: LIST_TOPICS
+    kafka: london
+    kafkaConfig: london-sa.properties
+    assertExists:
+      - londonTopic
+      - existingLondonTopic
+      - existingSharedTopic
+
+  - type: CONSUME
+    kafka: london
+    kafkaConfig: london-sa.properties
+    topic: existingLondonTopic
+    assertSize: 1
+    assertions:
+      - description: Assert contains the original london topic message
+        value:
+          operator: contains
+          expected: '{"message: "Hello from London"}'
+
+  - type: CONSUME
+    kafka: london
+    kafkaConfig: london-sa.properties
+    topic: existingSharedTopic
+    assertSize: 1
+    assertions:
+      - description: Assert contains the original shared topic message
+        value:
+          operator: containsIgnoreCase
+          expected: '{"message": "Existing shared message"}'
+
+  - type: SH
+    showOutput: true
+    kafka: kafka1
+    script: |
+      curl \
+        --silent \
+        --user admin:conduktor \
+        --request POST localhost:8888/admin/vclusters/v1/vcluster/paris/topics/existingSharedTopic \
+        --header 'Content-Type: application/json' \
+        --data-raw '{
+          "physicalTopicName": "existingSharedTopic",
+          "readOnly": false,
+          "concentrated": false
+        }' | jq
+
+  - type: LIST_TOPICS
+    kafka: paris
+    kafkaConfig: paris-sa.properties
+    assertExists:
+      - parisTopic
+      - existingSharedTopic
+
+  - type: CONSUME
+    kafka: paris
+    kafkaConfig: paris-sa.properties
+    topic: existingSharedTopic
+    assertSize: 1
+    assertions:
+      - description: Assert contains the original shared topic message
+        value:
+          operator: containsIgnoreCase
+          expected: '{"message": "Existing shared message"}'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Multi-tenancy/Virtual clusters is key to be in control of your kafka spend!
+

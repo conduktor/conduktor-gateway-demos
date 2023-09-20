@@ -1,0 +1,16 @@
+Reading payloads from: /Users/framiere/conduktor/conduktor-gateway-soak-func/target/2023.09.20-09:47:20/encryption-performance/examples.json
+Number of messages read: 2
+10647 records sent, 2118,4 records/sec (0,25 MB/sec), 2001,0 ms avg latency, 3214,0 ms max latency.
+52778 records sent, 10324,3 records/sec (1,21 MB/sec), 5395,3 ms avg latency, 7709,0 ms max latency.
+64560 records sent, 12883,7 records/sec (1,51 MB/sec), 10376,6 ms avg latency, 12655,0 ms max latency.
+52080 records sent, 10368,3 records/sec (1,22 MB/sec), 15159,9 ms avg latency, 17627,0 ms max latency.
+85652 records sent, 17127,0 records/sec (2,01 MB/sec), 19844,5 ms avg latency, 21553,0 ms max latency.
+117676 records sent, 23187,4 records/sec (2,72 MB/sec), 21402,2 ms avg latency, 23011,0 ms max latency.
+127225 records sent, 24363,3 records/sec (2,86 MB/sec), 25082,1 ms avg latency, 27411,0 ms max latency.
+112059 records sent, 22242,8 records/sec (2,61 MB/sec), 29226,6 ms avg latency, 31705,0 ms max latency.
+106052 records sent, 21012,9 records/sec (2,46 MB/sec), 33806,4 ms avg latency, 36128,0 ms max latency.
+111028 records sent, 21942,3 records/sec (2,57 MB/sec), 38069,1 ms avg latency, 40379,0 ms max latency.
+102145 records sent, 19153,4 records/sec (2,25 MB/sec), 42053,5 ms avg latency, 44905,0 ms max latency.
+51616 records sent, 10196,8 records/sec (1,20 MB/sec), 47157,5 ms avg latency, 49402,0 ms max latency.
+1000000 records sent, 16319,070466 records/sec (1,91 MB/sec), 27312,37 ms avg latency, 49544,00 ms max latency, 26806 ms 50th, 45563 ms 95th, 49345 ms 99th, 49536 ms 99.9th.
+ 

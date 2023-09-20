@@ -1,0 +1,342 @@
+title: Cluster Switching
+services:
+  kafka1:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  failover-kafka1:
+    docker:
+      hostname: failover-kafka1
+      container_name: failover-kafka1
+      image: confluentinc/cp-kafka:latest
+      ports:
+        - "39092:39092"
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2801/backup
+        KAFKA_LISTENERS: EXTERNAL_SAME_HOST://:39092,INTERNAL://:9092
+        KAFKA_ADVERTISED_LISTENERS: EXTERNAL_SAME_HOST://localhost:39092,INTERNAL://failover-kafka1:9092
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+        KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+        KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+      depends_on:
+        zookeeper:
+          condition: service_healthy
+      healthcheck:
+        test: nc -zv failover-kafka1 9092 || exit 1
+        interval: 5s
+        retries: 25
+    properties:
+      bootstrap.servers: localhost:39092,localhost:39093,localhost:39094
+  failover-kafka2:
+    docker:
+      hostname: failover-kafka2
+      container_name: failover-kafka2
+      image: confluentinc/cp-kafka:latest
+      ports:
+        - "39093:39093"
+      environment:
+        KAFKA_BROKER_ID: 2
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2801/backup
+        KAFKA_LISTENERS: EXTERNAL_SAME_HOST://:39093,INTERNAL://:9093
+        KAFKA_ADVERTISED_LISTENERS: EXTERNAL_SAME_HOST://localhost:39093,INTERNAL://failover-kafka2:9093
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+        KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+        KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+      depends_on:
+        zookeeper:
+          condition: service_healthy
+      healthcheck:
+        test: nc -zv failover-kafka2 9093 || exit 1
+        interval: 5s
+        retries: 25
+    properties:
+      bootstrap.servers: localhost:39092,localhost:39093,localhost:39094
+  failover-kafka3:
+    docker:
+      hostname: failover-kafka3
+      container_name: failover-kafka3
+      image: confluentinc/cp-kafka:latest
+      ports:
+        - "39094:39094"
+      environment:
+        KAFKA_BROKER_ID: 3
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2801/backup
+        KAFKA_LISTENERS: EXTERNAL_SAME_HOST://:39094,INTERNAL://:9094
+        KAFKA_ADVERTISED_LISTENERS: EXTERNAL_SAME_HOST://localhost:39094,INTERNAL://failover-kafka3:9094
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+        KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+        KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+      depends_on:
+        zookeeper:
+          condition: service_healthy
+      healthcheck:
+        test: nc -zv failover-kafka3 9094 || exit 1
+        interval: 5s
+        retries: 25
+    properties:
+      bootstrap.servers: localhost:39092,localhost:39093,localhost:39094
+  mirror-maker:
+    docker:
+      image: confluentinc/cp-kafka:latest
+      container_name: mirror-maker
+      hostname: mirror-maker
+      volumes:
+        - type: bind
+          source: .
+          target: /config
+          read_only: true
+      command: connect-mirror-maker /config/mm2.properties
+      depends_on:
+        kafka1:
+          condition: service_healthy
+        kafka2:
+          condition: service_healthy
+        kafka3:
+          condition: service_healthy
+        failover-kafka1:
+          condition: service_healthy
+        failover-kafka2:
+          condition: service_healthy
+        failover-kafka3:
+          condition: service_healthy
+      healthcheck:
+        test: nc -zv failover-kafka3 9094 || exit 1
+        interval: 5s
+        retries: 25
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_CLUSTER_ID: private
+        GATEWAY_BACKEND_KAFKA_SELECTOR: 'file : { path:  /config/clusters.yaml}'
+      volumes:
+        - type: bind
+          source: .
+          target: /config
+          read_only: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_CLUSTER_ID: private
+        GATEWAY_BACKEND_KAFKA_SELECTOR: 'file : { path:  /config/clusters.yaml}'
+      volumes:
+        - type: bind
+          source: .
+          target: /config
+          read_only: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: What is cluster switching?
+    markdown: |
+      Conduktor Gateway's cluster switching allows hot-switch the backend Kafka cluster without having to change your client configuration, or restart Gateway.
+      
+      This features enables you to build a seamless disaster recovery strategy for your Kafka cluster, when Gateway is deployed in combination with a replication solution (like MirrorMaker, Confluent replicator, Cluster Linking, etc.).
+
+  - type: ASCIINEMA
+
+  - type: STEP
+    title: Limitations to consider when designing a disaster recovery strategy
+    markdown: |
+      * Cluster switching does not replicate data between clusters. You need to use a replication solution like MirrorMaker to replicate data between clusters
+      * Because of their asynchronous nature, such replication solutions may lead to data loss in case of a disaster
+      * Cluster switching is a manual process - automatic failover is not supported, yet
+      * Concentrated topics offsets: Gateway stores client offsets of concentrated topics in a regular Kafka topic. When replicating this topic, there will be no adjustments of potential offsets shifts between the source and failover cluster
+      * When switching, Kafka consumers will perform a group rebalance. They will not be able to commit their offset before the rebalance. This may lead to a some messages being consumed twice
+
+  - type: FILE
+    filename: docker-compose.yaml
+    headerLevel: 3
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+  
+      * A single Zookeeper Server
+      * A main 3 node Kafka cluster
+      * A failover 3 node Kafka cluster
+      * A 2 node Conduktor Gateway server
+      * A MirrorMaker container
+
+  - type: FILE
+    title: Review the Gateway configuration
+    filename: clusters.yaml
+    headerLevel: 3
+    markdown: |
+      The Kafka brokers used by Gateway are stored in `clusters.yaml` and this is mounted into the Gateway container.
+      
+      The failover cluster is configured with the `gateway.role` property set to `failover`.
+      
+      This cluster is not used by Gateway in normal mode.
+
+  - type: FILE
+    title: Review the Mirror-Maker configuration
+    headerLevel: 3
+    filename: mm2.properties
+    markdown: |
+      MirrorMaker is configured to replicate all topics and groups from the main cluster to the failover cluster (see `mm2.properties`).
+      
+      One important bit is the `replication.policy.class=org.apache.kafka.connect.mirror.IdentityReplicationPolicy` configuration. 
+      
+      Gateway expects the topics to have the same names on both clusters.
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: users
+        replicationFactor: 1
+        partitions: 1
+
+  - type: PRODUCE
+    title: Send `tom` and `florent` into topic `users`
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    messages:
+      - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
+
+  - type: LIST_TOPICS
+    kafka: kafka1
+    assertExists:
+      - _acls
+      - _auditLogs
+      - _consumerGroupSubscriptionBackingTopic
+      - _interceptorConfigs
+      - _license
+      - _offsetStore
+      - _schemas
+      - _topicMappings
+      - _topicRegistry
+      - teamAusers
+
+  - type: CONSUME
+    title: Wait for mirror maker to do its job on gateway internal topic
+    kafka: failover-kafka1
+    maxMessages: 1
+    topic: _topicMappings
+
+  - type: CONSUME
+    title: Wait for mirror maker to do its job on `users` topics
+    kafka: failover-kafka1
+    maxMessages: 1
+    topic: teamAusers
+
+  - type: LIST_TOPICS
+    title: Assert mirror maker did its job
+    kafka: failover-kafka1
+    assertExists:
+      - _acls
+      - _auditLogs
+      - _consumerGroupSubscriptionBackingTopic
+      - _interceptorConfigs
+      - _license
+      - _offsetStore
+      - _schemas
+      - _topicMappings
+      - _topicRegistry
+      - teamAusers
+
+  - type: FAILOVER
+    gateway: gateway1
+    from: main
+    to: failover
+
+  - type: FAILOVER
+    gateway: gateway2
+    from: main
+    to: failover
+
+  - type: PRODUCE
+    title: Produce `thibault` into `users`, it should hit only `failover-kafka`
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    messages:
+      - value: '{"name":"thibaut","username":"thibaut@conduktor.io","password":"youpi","visa":"#812SSS","address":"Les ifs"}'
+
+  - type: CONSUME
+    title: Verify we can read `florent` (via mirror maker), `tom` (via mirror maker) and `thibault` (via cluster switching)
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: users
+    maxMessages: 3
+    assertSize: 3
+    assertions:
+      - description: Confirm producer after switch is readable
+        value:
+          operator: containsIgnoreCase
+          expected: 'thibaut'
+
+  - type: CONSUME
+    title: Verify `thibaut` is not in main kafka
+    kafka: kafka1
+    topic: teamAusers
+    assertSize: 2
+    assertions:
+      - description: Thibaut should be only in failover kafka
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'thibaut'
+
+  - type: CONSUME
+    title: Verify `thibaut` is in failover
+    kafka: failover-kafka1
+    topic: teamAusers
+    maxMessages: 3
+    assertions:
+      - description: Confirm producer after switch is written in failover kafka
+        value:
+          operator: containsIgnoreCase
+          expected: 'thibaut'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Cluster switching help your seamlessly move from one cluster to another!

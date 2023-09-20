@@ -1,1 +1,2 @@
-PDK_originalPartition:2,PDK_originalTopic:concentrated-topic-with-10-partitions	{"type": "Sports", "price": 75, "color": "blue"}
+PDK_originalPartition:5,PDK_originalTopic:concentrated-topic-with-10-partitions	{"type": "Sports", "price": 75, "color": "blue"}
+ 

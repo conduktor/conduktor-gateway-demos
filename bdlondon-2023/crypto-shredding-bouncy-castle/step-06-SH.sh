@@ -1,0 +1,1 @@
+docker logs  gateway1 2>&1  | grep "disabledAlgorithms"

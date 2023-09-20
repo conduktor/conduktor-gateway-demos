@@ -1,0 +1,3 @@
+X-INTERPOLATED:User sa via ip 192.168.65.1,X-MY-KEY:my own value,X-USER:sa	{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}
+X-INTERPOLATED:User sa via ip 192.168.65.1,X-MY-KEY:my own value,X-USER:sa	{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}
+ 

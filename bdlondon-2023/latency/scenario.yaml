@@ -1,0 +1,109 @@
+title: Latency
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: How about the latency impact?
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_TOPICS
+    kafka: kafka1
+    topics:
+      - name: physical-kafka
+        replicationFactor: 1
+        partitions: 10
+
+  - type: SH
+    title: Let's use `EndToEndLatency` that comes bundled with Kafka
+    kafka: kafka1
+    script: |
+        kafka-run-class kafka.tools.EndToEndLatency \
+            ${BOOTSTRAP_SERVERS} \
+            physical-kafka 10000 all 255
+    markdown: |
+      arg1: broker_list 
+      arg2: topic 
+      arg3: num_messages 
+      arg4: producer_acks
+      arg5: message_size_bytes
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: via-gateway
+        replicationFactor: 1
+        partitions: 10
+
+  - type: SH
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    title: Let's use `kafka-producer-perf-test` that comes bundled with Kafka
+    iteration: 3
+    script: |
+      kafka-run-class kafka.tools.EndToEndLatency \
+          ${BOOTSTRAP_SERVERS} \
+          via-gateway 10000 all 255 \
+          ${KAFKA_CONFIG_FILE}
+    markdown: |
+      arg1: broker_list 
+      arg2: topic 
+      arg3: num_messages 
+      arg4: producer_acks
+      arg5: message_size_bytes
+      arg6: property file
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Gateway is end to end latency is enough for all use cases!

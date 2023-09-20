@@ -1,0 +1,106 @@
+title: Throughput
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: How about the throughput impact?
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+    markdown: |
+      As can be seen from `docker-compose.yaml` the demo environment consists of the following:
+      
+      * A single Zookeeper Server
+      * A main 3 nodes Kafka cluster
+      * A 2 nodes Conduktor Gateway server
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_TOPICS
+    kafka: kafka1
+    topics:
+      - name: physical-kafka
+        replicationFactor: 1
+        partitions: 10
+
+  - type: SH
+    title: Let's use `kafka-producer-perf-test` that comes bundled with Kafka
+    kafka: kafka1
+    script: |
+      kafka-producer-perf-test \
+          --topic physical-kafka \
+          --throughput -1 \
+          --num-records 2500000 \
+          --record-size 255 \
+          --producer-props bootstrap.servers=${BOOTSTRAP_SERVERS}
+    markdown: |
+      `throughput` is set to -1 to disable throttling and create the maximum pain
+
+  - type: CREATE_VIRTUAL_CLUSTERS
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: via-gateway
+        replicationFactor: 1
+        partitions: 10
+
+  - type: SH
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    title: Let's use `kafka-producer-perf-test` that comes bundled with Kafka
+    iteration: 3
+    script: |
+      kafka-producer-perf-test \
+          --topic via-gateway \
+          --throughput -1 \
+          --num-records 2500000 \
+          --record-size 255 \
+          --producer-props bootstrap.servers=${BOOTSTRAP_SERVERS} \
+          --producer.config ${KAFKA_CONFIG_FILE}
+    markdown: |
+      `throughput` is set to -1 to disable throttling and create the maximum pain
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Gateway is fast enough for all use cases!
