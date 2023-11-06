@@ -95,6 +95,43 @@ services:
       kafka2:
         condition: service_healthy
 
+  conduktor-console:
+      image: conduktor/conduktor-platform:1.19.0
+      hostname: conduktor-console
+      container_name: conduktor-console
+      ports:
+        - "8080:8080"
+      volumes:
+        - type: bind
+          source: "./platform-config.yaml"
+          target: /opt/conduktor/platform-config.yaml
+          read_only: true
+      environment:
+        CDK_IN_CONF_FILE: /opt/conduktor/platform-config.yaml
+        KAFKA_BOOTSTRAP_SERVER: kafka1:9092
+        LICENSE_KEY: ${CDK_LICENSE}
+        PROXY_TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJvcmdJZCI6MSwiY2x1c3RlcklkIjoxLCJ1c2VybmFtZSI6InRlc3RAY29uZHVrdG9yLmlvIn0.Eb94MxCyesPeVdQmm0EDBGvhwcx8j-ST-mvmdAId_j0
+        CDK_DATABASE_URL: postgresql://conduktor:change_me@postgresql:5432/conduktor-platform
+      healthcheck:
+        test: curl -f http://localhost:8080/platform/api/modules/health/live || exit 1
+        interval: 10s
+        start_period: 10s
+        timeout: 5s
+        retries: 3
+  
+  postgresql:
+      image: postgres:14
+      hostname: postgresql
+      volumes:
+        - pg_data_cdk:/var/lib/postgresql/data
+      environment:
+        PGDATA: "/var/lib/postgresql/data"
+        POSTGRES_DB: "conduktor-platform"
+        POSTGRES_USER: "conduktor"
+        POSTGRES_PASSWORD: "change_me"
+        POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+
+
   kafka-client:
     image: confluentinc/cp-kafka:7.4.1
     hostname: kafka-client
@@ -105,3 +142,6 @@ services:
         source: "./clientConfig"
         target: /clientConfig
         read_only: true
+
+volumes:
+  pg_data_cdk: {}
