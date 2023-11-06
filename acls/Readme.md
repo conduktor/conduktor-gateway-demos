@@ -16,6 +16,9 @@ As can be seen from `docker-compose.yaml` the demo environment consists of the f
 * A single Conduktor Gateway container
 * A Kafka Client container (this provides nothing more than a place to run kafka client commands)
 * A Conduktor Platform container
+* A Conduktor Console, our UI for everything Kafka
+* A Postgres, required by our UI
+* A volume, required by our UI
 
 ### Step 2: Review the platform configuration
 
@@ -57,7 +60,7 @@ docker compose exec kafka-client \
 
 ### Step 4: Create topics
 
-To start let's create a topic named `someTopic`.
+To start let's try (and fail) to create a topic named `someTopic`.
 
 ```bash
 docker compose exec kafka-client \
@@ -78,7 +81,7 @@ Error while executing topic command : Cluster not authorized
 
 ### Step 5: Add Acls
 
-Let's allow our user to create topics. To do this they require the Cluster -> Create Acl and the Topic -> Create Acl 
+Let's allow our user to create topics. To do this they require the `Cluster -> Create` Acl and the `Topic -> Create` Acl 
 for the desired topic. 
 
 Note that we use a different command-config for these commands. This is because Acls can only be modified by admin 
@@ -114,9 +117,9 @@ docker compose exec kafka-client  \
   --list
 ```
 
-### Step 6: Create topics again
+### Step 6: Retry create topics
 
-now we can create a topic named `someTopic`.
+Now we can create a topic named `someTopic`.
 
 ```bash
 docker compose exec kafka-client \
