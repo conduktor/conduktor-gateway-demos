@@ -1,0 +1,59 @@
+version: '3.7'
+services:
+  conduktor-gateway:
+    image: conduktor/conduktor-gateway:2.2.0
+    hostname: conduktor-gateway
+    container_name: conduktor-gateway
+    environment:
+      GATEWAY_ADVERTISED_HOST: conduktor-gateway
+      KAFKA_BOOTSTRAP_SERVERS: b-2-public.gatewaycluster1.2kyag8.c11.kafka.us-east-1.amazonaws.com:9198,b-3-public.gatewaycluster1.2kyag8.c11.kafka.us-east-1.amazonaws.com:9198,b-1-public.gatewaycluster1.2kyag8.c11.kafka.us-east-1.amazonaws.com:9198
+      GATEWAY_BACKEND_KAFKA_SELECTOR: 'file : { path: /msk.properties }'
+      GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_USER_POOL_TYPE: JWT
+      AWS_ACCESS_KEY_ID: AKIA6FE6BRQVIZQKYBVG
+      AWS_SECRET_ACCESS_KEY: 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
+    volumes:
+      - type: bind
+        source: "./msk.properties"
+        target: /msk.properties
+        read_only: true
+    healthcheck:
+      test: curl localhost:8888/health
+      interval: 5s
+      retries: 25
+
+  conduktor-gateway-1:
+    image: conduktor/conduktor-gateway:2.2.0
+    hostname: conduktor-gateway-1
+    container_name: conduktor-gateway-1
+    environment:
+      GATEWAY_ADVERTISED_HOST: conduktor-gateway-1
+      KAFKA_BOOTSTRAP_SERVERS: b-2-public.gatewaycluster1.2kyag8.c11.kafka.us-east-1.amazonaws.com:9198,b-3-public.gatewaycluster1.2kyag8.c11.kafka.us-east-1.amazonaws.com:9198,b-1-public.gatewaycluster1.2kyag8.c11.kafka.us-east-1.amazonaws.com:9198
+      GATEWAY_BACKEND_KAFKA_SELECTOR: 'file : { path: /msk.properties }'
+      GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_USER_POOL_TYPE: JWT
+      AWS_ACCESS_KEY_ID: AKIA6FE6BRQVIZQKYBVG
+      AWS_SECRET_ACCESS_KEY: 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
+    volumes:
+      - type: bind
+        source: "./msk.properties"
+        target: /msk.properties
+        read_only: true
+    healthcheck:
+      test: curl localhost:8888/health
+      interval: 5s
+      retries: 25
+
+  kafka-client:
+    image: confluentinc/cp-kafka
+    hostname: kafka-client
+    container_name: kafka-client
+    command:
+      sleep infinity
+    volumes:
+        - type: bind
+          source: "./msk.properties"
+          target: /msk.properties
+          read_only: true
