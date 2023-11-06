@@ -78,15 +78,13 @@ services:
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
 
   conduktor-gateway:
-    image: harbor.cdkt.dev/conduktor/conduktor-gateway:2.2.0-SNAPSHOT
+    image: conduktor/conduktor-gateway:2.2.1-SB-rc3
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093
       GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
       GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
-      LOG4J2_IO_CONDUKTOR_PROXY_REBUILDER_COMPONENTS_LEVEL: debug
-      LOG4J2_IO_CONDUKTOR_PROXY_SERVICE_LEVEL: debug
     healthcheck:
       test: curl localhost:8888/health
       interval: 5s
