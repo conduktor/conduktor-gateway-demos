@@ -1,0 +1,164 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+kafka-console-consumer \
+    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
+    --topic _auditLogs \
+    --from-beginning \
+    --timeout-ms 3000 \
+ | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin")'
+{
+  "id": "f464a103-d455-4e3d-888a-46078f1c291e",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:21749"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:23:13.232996003Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
+    "message": "Client connections exceed the limitation of 1 connections per second"
+  }
+}
+{
+  "id": "48c25392-7d44-41d9-a300-0ab256839916",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:47522"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:23:13.561642045Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
+    "message": "Client connections exceed the limitation of 1 connections per second"
+  }
+}
+{
+  "id": "e4d5c2dd-bad7-4672-ae71-b31460f1f17d",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:21751"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:23:16.543739422Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
+    "message": "Client connections exceed the limitation of 1 connections per second"
+  }
+}
+{
+  "id": "9e598604-89a1-4c69-80af-36023f51cb5e",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:21751"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:23:17.701786422Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
+    "message": "Client connections exceed the limitation of 1 connections per second"
+  }
+}
+{
+  "id": "c6e05a74-f3f5-40a7-98c4-70d059589d8a",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:21751"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:23:18.413187173Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
+    "message": "Client connections exceed the limitation of 1 connections per second"
+  }
+}
+{
+  "id": "bd4800a6-71f1-4978-8e9b-c7581d86c5db",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:21751"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:23:22.626133008Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
+    "message": "Client connections exceed the limitation of 1 connections per second"
+  }
+}
+{
+  "id": "442d22ca-cc4e-44b6-ab43-7b51e8d10253",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:21751"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:23:23.620411842Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
+    "message": "Client connections exceed the limitation of 1 connections per second"
+  }
+}
+{
+  "id": "2b899421-6949-4522-b44b-56b2358dcf17",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrinci[2024-01-23 00:23:28,289] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 58 messages
+pal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:21751"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:23:23.765914425Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
+    "message": "Client connections exceed the limitation of 1 connections per second"
+  }
+}
+
+```
+
+</details>
+      

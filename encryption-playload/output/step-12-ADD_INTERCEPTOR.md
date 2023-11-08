@@ -1,0 +1,36 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+cat step-12-decrypt-full-payload.json | jq
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+  "priority": 100,
+  "config": {
+    "topic": "customers",
+    "kmsConfig": {
+      "vault": {
+        "uri": "http://vault:8200",
+        "token": "vault-plaintext-root-token",
+        "version": 1
+      }
+    }
+  }
+}
+
+curl \
+    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/decrypt-full-payload" \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent \
+    --data @step-12-decrypt-full-payload.json | jq
+{
+  "message": "decrypt-full-payload is created"
+}
+
+```
+
+</details>
+      

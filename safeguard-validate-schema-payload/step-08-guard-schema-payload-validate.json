@@ -1,0 +1,13 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin",
+  "priority" : 100,
+  "config" : {
+    "schemaRegistryConfig" : {
+      "host" : "http://schema-registry:8081"
+    },
+    "topic" : "topic-.*",
+    "schemaIdRequired" : true,
+    "validateSchema" : true,
+    "action" : "BLOCK"
+  }
+}

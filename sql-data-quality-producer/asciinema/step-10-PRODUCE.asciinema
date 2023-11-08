@@ -1,0 +1,12 @@
+{"version": 2, "width": 140, "height": 20, "timestamp": 1705972514, "idle_time_limit": 2.0, "env": {"SHELL": "/bin/zsh", "TERM": null}, "title": "step-10-PRODUCE"}
+[0.010511, "o", "\u001b[0;97m"]
+[0.016568, "o", "echo '{\"ty"]
+[0.212926, "o", "pe\":\"SUV\","]
+[0.312972, "o", "\"price\":20"]
+[0.41136, "o", "00,\"color\""]
+[0.506012, "o", ":\"blue\"}' "]
+[0.604089, "o", "| \\\r\n    ka"]
+[0.703231, "o", "fka-consol"]
+[1.012709, "o", "e-producer \\\r\n        --bootstrap-server localhost:6969 \\\r\n        --producer.config teamA-sa.properties \\\r\n        --topic cars"]
+[1.013745, "o", "\u001b[0m\r\n"]
+[2.344481, "o", "[2024-01-23 02:31:58,245] ERROR Error when sending message to topic cars with key: null, value: 42 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)\r\norg.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy: Data quality policy is violated.\r\n"]

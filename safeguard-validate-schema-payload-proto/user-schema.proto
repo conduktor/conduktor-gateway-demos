@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_package = "schema.protobuf";
+option java_outer_classname = "User";
+
+message Student {
+  string name = 1;
+  int32 age = 2;
+  string email = 3;
+  Address address = 4;
+  repeated string hobbies = 5;
+  repeated Friend friends = 6;
+
+  message Address {
+    string street = 1;
+    string city = 2;
+  }
+
+  message Friend {
+    string name = 1;
+    int32 age = 2;
+  }
+}

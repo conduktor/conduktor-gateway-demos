@@ -1,0 +1,233 @@
+title: Schema Payload Validation for Avro
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: What is a Schema Payload Validation Policy Interceptor?
+    markdown: |
+      Avoid outages from missing or badly formatted records, ensure all messages adhere to a schema.
+      
+      This interceptor also supports validating payload against specific constraints for AvroSchema and Protobuf.
+      
+      This is similar to the validations provided by JsonSchema, such as:
+      
+      - **Number**: `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`
+      - **String**: `minLength`, `maxLength`, `pattern`, `format`
+      - **Collections**: `maxItems`, `minItems`
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: topic-avro
+        replicationFactor: 1
+        partitions: 1
+
+  - type: FILE
+    title: Review the example avro schema
+    filename: user-schema.avsc
+    markdown: |
+      It is a regular Avro Schema, nothing extraordinary about it.
+
+  - type: SH
+    title: Let's register it to the Schema Registry
+    showOutput: true
+    script: |
+        curl -s \
+          http://localhost:8081/subjects/topic-avro/versions \
+          -X POST \
+          -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+          --data "{\"schemaType\": \"AVRO\", \"schema\": $(cat user-schema.avsc | jq tostring)}"
+    assertOutputContains:
+      - '{"id":1}'
+
+  - type: FILE
+    title: Review invalid payload
+    filename: invalid-payload.json
+    markdown: |
+      It is a well formed object, but with invalid data
+
+  - type: SH
+    title: Let's send invalid data
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      cat invalid-payload.json | jq -c | \
+          kafka-avro-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic topic-avro \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema.id=1
+    assertOutputDoesNotContain:
+      - "org.apache.kafka.common.errors.PolicyViolationException"
+
+  - type: SH
+    title: Let's consume it back
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-avro-console-consumer \
+          --bootstrap-server ${BOOTSTRAP_SERVERS} \
+          --consumer.config ${KAFKA_CONFIG_FILE} \
+          --topic topic-avro \
+          --from-beginning \
+          --timeout-ms 3000
+    markdown: |
+      That's pretty bad, you are going to propagate wrong data within your system!
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Add Schema Payload Validation Policy Interceptor
+    gateway: gateway1
+    vcluster: teamA
+    name: guard-schema-payload-validate
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin"
+      "priority": "100"
+      "config": {
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        },
+        "topic": "topic-.*",
+        "schemaIdRequired": true,
+        "validateSchema": true,
+        "action": "BLOCK"
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - guard-schema-payload-validate
+
+  - type: FILE
+    title: Review the avro schema with validation rules
+    filename: user-schema-with-validation-rules.avsc
+    markdown: |
+      We are adding data contract within our schema by adding `"minLength": 5, "maxLength": 15` or `"format": "email"`
+
+  - type: SH
+    title: Let's update the schema with our validation rules
+    showOutput: true
+    script: |
+      curl -s \
+        http://localhost:8081/subjects/topic-avro/versions \
+        -X POST \
+        -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+        --data "{\"schemaType\": \"AVRO\", \"schema\": $(cat user-schema-with-validation-rules.avsc | jq tostring)}"
+    assertOutputContains:
+      - '{"id":2}'
+
+  - type: SH
+    title: Let's asserts number of registered schemas
+    showOutput: true
+    script: |
+      curl -s http://localhost:8081/subjects/topic-avro/versions
+    assertOutputContains:
+      - '[1,2]'
+
+  - type: SH
+    title: Let's produce the same invalid payload again
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      cat invalid-payload.json | jq -c | \
+          kafka-avro-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic topic-avro \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema.id=2
+    assertOutputContains:
+      - "org.apache.kafka.common.errors.PolicyViolationException"
+    markdown: |
+      The payload has been rejected with useful errors
+      
+      ```
+      org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. 
+      Topic 'topic-avro' has invalid avro schema payload: name is too short (1 < 3), email does not match format 'email', street is too long (56 > 15), city is too short (0 < 2), hobbies has too few items (1 < 2), age is greater than 10, age is greater than 10
+      ```
+
+  - type: AUDITLOG
+    title: Check in the audit log that message was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+    assertions:
+      - description: Confirm SchemaPayloadValidationPolicyPlugin audit has blocked commit
+        value:
+          operator: containsIgnoreCase
+          expected: Topic 'topic-avro' has invalid avro schema payload
+
+  - type: SH
+    title: Let's now produce a valid payload
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      cat valid-payload.json | jq -c | \
+          kafka-avro-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic topic-avro \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema.id=2
+    assertOutputDoesNotContain:
+      - "org.apache.kafka.common.errors.PolicyViolationException"
+
+  - type: SH
+    title: And consume it back
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+        kafka-avro-console-consumer \
+            --bootstrap-server ${BOOTSTRAP_SERVERS} \
+            --consumer.config ${KAFKA_CONFIG_FILE} \
+            --topic topic-avro \
+            --from-beginning \
+            --timeout-ms 3000
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      You can enrich your existing schema to add even more data quality to your systems!

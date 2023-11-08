@@ -1,0 +1,193 @@
+title: ACLs in VClusters
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_MODE: VCLUSTER
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_MODE: VCLUSTER
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Using Gateway ACL in your VClusters
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: aclCluster
+    serviceAccount: admin
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: aclCluster
+    serviceAccount: producer
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: aclCluster
+    serviceAccount: consumer
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Add ACL interceptor
+    gateway: gateway1
+    vcluster: aclCluster
+    name: acl
+    interceptor: {
+      "pluginClass": "io.conduktor.gateway.interceptor.AclsInterceptorPlugin",
+      "priority": 100,
+      "config": { }
+    }
+
+  - type: CREATE_TOPICS
+    title: try to create a topic as a consumer
+    kafka: aclCluster
+    kafkaConfig: aclCluster-consumer.properties
+    topics:
+      - name: restricted-topic
+        replicationFactor: 1
+        partitions: 1
+    assertError: true
+    assertErrorMessages:
+      - "java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster not authorized"
+
+  - type: CREATE_TOPICS
+    kafka: aclCluster
+    kafkaConfig: aclCluster-admin.properties
+    topics:
+      - name: restricted-topic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: LIST_TOPICS
+    title: List topics with consumer-sa not throw an error, but also no topic
+    kafka: aclCluster
+    kafkaConfig: aclCluster-consumer.properties
+    assertSize: 0
+
+  - type: SH
+    title: Let's give read-access to test-topic for consumer SA
+    kafka: aclCluster
+    kafkaConfig: aclCluster-admin.properties
+    showOutput: true
+    script: |
+      kafka-acls \
+        --bootstrap-server ${BOOTSTRAP_SERVERS} \
+        --command-config ${KAFKA_CONFIG_FILE} \
+        --add \
+        --allow-principal User:consumer \
+        --operation read \
+        --topic restricted-topic
+
+  - type: CONSUME
+    kafka: kafka1
+    topic: _acls
+    assertSize: 1
+    assertions:
+      - description: Assert expected message
+        key:
+          operator: contains
+          expected: '{"tenant":"aclCluster","principal":"User:consumer","host":"*","resource":{"name":"restricted-topic","resourceType":"TOPIC","patternType":"LITERAL"},"operation":"READ"}'
+
+  - type: SH
+    title: Let's give read-access to fixed console-consumer for consumer SA
+    kafka: aclCluster
+    kafkaConfig: aclCluster-admin.properties
+    showOutput: true
+    script: |
+      kafka-acls \
+        --bootstrap-server ${BOOTSTRAP_SERVERS} \
+        --command-config ${KAFKA_CONFIG_FILE} \
+        --add \
+        --allow-principal User:consumer \
+        --operation read \
+        --group console-consumer \
+        --resource-pattern-type prefixed
+      
+  - type: LIST_TOPICS
+    kafka: aclCluster
+    kafkaConfig: aclCluster-consumer.properties
+    assertExists:
+      - restricted-topic
+
+  - type: SH
+    title: Give read/write access to test-topic to producer SA
+    kafka: aclCluster
+    kafkaConfig: aclCluster-admin.properties
+    showOutput: true
+    script: |
+      kafka-acls \
+        --bootstrap-server ${BOOTSTRAP_SERVERS} \
+        --command-config ${KAFKA_CONFIG_FILE} \
+        --add \
+        --allow-principal User:producer \
+        --operation write \
+        --topic restricted-topic 
+      
+  - type: LIST_TOPICS
+    kafka: aclCluster
+    kafkaConfig: aclCluster-producer.properties
+    assertExists:
+      - restricted-topic
+
+  - type: PRODUCE
+    title: Let's write into test-topic (producer)
+    kafka: aclCluster
+    kafkaConfig: aclCluster-producer.properties
+    topic: restricted-topic
+    messages:
+      - value: '{"msg":"test message"}'
+
+  - type: CONSUME
+    title: Let's consume from test-topic (consumer)
+    kafka: aclCluster
+    kafkaConfig: aclCluster-consumer.properties
+    topic: restricted-topic
+    properties:
+      group.id: console-consumer-xxx
+    assertSize: 1
+    showHeaders: true
+    assertions:
+      - description: Assert expected message
+        value:
+          operator: contains
+          expected: '{"msg":"test message"}'
+
+  - type: PRODUCE
+    title: Consumer-sa cannot write into the test-topic
+    kafka: aclCluster
+    kafkaConfig: aclCluster-consumer.properties
+    topic: restricted-topic
+    messages:
+      - value: '{"msg":"I would be surprised if it would work!"}'
+    assertError: true
+    assertErrorMessages:
+      - "org.apache.kafka.common.errors.TopicAuthorizationException: Not authorized to access topics: [restricted-topic]"
+
+  - type: DOCKER
+    command: docker compose down --volumes

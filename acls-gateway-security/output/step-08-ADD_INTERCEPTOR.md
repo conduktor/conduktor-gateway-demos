@@ -1,0 +1,27 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+cat step-08-acl.json | jq
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.AclsInterceptorPlugin",
+  "priority": 100,
+  "config": {}
+}
+
+curl \
+    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/aclCluster/interceptor/acl" \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent \
+    --data @step-08-acl.json | jq
+{
+  "message": "acl is created"
+}
+
+```
+
+</details>
+      

@@ -1,0 +1,27 @@
+kafka-console-consumer \
+    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
+    --topic _auditLogs \
+    --from-beginning \
+    --timeout-ms 3000 \
+ | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+[2024-01-23 01:52:29,090] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 13 messages
+{
+  "id": "73dfb808-e4df-451b-a517-61e93ba1d095",
+  "source": "krn://cluster=duT02hzKTcmTa0hFI1Bzng",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:29923"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-23T00:52:24.705573800Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin",
+    "message": "Request parameters do not satisfy the configured policy. Topic 'topic-protobuf' has invalid protobuf schema payload: Student.name is too short (1 < 3), Student.email does not match format 'email', Student.Address.street is too long (56 > 15), Student.Address.city is too short (0 < 2), Student.hobbies has too few items (1 < 2), Student.Friend.age is greater than 10, Student.Friend.age is greater than 10"
+  }
+}

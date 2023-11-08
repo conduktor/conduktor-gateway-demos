@@ -1,0 +1,21 @@
+cat step-25-consumer-group-name-policy.json | jq
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin",
+  "priority": 100,
+  "config": {
+    "groupId": {
+      "value": "my-group.*",
+      "action": "BLOCK"
+    }
+  }
+}
+
+curl \
+    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy" \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent \
+    --data @step-25-consumer-group-name-policy.json | jq
+{
+  "message": "consumer-group-name-policy is created"
+}

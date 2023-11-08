@@ -1,0 +1,156 @@
+title: SQL topic with Avro
+services:
+  kafka1:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: Yes, SQL topic work with Avro/ProtoBuff.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: cars
+        replicationFactor: 1
+        partitions: 1
+
+  - type: LIST_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    assertExists:
+      - cars
+
+  - type: SH
+    title: Produce avro payload
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      schema='{
+                  "type": "record",
+                  "name": "car",
+                  "fields": [
+                    {"name": "type", "type": "string"},
+                    {"name": "price", "type": "long"},
+                    {"name": "color", "type": "string"}
+                  ]
+                }'
+      echo '{"type":"Sports","price":75,"color":"blue"}' | \
+          kafka-avro-console-producer  \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic cars \
+              --property schema.registry.url=http://localhost:8081 \
+              --property "value.schema=$schema"
+      
+      echo '{"type":"SUV","price":55,"color":"red"}' | \
+          kafka-avro-console-producer  \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic cars \
+              --property schema.registry.url=http://localhost:8081 \
+              --property "value.schema=$schema"
+      
+  - type: SH
+    title: Consume the avro payload back
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-avro-console-consumer  \
+          --bootstrap-server ${BOOTSTRAP_SERVERS} \
+          --consumer.config ${KAFKA_CONFIG_FILE} \
+          --topic cars \
+          --property schema.registry.url=http://localhost:8081 \
+          --from-beginning \
+          --max-messages 2 2>&1 | grep "{" | jq
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: red-cars
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's create the interceptor to filter out the red cars from the `cars` topic.
+    gateway: gateway1
+    vcluster: teamA
+    name: red-cars
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin"
+      "priority": "100"
+      "config": {
+        "virtualTopic": "red-cars",
+        "statement": "SELECT * FROM cars WHERE color = 'red'",
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        }
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - red-cars
+
+  - type: SH
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-avro-console-consumer  \
+          --bootstrap-server ${BOOTSTRAP_SERVERS} \
+          --consumer.config ${KAFKA_CONFIG_FILE} \
+          --topic red-cars \
+          --property schema.registry.url=http://localhost:8081 \
+          --from-beginning \
+          --max-messages 1 2>&1 | grep "{" | jq
+    assertOutputDoesNotContain:
+      - blue
+    assertOutputContains:
+      - red
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      SQL virtual topics can also work on data serialized with Schema Registry!

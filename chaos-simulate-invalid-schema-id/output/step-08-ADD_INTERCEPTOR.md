@@ -1,0 +1,31 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+cat step-08-simulate-invalid-schema-id.json | jq
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateInvalidSchemaIdPlugin",
+  "priority": 100,
+  "config": {
+    "topic": "with-schema",
+    "invalidSchemaId": 999,
+    "target": "CONSUME"
+  }
+}
+
+curl \
+    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/simulate-invalid-schema-id" \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent \
+    --data @step-08-simulate-invalid-schema-id.json | jq
+{
+  "message": "simulate-invalid-schema-id is created"
+}
+
+```
+
+</details>
+      

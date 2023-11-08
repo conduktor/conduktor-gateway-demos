@@ -1,0 +1,28 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+kafka-configs \
+    --bootstrap-server localhost:6969 \
+    --command-config teamA-sa.properties \
+    --alter \
+    --entity-type topics \
+    --entity-name roads \
+    --add-config retention.ms=5184000000
+Error while executing config command with args '--bootstrap-server localhost:6969 --command-config teamA-sa.properties --alter --entity-type topics --entity-name roads --add-config retention.ms=5184000000'
+java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Resource 'roads' with retention.ms is '5184000000', must not be greater than '432000000'
+	at java.base/java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:396)
+	at java.base/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2096)
+	at org.apache.kafka.common.internals.KafkaFutureImpl.get(KafkaFutureImpl.java:180)
+	at kafka.admin.ConfigCommand$.alterConfig(ConfigCommand.scala:361)
+	at kafka.admin.ConfigCommand$.processCommand(ConfigCommand.scala:328)
+	at kafka.admin.ConfigCommand$.main(ConfigCommand.scala:97)
+	at kafka.admin.ConfigCommand.main(ConfigCommand.scala)
+Caused by: org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Resource 'roads' with retention.ms is '5184000000', must not be greater than '432000000'
+
+```
+
+</details>
+      

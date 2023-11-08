@@ -1,0 +1,16 @@
+requiredMemory=$(( 2 * $(cat large-message.bin | wc -c | awk '{print $1}')))
+cat large-message.bin | wc -c | awk '{print $1}'
+
+kafka-producer-perf-test \
+  --producer.config teamA-sa.properties \
+  --topic large-messages \
+  --throughput -1 \
+  --num-records 1 \
+  --payload-file large-message.bin \
+  --producer-props \
+    bootstrap.servers=localhost:6969 \
+    max.request.size=$requiredMemory \
+    buffer.memory=$requiredMemory
+Reading payloads from: /Users/framiere/conduktor/conduktor-gateway-functional-testing/target/2024.01.22-22:50:30/large-messages/large-message.bin
+Number of messages read: 1
+1 records sent, 0,351617 records/sec (14,06 MB/sec), 2834,00 ms avg latency, 2834,00 ms max latency, 2834 ms 50th, 2834 ms 95th, 2834 ms 99th, 2834 ms 99.9th.

@@ -1,0 +1,140 @@
+echo '{"name":"Hi","age":7,"email":"john.doecom","address":{"street":"123 Main St","city":"a"},"hobbies":["reading","cycling"]}' | \
+    kafka-json-schema-console-producer \
+        --bootstrap-server localhost:6969 \
+        --producer.config teamA-sa.properties \
+        --topic topic-json \
+        --property schema.registry.url=http://localhost:8081 \
+        --property value.schema.id=1
+[2024-01-23 00:47:29,170] INFO KafkaJsonSchemaSerializerConfig values: 
+	auto.register.schemas = true
+	basic.auth.credentials.source = URL
+	basic.auth.user.info = [hidden]
+	bearer.auth.cache.expiry.buffer.seconds = 300
+	bearer.auth.client.id = null
+	bearer.auth.client.secret = null
+	bearer.auth.credentials.source = STATIC_TOKEN
+	bearer.auth.custom.provider.class = null
+	bearer.auth.identity.pool.id = null
+	bearer.auth.issuer.endpoint.url = null
+	bearer.auth.logical.cluster = null
+	bearer.auth.scope = null
+	bearer.auth.scope.claim.name = scope
+	bearer.auth.sub.claim.name = sub
+	bearer.auth.token = [hidden]
+	context.name.strategy = class io.confluent.kafka.serializers.context.NullContextNameStrategy
+	http.connect.timeout.ms = 60000
+	http.read.timeout.ms = 60000
+	id.compatibility.strict = true
+	json.fail.invalid.schema = true
+	json.fail.unknown.properties = true
+	json.indent.output = false
+	json.oneof.for.nullables = true
+	json.schema.spec.version = draft_7
+	json.write.dates.iso8601 = false
+	key.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
+	latest.cache.size = 1000
+	latest.cache.ttl.sec = -1
+	latest.compatibility.strict = true
+	max.schemas.per.subject = 1000
+	normalize.schemas = false
+	proxy.host = 
+	proxy.port = -1
+	rule.actions = []
+	rule.executors = []
+	rule.service.loader.enable = true
+	schema.format = null
+	schema.reflection = false
+	schema.registry.basic.auth.user.info = [hidden]
+	schema.registry.ssl.cipher.suites = null
+	schema.registry.ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	schema.registry.ssl.endpoint.identification.algorithm = https
+	schema.registry.ssl.engine.factory.class = null
+	schema.registry.ssl.key.password = null
+	schema.registry.ssl.keymanager.algorithm = SunX509
+	schema.registry.ssl.keystore.certificate.chain = null
+	schema.registry.ssl.keystore.key = null
+	schema.registry.ssl.keystore.location = null
+	schema.registry.ssl.keystore.password = null
+	schema.registry.ssl.keystore.type = JKS
+	schema.registry.ssl.protocol = TLSv1.3
+	schema.registry.ssl.provider = null
+	schema.registry.ssl.secure.random.implementation = null
+	schema.registry.ssl.trustmanager.algorithm = PKIX
+	schema.registry.ssl.truststore.certificates = null
+	schema.registry.ssl.truststore.location = null
+	schema.registry.ssl.truststore.password = null
+	schema.registry.ssl.truststore.type = JKS
+	schema.registry.url = [http://localhost:8081]
+	use.latest.version = false
+	use.latest.with.metadata = null
+	use.schema.id = -1
+	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
+ (io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializerConfig:376)
+org.apache.kafka.common.errors.SerializationException: Error serializing JSON message
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.serializeImpl(AbstractKafkaJsonSchemaSerializer.java:166)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageReader$JsonSchemaMessageSerializer.serialize(JsonSchemaMessageReader.java:167)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageReader$JsonSchemaMessageSerializer.serialize(JsonSchemaMessageReader.java:130)
+	at io.confluent.kafka.formatter.SchemaMessageReader.readMessage(SchemaMessageReader.java:406)
+	at kafka.tools.ConsoleProducer$.main(ConsoleProducer.scala:50)
+	at kafka.tools.ConsoleProducer.main(ConsoleProducer.scala)
+Caused by: org.apache.kafka.common.errors.SerializationException: Validation error in JSON {"name":"Hi","age":7,"email":"john.doecom","address":{"street":"123 Main St","city":"a"},"hobbies":["reading","cycling"]}, Error report:
+{
+  "schemaLocation": "#",
+  "pointerToViolation": "#",
+  "causingExceptions": [
+    {
+      "schemaLocation": "#/properties/address",
+      "pointerToViolation": "#/address",
+      "causingExceptions": [
+        {
+          "schemaLocation": "#/properties/address/properties/city",
+          "pointerToViolation": "#/address/city",
+          "causingExceptions": [],
+          "keyword": "minLength",
+          "message": "expected minLength: 2, actual: 1"
+        },
+        {
+          "schemaLocation": "#/properties/address/properties/street",
+          "pointerToViolation": "#/address/street",
+          "causingExceptions": [],
+          "keyword": "maxLength",
+          "message": "expected maxLength: 10, actual: 11"
+        }
+      ],
+      "message": "2 schema violations found"
+    },
+    {
+      "schemaLocation": "#/properties/hobbies",
+      "pointerToViolation": "#/hobbies",
+      "causingExceptions": [],
+      "keyword": "minItems",
+      "message": "expected minimum item count: 3, found: 2"
+    },
+    {
+      "schemaLocation": "#/properties/name",
+      "pointerToViolation": "#/name",
+      "causingExceptions": [],
+      "keyword": "minLength",
+      "message": "expected minLength: 3, actual: 2"
+    },
+    {
+      "schemaLocation": "#/properties/email",
+      "pointerToViolation": "#/email",
+      "causingExceptions": [],
+      "keyword": "format",
+      "message": "[john.doecom] is not a valid email address"
+    }
+  ],
+  "message": "5 schema violations found"
+}
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.validateJson(AbstractKafkaJsonSchemaSerializer.java:189)
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.serializeImpl(AbstractKafkaJsonSchemaSerializer.java:154)
+	... 5 more
+Caused by: org.everit.json.schema.ValidationException: #: 5 schema violations found
+	at org.everit.json.schema.ValidationException.copy(ValidationException.java:486)
+	at org.everit.json.schema.DefaultValidator.performValidation(Validator.java:76)
+	at org.everit.json.schema.Schema.validate(Schema.java:152)
+	at io.confluent.kafka.schemaregistry.json.JsonSchema.validate(JsonSchema.java:441)
+	at io.confluent.kafka.schemaregistry.json.JsonSchema.validate(JsonSchema.java:409)
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.validateJson(AbstractKafkaJsonSchemaSerializer.java:179)
+	... 6 more

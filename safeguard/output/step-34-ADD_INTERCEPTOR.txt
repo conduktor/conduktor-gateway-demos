@@ -1,0 +1,19 @@
+cat step-34-guard-agressive-auto-commit.json | jq
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin",
+  "priority": 100,
+  "config": {
+    "maximumCommitsPerMinute": 1,
+    "action": "BLOCK"
+  }
+}
+
+curl \
+    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-agressive-auto-commit" \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent \
+    --data @step-34-guard-agressive-auto-commit.json | jq
+{
+  "message": "guard-agressive-auto-commit is created"
+}

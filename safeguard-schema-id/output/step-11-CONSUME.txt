@@ -1,0 +1,10 @@
+kafka-console-consumer \
+    --bootstrap-server localhost:6969 \
+    --consumer.config teamA-sa.properties \
+    --topic users \
+    --from-beginning \
+    --timeout-ms 10000 \
+ | jq
+[2024-01-23 00:41:34,159] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 0 messages

@@ -1,0 +1,41 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+cat step-18-guard-on-produce.json | jq
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin",
+  "priority": 100,
+  "config": {
+    "acks": {
+      "value": [
+        -1
+      ],
+      "action": "BLOCK"
+    },
+    "compressions": {
+      "value": [
+        "NONE",
+        "GZIP"
+      ],
+      "action": "BLOCK"
+    }
+  }
+}
+
+curl \
+    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-produce" \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent \
+    --data @step-18-guard-on-produce.json | jq
+{
+  "message": "guard-on-produce is created"
+}
+
+```
+
+</details>
+      

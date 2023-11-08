@@ -1,0 +1,149 @@
+title: Data Masking
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: Data Masking
+    markdown: |
+      Let's demonstrate field level data masking
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      We want to data masking only two fields, with an in memory KMS.
+    gateway: gateway1
+    vcluster: teamA
+    name: data-masking
+    interceptor: {
+      "pluginClass": "io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin",
+      "priority": 100,
+      "config": {
+        "policies": [
+          {
+            "name": "Mask password",
+            "rule": {
+              "type": "MASK_ALL"
+            },
+            "fields": [
+              "password"
+            ]
+          },
+          {
+            "name": "Mask visa",
+            "rule": {
+              "type": "MASK_LAST_N",
+              "maskingChar": "X",
+              "numberOfChars": 4
+            },
+            "fields": [
+              "visa",
+              "a.b.c",
+              "visa3"
+            ]
+          }
+        ]
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - data-masking
+
+  - type: PRODUCE
+    title: Let's send json
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    messages:
+      - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+    markdown: |
+      We are using regular kafka tools
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm `tom` and `florent` fields are masked
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm `tom`'s `password` and `visa` are masked
+        value:
+          operator: contains
+          expected: '{"name":"tom","username":"tom@conduktor.io","password":"********","visa":"#abXXXX","address":"Chancery lane, London"}'
+      - description: Confirm `florent`'s `password` and `visa` are masked
+        value:
+          operator: contains
+          expected: '{"name":"florent","username":"florent@conduktor.io","password":"********","visa":"#88899XXXX","address":"Dubai, UAE"}'
+
+  - type: REMOVE_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    names:
+      - data-masking
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm `tom` and `florent` fields no more masked
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm `tom`'s `password` and `visa` are no more masked
+        value:
+          operator: contains
+          expected: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - description: Confirm `florent`'s `password` and `visa` no more masked
+        value:
+          operator: contains
+          expected: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, encryption in the Kafka world can be simple!

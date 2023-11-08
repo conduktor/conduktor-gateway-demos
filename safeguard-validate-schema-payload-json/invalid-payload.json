@@ -1,0 +1,22 @@
+{
+  "name": "D",
+  "age": 17,
+  "email": "bad email",
+  "address": {
+    "street": "a way too lond adress that will not fit in your database",
+    "city": ""
+  },
+  "hobbies": [
+    "reading"
+  ],
+  "friends": [
+    {
+      "name": "Tom",
+      "age": 17
+    },
+    {
+      "name": "Emma",
+      "age": 18
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin",
+  "priority" : 100,
+  "config" : {
+    "rateInPercent" : 100,
+    "minLatencyMs" : 2000,
+    "maxLatencyMs" : 2001
+  }
+}

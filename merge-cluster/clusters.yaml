@@ -1,0 +1,7 @@
+config:
+  main:
+    bootstrap.servers: kafka1:9092,kafka2:9093,kafka3:9094
+
+  cluster1:
+    bootstrap.servers: s1_kafka1:9092,s1_kafka2:9093,s1_kafka3:9094
+    gateway.roles: upstream

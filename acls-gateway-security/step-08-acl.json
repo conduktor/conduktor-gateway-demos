@@ -1,0 +1,5 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.AclsInterceptorPlugin",
+  "priority" : 100,
+  "config" : { }
+}

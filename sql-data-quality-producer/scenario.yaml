@@ -1,0 +1,141 @@
+title: SQL Based Data Quality Producer
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:29093,localhost:29094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: What is SQL Data quality producer?
+    markdown: |
+      Use sql definition to assert data quality before being produced.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: cars
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's create an interceptor to ensure the data produced is valid.
+    gateway: gateway1
+    vcluster: teamA
+    name: myDataQualityProducer
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.DataQualityProducerPlugin"
+      "priority": "100"
+      "config": {
+        "statement": "SELECT * FROM cars WHERE color = 'red' and record.key.year > 2020",
+        "action": "BLOCK_WHOLE_BATCH",
+        "deadLetterTopic": "dead-letter-topic"
+      }
+
+  - type: PRODUCE
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    messages:
+      - value: '{"type":"Sports","price":1000,"color":"red"}'
+        key: '{"year":2010,"make":"BMW"}'
+    assertError: true
+    assertErrorMessages:
+      - "Request parameters do not satisfy the configured policy: Data quality policy is violated."
+    markdown: |
+      Produce invalid record to the cars topic (record is not produced because year is not > 2020)
+
+  - type: PRODUCE
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    messages:
+      - value: '{"type":"SUV","price":2000,"color":"blue"}'
+        key: '{"year":2023,"make":"Mercedes"}'
+    assertError: true
+    assertErrorMessages:
+      - "Request parameters do not satisfy the configured policy: Data quality policy is violated."
+    markdown: |
+      Produce invalid record to the cars topic (record is not produced because color is not red)
+
+  - type: AUDITLOG
+    title: Check in the audit log that message was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.DataQualityProducerInterceptor")'
+    assertions:
+      - description: Confirm audit has been created
+        value:
+          operator: containsIgnoreCase
+          expected: "Data quality policy is violated."
+
+  - type: PRODUCE
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    messages:
+      - value: '{"type":"Trucks","price":2500,"color":"red"}'
+        key: '{"year":2023,"make":"Vinfast"}'
+    markdown: |
+      Produce valid record to the cars topic
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    maxMessages: 1
+    assertSize: 1
+    assertions:
+      - description: Confirm Trucks
+        value:
+          operator: containsIgnoreCase
+          expected: 'Trucks'
+    markdown: |
+      Let's confirm just one record is there by consuming from the `cars` topic.
+
+  - type: CONSUME
+    kafka: kafka1
+    topic: dead-letter-topic
+    maxMessages: 2
+    assertSize: 2
+    assertions:
+      - description: Confirm the Sport is there because it doesn't year > 2020
+        value:
+          operator: containsIgnoreCase
+          expected: 'Sports'
+      - description: Confirm Sport is there because it's not red
+        value:
+          operator: containsIgnoreCase
+          expected: 'SUV'
+    markdown: |
+      Let's confirm the invalid records are in the dead letter topic.

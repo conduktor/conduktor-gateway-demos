@@ -1,0 +1,156 @@
+title: Encryption for third party
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: Field level encryption for third party
+    markdown: |
+      Let's demonstrate field level encryption for third party
+
+      Aka sharing existing data that is not currently encrypted.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    title: Let's create a service account `third-party` for `teamA` virtual cluster
+    gateway: gateway1
+    name: teamA
+    serviceAccount: third-party
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      We want to encrypt only two fields, with an in memory KMS.
+    gateway: gateway1
+    username: third-party
+    vcluster: teamA
+    name: encrypt-on-consume
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.FetchEncryptPlugin"
+      "priority": "100"
+      "config": {
+        "fields": [ {
+          "fieldName": "password",
+          "keySecretId": "password-secret",
+          "algorithm": {
+            "type": "AES_GCM",
+            "kms": "IN_MEMORY"
+          }
+        },{
+          "fieldName": "visa",
+          "keySecretId": "visa-secret",
+          "algorithm": {
+            "type": "AES_GCM",
+            "kms": "IN_MEMORY"
+          }
+        } ]
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - encrypt-on-consume
+
+  - type: PRODUCE
+    title: Let's send unencrypted json
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    messages:
+      - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+
+  - type: CONSUME
+    title: Confirm `tom` and `florent` data is not encrypted for `teamA`
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm password is not encrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: 'motorhead'
+      - description: Confirm visa is not encrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: '#abc123'
+      - description: Confirm password is not encrypted for `florent`
+        value:
+          operator: containsIgnoreCase
+          expected: 'kitesurf'
+      - description: Confirm visa is not encrypted for `florent`
+        value:
+          operator: containsIgnoreCase
+          expected: '#888999XZ'
+
+  - type: CONSUME
+    title: Confirm `tom` and `florent` data is encrypted for `third-party`
+    kafka: teamA
+    kafkaConfig: teamA-third-party.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm password is encrypted for `tom`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'motorhead'
+      - description: Confirm visa is encrypted for `tom`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#abc123'
+      - description: Confirm password is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'kitesurf'
+      - description: Confirm visa is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#888999XZ'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, encryption in the Kafka world can be simple!

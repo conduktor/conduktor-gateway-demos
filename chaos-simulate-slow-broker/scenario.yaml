@@ -1,0 +1,101 @@
+title: Chaos Simulate Slow Broker
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:7969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Chaos Simulate Slow Broker
+    markdown: |
+      This interceptor simulates slow responses from brokers.
+      
+      This demo will run you through some of these use cases step-by-step.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: slow-topic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    gateway: gateway1
+    vcluster: teamA
+    name: simulate-slow-broker
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin"
+      "priority": 100
+      "config": {
+        "rateInPercent": 100,
+        "minLatencyMs": 2000,
+        "maxLatencyMs": 2001
+      }
+    markdown: |
+      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to simulate slow responses from brokers.
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - simulate-slow-broker
+
+  - type: SH
+    title: Let's produce some records to our created topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-producer-perf-test \
+        --producer.config ${KAFKA_CONFIG_FILE} \
+        --record-size 10 \
+        --throughput 1 \
+        --num-records 10 \
+        --topic slow-topic
+    assertOutputMatches: "\\d{4},\\d{1,2} ms avg latency"
+
+    markdown: |
+      This should produce output similar to this:
+      11 records sent, 2,1 records/sec (0,00 MB/sec), 2683,6 ms avg latency, 4303,0 ms max latency.
+      64 records sent, 11,2 records/sec (0,00 MB/sec), 3067,1 ms avg latency, 4210,0 ms max latency.
+      100 records sent, 7,738141 records/sec (0,00 MB/sec), 3022,77 ms avg latency, 4303,00 ms max latency, 2960 ms 50th, 3902 ms 95th, 4303 ms 99th, 4303 ms 99.9th.
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, Chaos Simulate Slow Broker is simple as it!

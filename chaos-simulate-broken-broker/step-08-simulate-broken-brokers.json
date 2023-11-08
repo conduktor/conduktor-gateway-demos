@@ -1,0 +1,11 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin",
+  "priority" : 100,
+  "config" : {
+    "rateInPercent" : 100,
+    "errorMap" : {
+      "FETCH" : "UNKNOWN_SERVER_ERROR",
+      "PRODUCE" : "CORRUPT_MESSAGE"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_package = "schema.protobuf";
+option java_outer_classname = "User";
+
+message Student {
+  string name = 1 [(confluent.field_meta).params = {minLength: "3", maxLength: "50"}];
+  int32 age = 2 [(confluent.field_meta).params = {minimum: "3", maximum: "120"}];
+  string email = 3 [(confluent.field_meta).params = {format: "email"}];
+  Address address = 4;
+  repeated string hobbies = 5 [(confluent.field_meta).params = {minItems: "2"}];
+  repeated Friend friends = 6;
+
+  message Address {
+    string street = 1 [(confluent.field_meta).params = {minLength: "5", maxLength: "15"}];
+    string city = 2 [(confluent.field_meta).params = {minLength: "2", maxLength: "50"}];
+  }
+
+  message Friend {
+    string name = 1 [(confluent.field_meta).params = {minLength: "3", maxLength: "10"}];
+    int32 age = 2 [(confluent.field_meta).params = {minimum: "2", maximum: "10"}];
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
+  "priority" : 100,
+  "config" : {
+    "virtualTopic" : "red-cars",
+    "statement" : "SELECT * FROM cars WHERE color = 'red'",
+    "schemaRegistryConfig" : {
+      "host" : "http://schema-registry:8081"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Doe",
+  "age": 17,
+  "email": "john.doe@example.com",
+  "address": {
+    "street": "123 Main St",
+    "city": "Anytown"
+  },
+  "hobbies": [
+    "reading",
+    "cycling"
+  ],
+  "friends": [
+    {
+      "name": "Tom",
+      "age": 9
+    },
+    {
+      "name": "Emma",
+      "age": 10
+    }
+  ]
+}

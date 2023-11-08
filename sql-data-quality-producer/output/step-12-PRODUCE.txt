@@ -1,0 +1,5 @@
+echo '{"type":"Trucks","price":2500,"color":"red"}' | \
+    kafka-console-producer \
+        --bootstrap-server localhost:6969 \
+        --producer.config teamA-sa.properties \
+        --topic cars

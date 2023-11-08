@@ -7,3 +7,5 @@
 
 .idea
 .env
+record-asciinema.sh
+record-output.sh

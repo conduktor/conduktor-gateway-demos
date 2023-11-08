@@ -1,0 +1,23 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+kafka-console-consumer \
+    --bootstrap-server localhost:6969 \
+    --consumer.config teamA-sa.properties \
+    --topic customers \
+    --from-beginning \
+    --timeout-ms 10000 \
+    --property print.headers=true 
+NO_HEADERS	{"name":"tom","username":"tom@conduktor.io","password":"AAAABQHU3iNQtCsw5zISYuiXBw1ERQyAJAqjFHJl7mOaYvXfACLIQ+72wKoP3KB+ZTP8D4A=","visa":"#abc123","address":"Chancery lane, London"}
+NO_HEADERS	{"name":"florent","username":"florent@conduktor.io","password":"AAAABQHU3iNQJN/9kBBvSAUum5Fw4xEW7jHk1y03VwvFMx2lORL6gTTTjsgnmUKBfWBUEw==","visa":"#888999XZ;","address":"Dubai, UAE"}
+[2024-01-22 18:51:49,266] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 2 messages
+
+```
+
+</details>
+      

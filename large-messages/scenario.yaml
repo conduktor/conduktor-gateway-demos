@@ -1,0 +1,183 @@
+title: Large message support
+services:
+  kafka1:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+  minio:
+    docker:
+      image: quay.io/minio/minio
+      hostname: minio
+      container_name: minio
+      command: minio server /data
+      ports:
+        - "9000:9000"
+      environment:
+        MINIO_SERVER_HOST: minio
+        MINIO_ROOT_USER: minio
+        MINIO_ROOT_PASSWORD: minio123
+        MINIO_SITE_REGION: eu-south-1
+
+  cli-aws:
+    docker:
+      hostname: cli-aws
+      container_name: cli-aws
+      image: amazon/aws-cli
+      entrypoint: "sleep 100d"
+      volumes:
+        - type: bind
+          source: "credentials"
+          target: "/root/.aws/credentials"
+          read_only: true
+
+actions:
+
+  - type: INTRODUCTION
+    title: Large messages support in Kafka with built-in claimcheck pattern.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    filename: credentials
+
+  - type: SH
+    title: Let's create a bucket
+    showOutput: true
+    script: |
+      docker compose exec cli-aws \
+        aws \
+          --profile minio \
+          --endpoint-url=http://minio:9000 \
+          --region eu-south-1 \
+          s3api create-bucket \
+            --bucket bucket
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: large-messages
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's ask Gateway to offload large messages to S3
+    gateway: gateway1
+    vcluster: teamA
+    name: large-messages
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.LargeMessageHandlingPlugin"
+      "priority": 100
+      "config": {
+        "topic": "large-messages",
+        "s3Config": {
+          "accessKey": "minio",
+          "secretKey": "minio123",
+          "bucketName": "bucket",
+          "region": "eu-south-1",
+          "uri": "http://minio:9000"
+        }
+      }
+
+  - type: SH
+    title: Let's create a large message
+    showOutput: true
+    script: |
+        openssl rand -hex $((20*1024*1024)) > large-message.bin 
+        ls -lh large-message.bin
+
+  - type: SH
+    title: Sending large pdf file through kafka
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    iteration: 4
+    script: |
+      requiredMemory=$(( 2 * $(cat large-message.bin | wc -c | awk '{print $1}')))
+  
+      kafka-producer-perf-test \
+        --producer.config ${KAFKA_CONFIG_FILE} \
+        --topic large-messages \
+        --throughput -1 \
+        --num-records 1 \
+        --payload-file large-message.bin \
+        --producer-props \
+          bootstrap.servers=${BOOTSTRAP_SERVERS} \
+          max.request.size=$requiredMemory \
+          buffer.memory=$requiredMemory
+
+  - type: SH
+    title: Let's read the message back
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-console-consumer  \
+        --bootstrap-server ${BOOTSTRAP_SERVERS} \
+        --consumer.config ${KAFKA_CONFIG_FILE} \
+        --topic large-messages \
+        --from-beginning \
+        --property print.headers=true \
+        --max-messages 1 > from-kafka.bin
+
+  - type: SH
+    title: Let's compare the files
+    showOutput: true
+    script: |
+      ls -lH *bin
+
+  - type: SH
+    title: Let's look at what's inside minio
+    showOutput: true
+    script: |
+      docker compose exec cli-aws \
+          aws \
+              --profile minio \
+              --endpoint-url=http://minio:9000 \
+              --region eu-south-1 \
+              s3 \
+              ls s3://bucket --recursive --human-readable
+
+  - type: CONSUME
+    kafka: kafka1
+    topic: teamAlarge-messages
+    showRecords: true
+    showHeaders: true
+    assertSize: 4
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      ksqlDB can run in a virtual cluster where all its topics are concentrated into a single physical topic 
