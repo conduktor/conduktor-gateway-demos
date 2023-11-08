@@ -1,0 +1,60 @@
+
+organization:
+  name: Org
+
+admin:
+  email: bob@conduktor.io
+  password: admin
+
+auth:
+  local-users:
+    - email: bob@conduktor.io
+      password: admin
+    - email: yourAdmin@email.com
+      password: yourAdminPassword
+      groups:
+        - ADMIN
+    - email: admin
+      password: admin
+      groups:
+        - ADMIN
+    - email: guest@email.com
+      password: guest
+      groups:
+        - MEMBER  
+  sessionLifetime: 259200
+  idleLifetime: 259199
+    
+clusters:
+  - id: kafka-backing-cluster
+    name: kafka-backing-cluster
+    color: "#0013E7"
+    ignoreUntrustedCertificate: false
+    bootstrapServers: "kafka1:9092"
+    properties:
+    schemaRegistry:
+      url: "http://schema-registry:8081"
+      ignoreUntrustedCertificate: false
+      properties:
+    labels: {}
+  - id: cdk-gateway
+    name: cdk-gateway
+    color: "#A020F0"
+    ignoreUntrustedCertificate: false
+    bootstrapServers: "conduktor-gateway:6969"
+    kafkaFlavor:
+      url: "http://conduktor-gateway:8888"
+      user: "admin"
+      password: "conduktor"
+      virtualCluster: "someCluster"
+      type: "Gateway"
+    schemaRegistry:
+      url: "http://schema-registry:8081"
+      ignoreUntrustedCertificate: false
+      properties:
+    properties: |
+      security.protocol=SASL_PLAINTEXT
+      sasl.mechanism=PLAIN
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="someUsername" password="eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNvbWVVc2VybmFtZSIsInZjbHVzdGVyIjoic29tZUNsdXN0ZXIiLCJleHAiOjIwMDgyOTgzNzJ9.vgTd0QngJQp51gt73HNbHlwjK0m2dW8wD9zRLSZnZd4";
+    labels: { }
+
