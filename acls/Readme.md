@@ -3,7 +3,7 @@
 ## What are Conduktor Gateway Acls?
 
 Conduktor Gateway Acls are a reimplementation of Kafka's ACL features in Conduktor Gateway. Using Gateway Acls you can 
-configure access restrictions for individual vClusters in Conduktor Gateway 
+configure access restrictions for individual vClusters in Conduktor Gateway.
 
 ## Running the demo
 
@@ -81,7 +81,7 @@ Error while executing topic command : Cluster not authorized
 
 ### Step 5: Add Acls
 
-Let's allow our user to create topics. To do this they require the `Cluster -> Create` Acl and the `Topic -> Create` Acl 
+Let's permit our user to create topics. To do this they require the `Cluster -> Create` Acl and the `Topic -> Create` Acl 
 for the desired topic. 
 
 Note that we use a different command-config for these commands. This is because Acls can only be modified by admin 
@@ -133,6 +133,7 @@ docker compose exec kafka-client \
 ### Step 6: Produce to the topic
 
 We have to add a write Acl before we can produce to the created topic.
+Three calls below, `describe`, `write`, `read`.
 
 ```bash
 docker compose exec kafka-client  \
@@ -161,7 +162,7 @@ docker compose exec kafka-client  \
   --topic someTopic 
 ```
 
-Now we can produce.
+Now we can produce!
 
 ```bash
 echo testMessage | \
