@@ -78,7 +78,7 @@ services:
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
 
   conduktor-gateway:
-    image: conduktor/conduktor-gateway:2.2.1
+    image: harbor.cdkt.dev/conduktor/conduktor-gateway:2.4.0-SNAPSHOT
     hostname: conduktor-gateway
     container_name: conduktor-gateway
     environment:

@@ -93,10 +93,11 @@ docker compose exec kafka-client  \
   --bootstrap-server conduktor-gateway:6969 \
   --command-config /clientConfig/admin.properties \
   --add \
-   --allow-principal User:someUsername \
+   --allow-principal User:'*' \
   --operation create \
   --cluster
-
+```
+```bash
 docker compose exec kafka-client  \
   kafka-acls \
   --bootstrap-server conduktor-gateway:6969 \
@@ -133,7 +134,7 @@ docker compose exec kafka-client \
 ### Step 6: Produce to the topic
 
 We have to add a write Acl before we can produce to the created topic.
-Three calls below, `describe`, `write`, `read`.
+Two calls below, `describe`, `write`.
 
 ```bash
 docker compose exec kafka-client  \
@@ -144,6 +145,8 @@ docker compose exec kafka-client  \
    --allow-principal User:someUsername \
   --operation describe \
   --topic someTopic 
+```
+```bash
 docker compose exec kafka-client  \
   kafka-acls \
   --bootstrap-server conduktor-gateway:6969 \
@@ -151,14 +154,6 @@ docker compose exec kafka-client  \
   --add \
    --allow-principal User:someUsername \
   --operation write \
-  --topic someTopic 
-docker compose exec kafka-client  \
-  kafka-acls \
-  --bootstrap-server conduktor-gateway:6969 \
-  --command-config /clientConfig/admin.properties \
-  --add \
-   --allow-principal User:someUsername \
-  --operation read \
   --topic someTopic 
 ```
 
@@ -174,7 +169,17 @@ echo testMessage | \
 ```
 
 ### Step 7: Consume from the topic
-
+We have to add a read Acl before we can consume to the created topic.
+```bash
+docker compose exec kafka-client  \
+  kafka-acls \
+  --bootstrap-server conduktor-gateway:6969 \
+  --command-config /clientConfig/admin.properties \
+  --add \
+   --allow-principal User:someUsername \
+  --operation read \
+  --topic someTopic 
+```
 Before we can consume we need to add an acl to allow our consumer to form a consumer group.
 
 ```bash
@@ -183,18 +188,52 @@ docker compose exec kafka-client  \
   --bootstrap-server conduktor-gateway:6969 \
   --command-config /clientConfig/admin.properties \
   --add \
-  --allow-principal User:someUsername \
+  --allow-principal User:'*' \
   --operation read \
   --group '*'
 ```
 
-Now we can consume.
+Now we can consume with User:someUsername
 
 ```bash
 docker compose exec kafka-client \
   kafka-console-consumer \
     --bootstrap-server conduktor-gateway:6969 \
     --consumer.config /clientConfig/gateway.properties \
+    --topic someTopic \
+    --from-beginning \
+    --max-messages 1
+```
+
+But we can't consume with User:someUsername1
+```bash
+docker compose exec kafka-client \
+  kafka-console-consumer \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway1.properties \
+    --topic someTopic \
+    --from-beginning \
+    --max-messages 1
+```
+
+Let's add an acl to allow all users to consume the created topic
+```bash
+docker compose exec kafka-client  \
+  kafka-acls \
+  --bootstrap-server conduktor-gateway:6969 \
+  --command-config /clientConfig/admin.properties \
+  --add \
+   --allow-principal User:'*' \
+  --operation read \
+  --topic someTopic 
+```
+
+Retry consume messages with User:someUsername1
+```bash
+docker compose exec kafka-client \
+  kafka-console-consumer \
+    --bootstrap-server conduktor-gateway:6969 \
+    --consumer.config /clientConfig/gateway1.properties \
     --topic someTopic \
     --from-beginning \
     --max-messages 1
