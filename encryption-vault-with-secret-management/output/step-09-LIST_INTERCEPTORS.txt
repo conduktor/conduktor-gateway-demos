@@ -1,0 +1,44 @@
+curl \
+    --request GET 'http://localhost:8888/admin/interceptors/v1/vcluster/teamA' \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent | jq
+{
+  "interceptors": [
+    {
+      "name": "crypto-shredding-encrypt",
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+      "apiKey": null,
+      "priority": 100,
+      "timeoutMs": 9223372036854775807,
+      "config": {
+        "topic": "customers",
+        "kmsConfig": {
+          "vault": {
+            "uri": "http://vault:8200",
+            "token": "${VAULT_TOKEN}",
+            "version": 1
+          }
+        },
+        "fields": [
+          {
+            "fieldName": "password",
+            "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "VAULT"
+            }
+          },
+          {
+            "fieldName": "visa",
+            "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "VAULT"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

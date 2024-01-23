@@ -1,0 +1,36 @@
+{
+  "namespace": "schema.avro",
+  "type": "record",
+  "name": "User",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "age", "type": "int"},
+    {"name": "email", "type": "string"},
+    {
+      "name": "address",
+      "type": {
+        "type": "record",
+        "name": "AddressRecord",
+        "fields": [
+          {"name": "street", "type": "string"},
+          {"name": "city", "type": "string"}
+        ]
+      }
+    },
+    {"name": "hobbies", "type": {"type": "array", "items": "string"}},
+    {
+      "name": "friends",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "Friend",
+          "fields": [
+            {"name": "name", "type": "string"},
+            {"name": "age", "type": "int"}
+          ]
+        }
+      }
+    }
+  ]
+}

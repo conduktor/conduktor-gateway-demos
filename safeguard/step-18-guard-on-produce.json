@@ -1,0 +1,14 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin",
+  "priority" : 100,
+  "config" : {
+    "acks" : {
+      "value" : [ -1 ],
+      "action" : "BLOCK"
+    },
+    "compressions" : {
+      "value" : [ "NONE", "GZIP" ],
+      "action" : "BLOCK"
+    }
+  }
+}

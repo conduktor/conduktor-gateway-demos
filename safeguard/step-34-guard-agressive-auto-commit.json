@@ -1,0 +1,8 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin",
+  "priority" : 100,
+  "config" : {
+    "maximumCommitsPerMinute" : 1,
+    "action" : "BLOCK"
+  }
+}

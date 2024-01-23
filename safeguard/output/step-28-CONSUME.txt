@@ -1,0 +1,36 @@
+kafka-console-consumer \
+    --bootstrap-server localhost:6969 \
+    --consumer.config teamA-sa.properties \
+    --topic cars \
+    --from-beginning \
+    --timeout-ms 10000 \
+    --group my-group-within-policy \
+ | jq
+[2024-01-23 00:23:10,517] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 5 messages
+{
+  "type": "Ferrari",
+  "color": "red",
+  "price": 10000
+}
+{
+  "type": "RollsRoyce",
+  "color": "black",
+  "price": 9000
+}
+{
+  "type": "Mercedes",
+  "color": "black",
+  "price": 6000
+}
+{
+  "type": "Fiat",
+  "color": "red",
+  "price": -1
+}
+{
+  "type": "Fiat",
+  "color": "red",
+  "price": -1
+}

@@ -1,0 +1,14 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+openssl rand -hex $((20*1024*1024)) > large-message.bin 
+ls -lh large-message.bin
+-rw-r--r--@ 1 framiere  staff    40M Jan 22 23:43 large-message.bin
+
+```
+
+</details>
+      

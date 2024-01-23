@@ -1,0 +1,36 @@
+{
+  "namespace": "schema.avro",
+  "type": "record",
+  "name": "User",
+  "fields": [
+    {"name": "name", "type": "string", "minLength": 3, "maxLength": 50},
+    {"name": "age", "type": "int", "minimum": 0, "maximum": 120},
+    {"name": "email", "type": "string", "format": "email"},
+    {
+      "name": "address",
+      "type": {
+        "type": "record",
+        "name": "AddressRecord",
+        "fields": [
+          {"name": "street", "type": "string", "minLength": 5, "maxLength": 10},
+          {"name": "city", "type": "string", "minLength": 2, "maxLength": 50}
+        ]
+      }
+    },
+    {"name": "hobbies", "type": {"type": "array", "items": "string"}, "minItems": 3},
+    {
+      "name": "friends",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "Friend",
+          "fields": [
+            {"name": "name", "type": "string"},
+            {"name": "age", "type": "int", "minimum": 2, "maximum": 10}
+          ]
+        }
+      }
+    }
+  ]
+}

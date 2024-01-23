@@ -1,0 +1,116 @@
+title: Chaos Simulate Invalid Schema Id
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:7969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Chaos Simulate Invalid Schema Id
+    markdown: |
+      This interceptor injects Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
+      
+      This demo will run you through some of these use cases step-by-step.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: with-schema
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    gateway: gateway1
+    vcluster: teamA
+    name: simulate-invalid-schema-id
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateInvalidSchemaIdPlugin"
+      "priority": 100
+      "config": {
+        "topic": "with-schema",
+        "invalidSchemaId": 999,
+        "target": "CONSUME"
+      }
+    markdown: |
+      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - simulate-invalid-schema-id
+
+  - type: SH
+    title: Let's produce some records to our created topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      echo '{"message": "hello world"}' | \
+        kafka-json-schema-console-producer \
+        --bootstrap-server ${BOOTSTRAP_SERVERS} \
+        --topic with-schema \
+        --producer.config ${KAFKA_CONFIG_FILE} \
+        --property value.schema='{
+        "title": "someSchema",
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      }'
+
+  - type: SH
+    title: Let's consume them with a schema aware consumer.
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-json-schema-console-consumer \
+      --bootstrap-server ${BOOTSTRAP_SERVERS} \
+      --topic with-schema \
+      --consumer.config ${KAFKA_CONFIG_FILE} \
+      --from-beginning
+    assertOutputContains:
+      - "org.apache.kafka.common.errors.SerializationException: Error retrieving JSON schema for id 999"
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, Chaos Simulate Invalid Schema Id is simple as it!

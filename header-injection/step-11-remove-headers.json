@@ -1,0 +1,7 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.safeguard.MessageHeaderRemovalPlugin",
+  "priority" : 100,
+  "config" : {
+    "headerKeyRegex" : "X-MY-.*"
+  }
+}

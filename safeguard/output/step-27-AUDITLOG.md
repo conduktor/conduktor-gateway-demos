@@ -1,0 +1,38 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+kafka-console-consumer \
+    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
+    --topic _auditLogs \
+    --from-beginning \
+    --timeout-ms 3000 \
+ | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin")'
+[2024-01-23 00:22:58,935] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 41 messages
+{
+  "id": "6ec9eb8a-1db6-4ea6-a2ed-9840883312be",
+  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
+  "type": "SAFEGUARD",
+  "authenticationPrincipal": "teamA",
+  "userName": "sa",
+  "connection": {
+    "localAddress": null,
+    "remoteAddress": "/192.168.65.1:21738"
+  },
+  "specVersion": "0.1.0",
+  "time": "2024-01-22T23:22:54.411529634Z",
+  "eventData": {
+    "level": "error",
+    "plugin": "io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin",
+    "message": "Request parameters do not satisfy the configured policy. GroupId 'group-not-within-policy' is invalid, naming convention must match with regular expression my-group.*"
+  }
+}
+
+```
+
+</details>
+      

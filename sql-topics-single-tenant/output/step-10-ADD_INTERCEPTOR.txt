@@ -1,0 +1,19 @@
+cat step-10-red-cars.json | jq
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
+  "priority": 100,
+  "config": {
+    "virtualTopic": "red-cars",
+    "statement": "SELECT type, price as money FROM cars WHERE color = 'red'"
+  }
+}
+
+curl \
+    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/passthrough/interceptor/red-cars" \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent \
+    --data @step-10-red-cars.json | jq
+{
+  "message": "red-cars is created"
+}

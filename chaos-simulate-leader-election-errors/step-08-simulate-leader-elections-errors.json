@@ -1,0 +1,7 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
+  "priority" : 100,
+  "config" : {
+    "rateInPercent" : 50
+  }
+}

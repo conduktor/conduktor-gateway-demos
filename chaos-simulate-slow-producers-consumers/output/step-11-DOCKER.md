@@ -1,0 +1,42 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+docker compose down --volumes
+ Container schema-registry  Stopping
+ Container gateway2  Stopping
+ Container gateway1  Stopping
+ Container gateway1  Stopped
+ Container gateway1  Removing
+ Container gateway1  Removed
+ Container gateway2  Stopped
+ Container gateway2  Removing
+ Container gateway2  Removed
+ Container schema-registry  Stopped
+ Container schema-registry  Removing
+ Container schema-registry  Removed
+ Container kafka2  Stopping
+ Container kafka3  Stopping
+ Container kafka1  Stopping
+ Container kafka3  Stopped
+ Container kafka3  Removing
+ Container kafka3  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
+ Container kafka2  Stopped
+ Container kafka2  Removing
+ Container kafka2  Removed
+ Container zookeeper  Stopping
+ Container zookeeper  Stopped
+ Container zookeeper  Removing
+ Container zookeeper  Removed
+ Network chaos-simulate-slow-producers-consumers_default  Removing
+ Network chaos-simulate-slow-producers-consumers_default  Removed
+
+```
+
+</details>
+      

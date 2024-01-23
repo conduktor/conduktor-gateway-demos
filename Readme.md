@@ -4,27 +4,56 @@ Enhance your Kafka Experience without changing your applications
 
 https://www.conduktor.io/gateway/
 
-# Walkthrough
-
-Walkthrough of the main Conduktor Gateway features
-
-[![asciicast](https://asciinema.org/a/1qMwuNg8OD9HHd8l1lPy3LGw8.svg)](https://asciinema.org/a/1qMwuNg8OD9HHd8l1lPy3LGw8)
-
 # Conduktor Gateway Demos
 
-* [End To End Encryption](encryption/Readme.md) - Seamlessly encrypt data at rest.
-* [SQL Topics](sql-topics/Readme.md) - The power of SQL... for topics!
-* [Multi Tenancy](multi-tenant/Readme.md) - Host multiple, isolated vclusters on your Kafka cluster.
-* [Create Virtual Cluster](create-virtual-cluster/Readme.md) - Creating a virtual cluster
-* [Chaos](chaos/Readme.md) - Simulating Kafka problems to test the resiliency of your Kafka applications.
-* [Safeguard](safeguard/Readme.md) - Protect Kafka from inefficient configurations or lack of knowledge.
-* [Masking](masking/Readme.md) - Hide important information.
-* [Headers Injection](inject-remove-header/Readme.md) - Add and remove headers to help your customers.
-* [Schema Validation](schema-validation/Readme.md) - Validate schemas, the real way
+* [ACLs with GATEWAY_SECURITY](acls-gateway-security/Readme.md)
+* [ACLs in VClusters](acls-vcluster/Readme.md)
+* [Audit](audit/Readme.md)
+* [Chaos Duplicate Messages](chaos-duplicate-messages/Readme.md)
+* [Chaos Simulate Broken Brokers](chaos-simulate-broken-broker/Readme.md)
+* [Chaos Simulate Invalid Schema Id](chaos-simulate-invalid-schema-id/Readme.md)
+* [Chaos Simulate Leader Election Errors](chaos-simulate-leader-election-errors/Readme.md)
+* [Chaos Simulate Message Corruption](chaos-simulate-message-corruption/Readme.md)
+* [Chaos Simulate Slow Broker](chaos-simulate-slow-broker/Readme.md)
+* [Chaos Simulate Slow Producers & Consumers](chaos-simulate-slow-producers-consumers/Readme.md)
+* [Cluster Switching](cluster-switching/Readme.md)
+* [Data Masking](data-masking/Readme.md)
+* [Encryption](encryption/Readme.md)
+* [Crypto Shredding](encryption-crypto-shredding/Readme.md)
+* [Field level Encryption, but decrypt only a set of fields](encryption-decrypt-only-specific-fields/Readme.md)
+* [Full payload encryption with external storage](encryption-external-storage/Readme.md)
+* [Encryption with external storage](encryption-payload-external-storage/Readme.md)
+* [Encryption performance](encryption-performance/Readme.md)
+* [Encryption full playload](encryption-playload/Readme.md)
+* [Encryption and Schema Registry](encryption-schema-registry/Readme.md)
+* [Encryption for third party](encryption-third-party/Readme.md)
+* [Encryption using Vault and secret management](encryption-vault-with-secret-management/Readme.md)
+* [Header Injection](header-injection/Readme.md)
+* [ksqldb](ksqlDB/Readme.md)
+* [Large message support](large-messages/Readme.md)
+* [Latency](latency/Readme.md)
+* [Merge Cluster](merge-cluster/Readme.md)
+* [Multi tenancy](multi-tenancy/Readme.md)
+* [Oauth](oauth/Readme.md)
+* [Safeguard](safeguard/Readme.md)
+* [Client Id validation](safeguard-client-id/Readme.md)
+* [Schema Id validation](safeguard-schema-id/Readme.md)
+* [Schema Producer Interceptor](safeguard-validate-schema-payload/Readme.md)
+* [Schema Payload Validation for Avro](safeguard-validate-schema-payload-avro/Readme.md)
+* [Schema Payload Validation for Json Schema](safeguard-validate-schema-payload-json/Readme.md)
+* [Schema Payload Validation for Protocol Buffer](safeguard-validate-schema-payload-proto/Readme.md)
+* [SQL Based Data Quality Producer](sql-data-quality-producer/Readme.md)
+* [SQL topic with Avro](sql-topic-schema-registry/Readme.md)
+* [SQL topics](sql-topics/Readme.md)
+* [SQL topics on passthrough](sql-topics-passthrough/Readme.md)
+* [SQL topics with single tenant](sql-topics-single-tenant/Readme.md)
+* [SSL and Multitenancy](ssl/Readme.md)
+* [SSL and Multitenancy](ssl-and-user-mapping/Readme.md)
+* [Throughput](throughput/Readme.md)
+* [Topic Concentration](topic-concentration/Readme.md)
 
-Note: Some of the demos might not be available for Gateway V2 upwards, which can be found in the historical V1 branch.
-
-# Want more features?
+# Want more?
 
 Checkout our marketplace https://marketplace.conduktor.io/
 
+and our documentation at https://docs.conduktor.io/gateway/

@@ -1,0 +1,213 @@
+title: Schema Producer Interceptor
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: What is a Schema Payload Validation Policy Interceptor?
+    markdown: |
+      Avoid outages from missing or badly formatted records, ensure all messages adhere to a schema.
+      
+      This interceptor also supports validating payload against specific constraints for AvroSchema and Protobuf.
+      
+      This is similar to the validations provided by JsonSchema, such as:
+      
+      - **Number**: `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`
+      - **String**: `minLength`, `maxLength`, `pattern`, `format`
+      - **Collections**: `maxItems`, `minItems`
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: topic-json
+        replicationFactor: 1
+        partitions: 1
+      - name: topic-avro
+        replicationFactor: 1
+        partitions: 1
+      - name: topic-protobuf
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Add Schema Payload Validation Policy Interceptor
+    gateway: gateway1
+    vcluster: teamA
+    name: guard-schema-payload-validate
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin"
+      "priority": "100"
+      "config": {
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        },
+        "topic": "topic-.*",
+        "schemaIdRequired": true,
+        "validateSchema": true,
+        "action": "BLOCK"
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - guard-schema-payload-validate
+
+  - type: FILE
+    title: Review the example json schema
+    filename: user-schema.json
+
+  - type: FILE
+    title: Review the example avro schema
+    filename: user-schema.avsc
+
+  - type: FILE
+    title: Review the example protobuf schema
+    filename: user-schema.proto
+
+  - type: SH
+    title: Let's register these schemas to the Schema Registry
+    showOutput: true
+    script: |
+      echo jsonSchemaId = $(curl -s -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+      --data "{\"schemaType\": \"JSON\", \"schema\": $(cat user-schema.json | jq tostring)}" \
+        http://localhost:8081/subjects/topic-json/versions)
+      
+      echo avroSchemaId = $(curl -s -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+      --data "{\"schemaType\": \"AVRO\", \"schema\": $(cat user-schema.avsc | jq tostring)}" \
+        http://localhost:8081/subjects/topic-avro/versions)
+      
+      echo protobufSchemaId = $(curl -s -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+      --data "{\"schemaType\": \"PROTOBUF\", \"schema\": $(cat user-schema.proto | jq -Rs .)}" \
+        http://localhost:8081/subjects/topic-protobuf/versions)
+
+    assertOutputContains:
+      - 'jsonSchemaId = {"id":1}'
+      - 'avroSchemaId = {"id":2}'
+      - 'protobufSchemaId = {"id":3}'
+
+  - type: SH
+    title: Let's asserts number of registered schemas
+    showOutput: true
+    script: |
+      echo nb schemas = $(curl --silent http://localhost:8081/subjects/ | jq 'length')
+
+    assertOutputContains:
+      - 'nb schemas = 3'
+
+  - type: SH
+    title: Let's produce invalid payload to the json schema
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      echo '{"name":"Hi","age":7,"email":"john.doecom","address":{"street":"123 Main St","city":"a"},"hobbies":["reading","cycling"]}' | \
+          kafka-json-schema-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic topic-json \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema.id=1
+    assertOutputContains:
+      - "5 schema violations found"
+      - "expected minLength: 2, actual: 1"
+      - "expected maxLength: 10, actual: 11"
+      - "expected minimum item count: 3, found: 2"
+      - "expected minLength: 3, actual: 2"
+      - "[john.doecom] is not a valid email address"
+
+  - type: SH
+    title: Let's produce invalid payload to the avro schema
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      echo '{"name":"Hi","age":7,"email":"john.doe@example.com","address":{"street":"123 Main St","city":"Anytown"},"hobbies":["reading","cycling"],"friends":[{"name":"Friend1","age":17},{"name":"Friend2","age":18}]}' | \
+          kafka-avro-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic topic-avro \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema.id=2
+    assertOutputContains:
+      - "org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy."
+      - "Topic 'topic-avro' has invalid avro schema payload: name is too short (2 < 3), street is too long (11 > 10), hobbies has too few items (2 < 3), age is greater than 10, age is greater than 10"
+
+  - type: AUDITLOG
+    title: Check in the audit log that message was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+    assertions:
+      - description: Confirm SchemaPayloadValidationPolicyPlugin audit has blocked commit
+        value:
+          operator: containsIgnoreCase
+          expected: Topic 'topic-avro' has invalid avro schema payload
+
+  - type: SH
+    title: Let's produce invalid payload to the protobuf schema
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      echo '{"name":"Hi","age":7,"email":"john.doe@example.com","address":{"street":"123 Main St","city":"Anytown"},"hobbies":["reading","cycling"],"friends":[{"name":"Friend1","age":17},{"name":"Friend2","age":18}]}' | \
+          kafka-protobuf-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic topic-protobuf \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema.id=3
+    assertOutputContains:
+      - "org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy."
+      - "Topic 'topic-protobuf' has invalid protobuf schema payload: Student.name is too short (2 < 3), Student.Address.street is too long (11 > 10), Student.Friend.age is greater than 10, Student.Friend.age is greater than 10"
+
+  - type: AUDITLOG
+    title: Check in the audit log that message was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+    assertions:
+      - description: Confirm SchemaPayloadValidationPolicyPlugin audit has blocked commit
+        value:
+          operator: containsIgnoreCase
+          expected: Topic 'topic-protobuf' has invalid protobuf schema payload
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Safeguard is really a game changer!

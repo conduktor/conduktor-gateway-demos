@@ -1,0 +1,10 @@
+kafka-console-consumer \
+    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
+    --topic teamAlarge-messages \
+    --from-beginning \
+    --timeout-ms 10000 \
+    --property print.headers=true 
+S3-REF-FILE-PATH:large-messages/eaf8c224-6a8b-4432-b388-bee3b11585e4	null
+[2024-01-22 23:43:49,491] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 1 messages

@@ -1,0 +1,104 @@
+title: Audit
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: What does audit do?
+    markdown: |
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's make sure we enforce policies also at produce time!
+      
+      Here message shall be sent with compression and with the right level of resiliency
+    gateway: gateway1
+    name: guard-on-produce
+    vcluster: teamA
+    interceptor: {
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin",
+      "priority": "100",
+      "config": {
+        "acks": {
+          "value": [
+            -1,
+          ],
+          "action": "BLOCK"
+        },
+        "compressions": {
+          "value": [
+            "NONE",
+            "GZIP"
+          ],
+          "action": "BLOCK"
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: cars
+        replicationFactor: 1
+        partitions: 1
+
+  - type: PRODUCE
+    title: Produce sample data to our `cars` topic without the right policies
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    acks: 1
+    compression: snappy
+    messages:
+      - value: '{"type":"Fiat","color":"red","price":-1}'
+    assertError: true
+    markdown: |
+      Produce 1 record ... that do not match our policy
+
+  - type: AUDITLOG
+    title: Check in the audit log that produce was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin")'
+    assertions:
+      - description: Confirm ProducePolicyPlugin audit entry
+        value:
+          operator: containsIgnoreCase
+          expected: "Topic 'cars' with invalid value for 'acks': 1. Valid value is one of the values: -1. Topic 'cars' with invalid value for 'compressions': SNAPPY. Valid value is one of the values: [GZIP, NONE]"

@@ -1,0 +1,232 @@
+title: Schema Payload Validation for Json Schema
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: What is a Schema Payload Validation Policy Interceptor?
+    markdown: |
+      Avoid outages from missing or badly formatted records, ensure all messages adhere to a schema.
+      
+      This interceptor also supports validating payload against specific constraints for AvroSchema and ProtoBuf
+      
+      This is similar to the validations provided by JsonSchema, such as:
+      
+      - **Number**: `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`
+      - **String**: `minLength`, `maxLength`, `pattern`, `format`
+      - **Collections**: `maxItems`, `minItems`
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: topic-json-schema
+        replicationFactor: 1
+        partitions: 1
+
+  - type: FILE
+    title: Review the example json schema schema
+    filename: user-schema-with-validation-rules.json
+
+  - type: SH
+    title: Let's register it to the Schema Registry
+    showOutput: true
+    script: |
+        curl -s \
+          http://localhost:8081/subjects/topic-json-schema/versions \
+          -X POST \
+          -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+          --data "{\"schemaType\": \"JSON\", \"schema\": $(cat user-schema-with-validation-rules.json | jq tostring)}"
+    assertOutputContains:
+      - '{"id":1}'
+
+  - type: FILE
+    title: Review invalid payload
+    filename: invalid-payload.json
+    markdown: |
+      It is a well formed object, but with invalid data
+
+  - type: SH
+    title: Let's send invalid data
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      cat invalid-payload.json | jq -c | \
+          kafka-json-schema-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic topic-json-schema \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema.id=1
+    assertOutputDoesNotContain:
+      - "org.apache.kafka.common.errors.PolicyViolationException"
+    markdown: |
+      Perfect the Json Schema serializer did its magic and validated our rules
+
+  - type: SH
+    title: Let's send invalid data using the protocol
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      MAGIC_BYTE="\x00"
+      SCHEMA_ID="\x00\x00\x00\x01"
+      JSON_PAYLOAD=$(cat invalid-payload.json | jq -c)
+      printf "${MAGIC_BYTE}${SCHEMA_ID}${JSON_PAYLOAD}" | \
+        kcat \
+          -b  localhost:6969 \
+          -X security.protocol=SASL_PLAINTEXT \
+          -X sasl.mechanism=PLAIN \
+          -X sasl.username=sa \
+          -X sasl.password=$(cat ${KAFKA_CONFIG_FILE} | awk -F"'" '/password=/{print $4}') \
+          -P \
+          -t topic-json-schema
+    assertOutputDoesNotContain:
+      - "Delivery failed for message: Broker: Policy violation"
+    markdown: |
+      Unfortunately the message went through
+
+  - type: SH
+    title: Let's consume it back
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-json-schema-console-consumer \
+          --bootstrap-server ${BOOTSTRAP_SERVERS} \
+          --consumer.config ${KAFKA_CONFIG_FILE} \
+          --topic topic-json-schema \
+          --from-beginning \
+          --skip-message-on-error \
+          --timeout-ms 3000
+    markdown: |
+      That's pretty bad, you are going to propagate wrong data within your system!
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Add Schema Payload Validation Policy Interceptor
+    gateway: gateway1
+    vcluster: teamA
+    name: guard-schema-payload-validate
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin"
+      "priority": "100"
+      "config": {
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        },
+        "topic": "topic-.*",
+        "schemaIdRequired": true,
+        "validateSchema": true,
+        "action": "BLOCK"
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - guard-schema-payload-validate
+
+  - type: SH
+    title: Let's send invalid data using the protocol again
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      MAGIC_BYTE="\x00"
+      SCHEMA_ID="\x00\x00\x00\x01"
+      JSON_PAYLOAD=$(cat invalid-payload.json | jq -c)
+      printf "${MAGIC_BYTE}${SCHEMA_ID}${JSON_PAYLOAD}" | \
+        kcat \
+          -b  localhost:6969 \
+          -X security.protocol=SASL_PLAINTEXT \
+          -X sasl.mechanism=PLAIN \
+          -X sasl.username=sa \
+          -X sasl.password=$(cat ${KAFKA_CONFIG_FILE} | awk -F"'" '/password=/{print $4}') \
+          -P \
+          -t topic-json-schema
+    assertOutputContains:
+      - "Delivery failed for message: Broker: Policy violation"
+    markdown: |
+      Perfect our interceptor did its magic and validated our rules
+
+  - type: AUDITLOG
+    title: Check in the audit log that message was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+    assertions:
+      - description: Confirm SchemaPayloadValidationPolicyPlugin audit has blocked commit
+        value:
+          operator: containsIgnoreCase
+          expected: Topic 'topic-json-schema' has invalid json schema payload
+
+  - type: SH
+    title: Let's now produce a valid payload
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      cat valid-payload.json | jq -c | \
+          kafka-json-schema-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic topic-json-schema \
+              --property schema.registry.url=http://localhost:8081 \
+              --property value.schema.id=1
+    assertOutputDoesNotContain:
+      - "org.apache.kafka.common.errors.SerializationException: Error serializing JSON message"
+
+  - type: SH
+    title: And consume it back
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-json-schema-console-consumer \
+          --bootstrap-server ${BOOTSTRAP_SERVERS} \
+          --consumer.config ${KAFKA_CONFIG_FILE} \
+          --topic topic-json-schema \
+          --from-beginning \
+          --skip-message-on-error \
+          --timeout-ms 3000
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      You can enrich your existing schema to add even more data quality to your systems!

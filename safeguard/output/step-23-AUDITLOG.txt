@@ -1,0 +1,9 @@
+kafka-console-consumer \
+    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
+    --topic _auditLogs \
+    --from-beginning \
+    --timeout-ms 3000 \
+ | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin")'
+[2024-01-23 00:22:52,795] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 37 messages

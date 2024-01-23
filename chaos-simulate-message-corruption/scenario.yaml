@@ -1,0 +1,103 @@
+title: Chaos Simulate Message Corruption
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Chaos Simulate Message Corruption
+    markdown: |
+      This interceptor simulates message corruption by appending random bytes to messages produced.
+      
+      This demo will run you through some of these use cases step-by-step.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: with-random-bytes
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    gateway: gateway1
+    vcluster: teamA
+    name: simulate-massage-corruption
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.chaos.ProduceSimulateMessageCorruptionPlugin"
+      "priority": 100
+      "config": {
+        "topic": "with-random-bytes",
+        "sizeInBytes": 10,
+        "rateInPercent": 100
+      }
+    markdown: |
+      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - simulate-massage-corruption
+
+  - type: PRODUCE
+    title: Send message to our created topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: with-random-bytes
+    messages:
+      - value: '{"message": "hello world"}'
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm message was appended random bytes
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: with-random-bytes
+    assertSize: 1
+    assertions:
+      - value:
+          operator: contains
+          expected: '{"message": "hello world"}'
+    markdown: |
+      This should produce output similar to this:
+      {"message": "hello world"}T[�   �X�{�
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, Chaos Simulate Message Corruption is simple as it!

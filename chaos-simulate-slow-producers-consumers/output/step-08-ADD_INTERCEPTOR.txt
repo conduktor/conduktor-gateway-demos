@@ -1,0 +1,21 @@
+cat step-08-simulate-slow-producer-consumers.json | jq
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowProducersConsumersPlugin",
+  "priority": 100,
+  "config": {
+    "topic": "slow-topic",
+    "rateInPercent": 100,
+    "minLatencyMs": 3000,
+    "maxLatencyMs": 3001
+  }
+}
+
+curl \
+    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/simulate-slow-producer-consumers" \
+    --header 'Content-Type: application/json' \
+    --user 'admin:conduktor' \
+    --silent \
+    --data @step-08-simulate-slow-producer-consumers.json | jq
+{
+  "message": "simulate-slow-producer-consumers is created"
+}

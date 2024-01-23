@@ -1,0 +1,100 @@
+title: Chaos Simulate Leader Election Errors
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Chaos Simulate Leader Election Errors
+    markdown: |
+      This interceptor simulates a leader election on partitions being produced to through Conduktor Gateway
+      
+      This demo will run you through some of these use cases step-by-step.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: my-topic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    gateway: gateway1
+    vcluster: teamA
+    name: simulate-leader-elections-errors
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin"
+      "priority": 100
+      "config": {
+        "rateInPercent": 50
+      }
+    markdown: |
+      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - simulate-leader-elections-errors
+
+  - type: SH
+    title: Let's produce some records to our created topic.
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-producer-perf-test \
+        --producer-props bootstrap.servers=${BOOTSTRAP_SERVERS} \
+        --producer.config ${KAFKA_CONFIG_FILE} \
+        --record-size 10 \
+        --throughput 1 \
+        --num-records 10 \
+        --topic my-topic
+    assertOutputContains:
+      - "NOT_LEADER_OR_FOLLOWER"
+      - "org.apache.kafka.common.errors.NotLeaderOrFollowerException"
+    markdown: |
+      This should produce output similar to this:
+      [2023-12-18 12:58:57,041] WARN [Producer clientId=producer-1] Got error produce response with correlation id 25 on topic-partition my-topic-0, retrying (2147483646 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
+      [2023-12-18 12:58:57,041] WARN [Producer clientId=producer-1] Received invalid metadata error in produce request on partition my-topic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, Chaos Leader Election Errors is simple as it!

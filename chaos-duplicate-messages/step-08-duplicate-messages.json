@@ -1,0 +1,9 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.chaos.DuplicateMessagesPlugin",
+  "priority" : 100,
+  "config" : {
+    "rateInPercent" : 100,
+    "topic" : "topic-duplicate",
+    "target" : "PRODUCE"
+  }
+}

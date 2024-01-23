@@ -1,0 +1,311 @@
+title: Merge Cluster
+services:
+  kafka1:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  zookeeper_s1:
+    docker:
+      image: confluentinc/cp-zookeeper:latest
+      hostname: zookeeper_s1
+      container_name: zookeeper_s1
+      ports:
+        - "12801:12801"
+      environment:
+        ZOOKEEPER_CLIENT_PORT: 12801
+        ZOOKEEPER_TICK_TIME: 2000
+      healthcheck:
+        test: nc -zv 0.0.0.0 12801 || exit 1
+        interval: 5s
+        retries: 25
+  s1_kafka1:
+    docker:
+      hostname: s1_kafka1
+      container_name: s1_kafka1
+      image: confluentinc/cp-kafka:latest
+      ports:
+        - "29092:29092"
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper_s1:12801
+        KAFKA_LISTENERS: EXTERNAL_SAME_HOST://:29092,INTERNAL://:9092
+        KAFKA_ADVERTISED_LISTENERS: EXTERNAL_SAME_HOST://localhost:29092,INTERNAL://s1_kafka1:9092
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+        KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+        KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+      depends_on:
+        zookeeper_s1:
+          condition: service_healthy
+      healthcheck:
+        test: nc -zv s1_kafka1 9092 || exit 1
+        interval: 5s
+        retries: 25
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  s1_kafka2:
+    docker:
+      hostname: s1_kafka2
+      container_name: s1_kafka2
+      image: confluentinc/cp-kafka:latest
+      ports:
+        - "29093:29093"
+      environment:
+        KAFKA_BROKER_ID: 2
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper_s1:12801
+        KAFKA_LISTENERS: EXTERNAL_SAME_HOST://:29093,INTERNAL://:9093
+        KAFKA_ADVERTISED_LISTENERS: EXTERNAL_SAME_HOST://localhost:29093,INTERNAL://s1_kafka2:9093
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+        KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+        KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+      depends_on:
+        zookeeper_s1:
+          condition: service_healthy
+      healthcheck:
+        test: nc -zv s1_kafka2 9093 || exit 1
+        interval: 5s
+        retries: 25
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  s1_kafka3:
+    docker:
+      hostname: s1_kafka3
+      container_name: s1_kafka3
+      image: confluentinc/cp-kafka:latest
+      ports:
+        - "29094:29094"
+      environment:
+        KAFKA_BROKER_ID: 3
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper_s1:12801
+        KAFKA_LISTENERS: EXTERNAL_SAME_HOST://:29094,INTERNAL://:9094
+        KAFKA_ADVERTISED_LISTENERS: EXTERNAL_SAME_HOST://localhost:29094,INTERNAL://s1_kafka3:9094
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+        KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+        KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+      depends_on:
+        zookeeper_s1:
+          condition: service_healthy
+      healthcheck:
+        test: nc -zv s1_kafka3 9094 || exit 1
+        interval: 5s
+        retries: 25
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_BACKEND_KAFKA_SELECTOR: 'file : { path:  /config/clusters.yaml}'
+        GATEWAY_PORT_COUNT: 6
+      volumes:
+        - type: bind
+          source: .
+          target: /config
+          read_only: true
+      ports:
+        - "6972:6972"
+        - "6973:6973"
+        - "6974:6974"
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_BACKEND_KAFKA_SELECTOR: 'file : { path:  /config/clusters.yaml}'
+        GATEWAY_PORT_COUNT: 6
+      volumes:
+        - type: bind
+          source: .
+          target: /config
+          read_only: true
+      ports:
+        - "7972:7972"
+        - "7973:7973"
+        - "7974:7974"
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: What is merge cluster?
+    markdown: |
+      Conduktor Gateway's merge cluster brings all your Kafka clusters together into an instance for clients to access.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: FILE
+    title: Review the Gateway configuration
+    filename: clusters.yaml
+    markdown: |
+      The Kafka brokers used by Gateway are stored in `clusters.yaml` and this is mounted into the Gateway container.
+      
+      The main (default) cluster is configured with `main`.
+      
+      The second cluster is configured with `cluster1`.
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    title: Create the topic 'cars' in main cluster
+    kafka: kafka1
+    topics:
+      - name: cars
+        replicationFactor: 1
+        partitions: 1
+
+  - type: CREATE_TOPICS
+    title: Create the topic 'cars' in cluster1
+    kafka: s1_kafka1
+    topics:
+      - name: cars
+        replicationFactor: 1
+        partitions: 1
+
+  - type: SH
+    title: Let's route the topic 'eu_cars', as seen by the client application, on to the 'cars' topic on the main (default) cluster
+    showOutput: true
+    script: |
+      curl \
+        --silent \
+        --user admin:conduktor \
+        --request POST localhost:8888/topicMappings/teamA/eu_cars \
+        --header 'Content-Type: application/json' \
+        --data-raw '{
+            "clusterId": "main",
+            "topicName": "cars",
+            "concentrated": false
+          }' | jq
+      
+      curl \
+        --silent \
+        --user admin:conduktor \
+        --request POST localhost:8888/topics/teamA \
+        --header 'Content-Type: application/json' \
+        --data-raw '{
+            "name": "eu_cars"
+          }' | jq
+
+  - type: SH
+    title: Let's route the topic 'us_cars', as seen by the client application, on to the 'cars' topic on the second cluster (cluster1)
+    showOutput: true
+    script: |
+      curl \
+        --silent \
+        --user admin:conduktor \
+        --request POST localhost:8888/topicMappings/teamA/us_cars \
+        --header 'Content-Type: application/json' \
+        --data-raw '{
+            "clusterId": "cluster1",
+            "topicName": "cars",
+            "concentrated": false
+          }' | jq
+
+      curl \
+        --silent \
+        --user admin:conduktor \
+        --request POST localhost:8888/topics/teamA \
+        --header 'Content-Type: application/json' \
+        --data-raw '{
+            "name": "us_cars"
+          }' | jq
+
+  - type: PRODUCE
+    title: Send into topic 'eu_cars'
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: eu_cars
+    messages:
+      - value: '{"name":"eu_cars_record"}'
+
+  - type: PRODUCE
+    title: Send into topic 'us_cars'
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: us_cars
+    messages:
+      - value: '{"name":"us_cars_record"}'
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: eu_cars
+    assertSize: 1
+    assertions:
+      - description: Assert expected message in 'eu_cars' topic
+        value:
+          operator: contains
+          expected: 'eu_cars_record'
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: us_cars
+    assertSize: 1
+    assertions:
+      - description: Assert expected message in 'us_cars' topic
+        value:
+          operator: contains
+          expected: 'us_cars_record'
+
+  - type: CONSUME
+    title: Verify `eu_cars_record` is not in main kafka
+    kafka: kafka1
+    topic: cars
+    assertSize: 1
+    assertions:
+      - description: eu_cars_record should be only in main kafka
+        value:
+          operator: contains
+          expected: 'eu_cars_record'
+
+  - type: CONSUME
+    title: Verify `us_cars_record` is not in cluster1 kafka
+    kafka: s1_kafka1
+    topic: cars
+    assertSize: 1
+    assertions:
+      - description: us_cars_record should be only in cluster1 kafka
+        value:
+          operator: contains
+          expected: 'us_cars_record'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Merge cluster is simple as it

@@ -1,0 +1,21 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+kafka-topics \
+    --bootstrap-server localhost:6969 \
+    --command-config teamA-sa.properties \
+    --replication-factor 1 \
+    --partitions 100 \
+    --create --if-not-exists \
+    --topic roads
+Error while executing topic command : Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2
+[2024-01-23 00:22:38,511] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2
+ (kafka.admin.TopicCommand$)
+
+```
+
+</details>
+      

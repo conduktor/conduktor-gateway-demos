@@ -1,0 +1,131 @@
+title: Chaos Simulate Broken Brokers
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Simulate Broken Brokers
+    markdown: |
+      This interceptor injects intermittent errors in client connections to brokers that are consistent with broker side issues.
+      
+      This demo will run you through some of these use cases step-by-step.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: my-topic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    gateway: gateway1
+    vcluster: teamA
+    name: simulate-broken-brokers
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateBrokenBrokersPlugin"
+      "priority": 100
+      "config": {
+        "rateInPercent": 100,
+        "errorMap": {
+          "FETCH": "UNKNOWN_SERVER_ERROR",
+          "PRODUCE": "CORRUPT_MESSAGE"
+        }
+      }
+    markdown: |
+      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues.
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - simulate-broken-brokers
+
+  - type: SH
+    title: Let's produce some records to our created topic and observe some errors being injected by Conduktor Gateway.
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-producer-perf-test \
+        --producer.config ${KAFKA_CONFIG_FILE} \
+        --record-size 10 \
+        --throughput 1 \
+        --num-records 10 \
+        --topic my-topic
+    assertOutputContains:
+      - "Error: CORRUPT_MESSAGE"
+    markdown: |
+      This should produce output similar to this:
+      [2023-12-19 14:08:09,150] WARN [Producer clientId=producer-1] Got error produce response with correlation id 3 on topic-partition my-topic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+      [2023-12-19 14:08:09,252] WARN [Producer clientId=producer-1] Got error produce response with correlation id 4 on topic-partition my-topic-0, retrying (2147483645 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+
+
+  - type: REMOVE_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    names:
+      - simulate-broken-brokers
+    markdown: |
+      Let's delete the interceptor `simulate-broken-brokers` so we can stop chaos injection
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 0
+
+  - type: SH
+    title: Let's produce some records to our created topic with no chaos
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-producer-perf-test \
+        --producer.config ${KAFKA_CONFIG_FILE} \
+        --record-size 10 \
+        --throughput 1 \
+        --num-records 10 \
+        --topic my-topic
+    assertOutputDoesNotContain:
+      - "Error: CORRUPT_MESSAGE"
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, Chaos Simulate Broken Brokers is simple as it!

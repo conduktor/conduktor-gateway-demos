@@ -1,0 +1,148 @@
+title: SSL and Multitenancy
+
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_MODE: GATEWAY_SECURITY
+        GATEWAY_SECURITY_PROTOCOL: SSL
+        GATEWAY_SSL_KEY_STORE_PATH: /config/keystore.jks
+        GATEWAY_SSL_KEY_STORE_PASSWORD: 123456
+        GATEWAY_SSL_KEY_PASSWORD: 123456
+        GATEWAY_SSL_KEY_TYPE: pkcs12
+        GATEWAY_SSL_TRUST_STORE_PATH: /config/truststore.jks
+        GATEWAY_SSL_TRUST_STORE_PASSWORD: 123456
+        GATEWAY_SSL_TRUST_STORE_TYPE: pkcs12
+        GATEWAY_SSL_CLIENT_AUTH: REQUIRE
+      volumes:
+        - type: bind
+          source: "."
+          target: /config
+          read_only: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_MODE: GATEWAY_SECURITY
+        GATEWAY_SECURITY_PROTOCOL: SSL
+        GATEWAY_SSL_KEY_STORE_PATH: /config/keystore.jks
+        GATEWAY_SSL_KEY_STORE_PASSWORD: 123456
+        GATEWAY_SSL_KEY_PASSWORD: 123456
+        GATEWAY_SSL_KEY_TYPE: jks
+        GATEWAY_SSL_TRUST_STORE_PATH: /config/truststore.jks
+        GATEWAY_SSL_TRUST_STORE_PASSWORD: 123456
+        GATEWAY_SSL_TRUST_STORE_TYPE: jks
+        GATEWAY_SSL_CLIENT_AUTH: REQUIRE
+      volumes:
+        - type: bind
+          source: "."
+          target: /config
+          read_only: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: SSL
+    markdown: |
+      When passwords are not enough, you can rely on TLS client certificate
+      But certificates do not host vcluster information, so let's map manually CN to vclusters.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: SH
+    showOutput: true
+    script: |
+      
+      rm -f *jks *key *p12 *crt
+      
+      openssl req \
+        -x509 \
+        -newkey rsa:4096 \
+        -sha256 \
+        -days 3560 \
+        -nodes \
+        -keyout san.key \
+        -out san.crt \
+        -subj '/CN=username' \
+        -extensions san \
+        -config openssl.config
+      
+        openssl pkcs12 \
+          -export \
+          -in san.crt \
+          -inkey san.key \
+          -name brokers \
+          -out san.p12 \
+          -password "pass:123456"
+      
+        keytool \
+          -noprompt \
+          -alias brokers \
+          -importkeystore \
+          -deststorepass 123456 \
+          -destkeystore keystore.jks \
+          -srckeystore san.p12 \
+          -srcstoretype PKCS12 \
+          -srcstorepass 123456
+      
+        keytool \
+          -noprompt \
+          -import \
+          -alias brokers \
+          -file san.crt \
+          -keypass 123456 \
+          -destkeystore truststore.jks \
+          -storepass 123456
+      
+      echo """
+      bootstrap.servers=localhost:6969
+      security.protocol=SSL
+      ssl.truststore.location=$PWD/truststore.jks
+      ssl.truststore.password=123456
+      ssl.keystore.location=$PWD/keystore.jks
+      ssl.keystore.password=123456
+      """ > client.config
+
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: ADD_USER_MAPPING
+    gateway: gateway1
+    username: CN=username
+
+  - type: CREATE_TOPICS
+    kafka: gateway1
+    kafkaConfig: client.config
+    topics:
+      - name: foo
+        replicationFactor: 1
+        partitions: 10
+
+  - type: LIST_TOPICS
+    kafka: gateway1
+    kafkaConfig: client.config
+    assertExists:
+      - foo
+
+  - type: LIST_TOPICS
+    kafka: kafka1
+    assertExists:
+      - foo

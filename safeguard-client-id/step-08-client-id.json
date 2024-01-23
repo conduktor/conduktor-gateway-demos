@@ -1,0 +1,7 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.safeguard.ClientIdRequiredPolicyPlugin",
+  "priority" : 100,
+  "config" : {
+    "namingConvention" : "naming-convention-.*"
+  }
+}

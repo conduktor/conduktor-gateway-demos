@@ -1,0 +1,9 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.chaos.SimulateInvalidSchemaIdPlugin",
+  "priority" : 100,
+  "config" : {
+    "topic" : "with-schema",
+    "invalidSchemaId" : 999,
+    "target" : "CONSUME"
+  }
+}

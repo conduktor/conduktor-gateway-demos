@@ -1,0 +1,8 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin",
+  "priority" : 100,
+  "config" : {
+    "virtualTopic" : "red-cars",
+    "statement" : "SELECT type, price as money FROM cars WHERE color = 'red'"
+  }
+}

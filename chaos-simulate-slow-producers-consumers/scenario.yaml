@@ -1,0 +1,101 @@
+title: Chaos Simulate Slow Producers & Consumers
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:7969
+      gateway.host: http://localhost:8889
+
+actions:
+
+  - type: INTRODUCTION
+    title: Chaos Simulate Slow Producers & Consumers
+    markdown: |
+      This interceptor simulates slow responses from brokers, but only on a set of topics rather than all traffic.
+      
+      This demo will run you through some of these use cases step-by-step.
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: slow-topic
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    gateway: gateway1
+    vcluster: teamA
+    name: simulate-slow-producer-consumers
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowProducersConsumersPlugin"
+      "priority": 100
+      "config": {
+        "topic": "slow-topic",
+        "rateInPercent": 100,
+        "minLatencyMs": 3000,
+        "maxLatencyMs": 3001
+      }
+    markdown: |
+      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all traffic.
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - simulate-slow-producer-consumers
+
+  - type: SH
+    title: Let's produce some records to our created topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-producer-perf-test \
+        --producer.config ${KAFKA_CONFIG_FILE} \
+        --record-size 10 \
+        --throughput 1 \
+        --num-records 10 \
+        --topic slow-topic
+    assertOutputMatches: "\\d{4},\\d{1,2} ms avg latency"
+    markdown: |
+      9 records sent, 1,6 records/sec (0,00 MB/sec), 3168,2 ms avg latency, 4840,0 ms max latency.
+      71 records sent, 11,1 records/sec (0,00 MB/sec), 3287,0 ms avg latency, 4749,0 ms max latency.
+      100 records sent, 7,811279 records/sec (0,00 MB/sec), 3278,28 ms avg latency, 4840,00 ms max latency, 3180 ms 50th, 4440 ms 95th, 4840 ms 99th, 4840 ms 99.9th.
+
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, Chaos Simulate Slow Producers and Consumers is simple as it!

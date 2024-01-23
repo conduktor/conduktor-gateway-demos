@@ -1,0 +1,14 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+ls -lH *bin
+-rw-r--r--@ 1 framiere  staff  41943052 Jan 22 23:43 from-kafka.bin
+-rw-r--r--@ 1 framiere  staff  41943041 Jan 22 23:43 large-message.bin
+
+```
+
+</details>
+      

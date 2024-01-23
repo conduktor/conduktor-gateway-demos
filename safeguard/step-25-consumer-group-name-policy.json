@@ -1,0 +1,10 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin",
+  "priority" : 100,
+  "config" : {
+    "groupId" : {
+      "value" : "my-group.*",
+      "action" : "BLOCK"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin",
+  "priority" : 100,
+  "config" : {
+    "maximumBytesPerSecond" : 1
+  }
+}

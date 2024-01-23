@@ -1,0 +1,19 @@
+curl \
+  --silent \
+  --user admin:conduktor \
+  --request POST localhost:8888/topicMappings/teamA/eu_cars \
+  --header 'Content-Type: application/json' \
+  --data-raw '{
+      "clusterId": "main",
+      "topicName": "cars",
+      "concentrated": false
+    }' | jq
+
+curl \
+  --silent \
+  --user admin:conduktor \
+  --request POST localhost:8888/topics/teamA \
+  --header 'Content-Type: application/json' \
+  --data-raw '{
+      "name": "eu_cars"
+    }' | jq

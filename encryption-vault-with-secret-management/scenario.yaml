@@ -1,0 +1,224 @@
+title: Encryption using Vault and secret management
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    docker:
+      environment:
+        VAULT_TOKEN: vault-plaintext-root-token
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        VAULT_TOKEN: vault-plaintext-root-token
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+  vault:
+    docker:
+      image: hashicorp/vault
+      hostname: vault
+      container_name: vault
+      ports:
+        - "8200:8200"
+      command: [
+        "sh",
+        "-c",
+        "(while ! nc -z 127.0.0.1 8200; \
+                  do \
+                  sleep 1; \
+                  echo 'waiting for vault service ...'; \
+                  done; \
+                  export VAULT_ADDR='http://0.0.0.0:8200';\
+                  vault secrets enable transit; \
+                  vault secrets enable -version=1 kv; \
+                  vault secrets enable totp \
+                  ) & vault server -dev -dev-listen-address=0.0.0.0:8200",
+      ]
+      environment:
+        VAULT_ADDR: "http://0.0.0.0:8200"
+        VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
+      healthcheck:
+        test: nc -zv 0.0.0.0 8200
+        interval: 5s
+        retries: 25
+
+actions:
+  - type: INTRODUCTION
+    title: A full field level with Vault and secret management
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers
+        replicationFactor: 1
+        partitions: 1
+
+  - type: LIST_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    assertExists:
+      - customers
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's ask gateway to encrypt messages using vault and secret management.
+      The vault token is retrieved from your env variable `${VAULT_TOKEN}`.
+    gateway: gateway1
+    vcluster: teamA
+    name: crypto-shredding-encrypt
+    interceptor: {
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+      "priority": 100,
+      "config": {
+        "topic": "customers",
+        "kmsConfig": {
+          "vault": {
+            "uri": "http://vault:8200",
+            "token": "${VAULT_TOKEN}",
+            "version": 1
+          }
+        },
+        "fields": [
+          {
+            "fieldName": "password",
+            "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "VAULT"
+            }
+          },
+          {
+            "fieldName": "visa",
+            "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "VAULT"
+            }
+          }
+        ]
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - crypto-shredding-encrypt
+
+  - type: PRODUCE
+    title: Let's produce sample data for `tom` and `florent`
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    messages:
+      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
+      - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm `tom` and `florent` are encrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm password is encrypted for `tom`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'motorhead'
+      - description: Confirm visa is encrypted for `tom`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#abc123'
+      - description: Confirm password is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: 'kitesurf'
+      - description: Confirm visa is encrypted for `florent`
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '#888999XZ'
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add the decrypt interceptor to decipher messages.
+      The vault token is retrieved from your env variable `${VAULT_TOKEN}`.
+    gateway: gateway1
+    vcluster: teamA
+    name: crypto-shredding-decrypt
+    interceptor: {
+      "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+      "priority": 100,
+      "config": {
+        "topic": "customers",
+        "kmsConfig": {
+          "vault": {
+            "uri": "http://vault:8200",
+            "token": "${VAULT_TOKEN}",
+            "version": 1
+          }
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 2
+    assertNames:
+      - crypto-shredding-encrypt
+      - crypto-shredding-decrypt
+
+  - type: CONSUME
+    title: Confirm message from `tom` and `florent` are encrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm password is decrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: 'motorhead'
+      - description: Confirm visa is decrypted for `tom`
+        value:
+          operator: containsIgnoreCase
+          expected: '#abc123'
+      - description: Confirm password is decrypted for `florent`
+        value:
+          operator: containsIgnoreCase
+          expected: 'kitesurf'
+      - description: Confirm visa is decrypted for `florent`
+        value:
+          operator: containsIgnoreCase
+          expected: '#888999XZ'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Crypto shredding help you protect your most precious information

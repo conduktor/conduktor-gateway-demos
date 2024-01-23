@@ -1,0 +1,17 @@
+
+<details>
+<summary>Command output</summary>
+
+```sh
+
+curl -s \
+  http://localhost:8081/subjects/topic-json-schema/versions \
+  -X POST \
+  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  --data "{\"schemaType\": \"JSON\", \"schema\": $(cat user-schema-with-validation-rules.json | jq tostring)}"
+cat user-schema-with-validation-rules.json | jq tostring
+{"id":1}
+```
+
+</details>
+      

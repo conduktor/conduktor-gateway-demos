@@ -1,0 +1,393 @@
+title: Safeguard
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: What is a safeguard?
+    markdown: |
+      Enforce your rules where it matters
+      
+      Safeguard ensures that your teams follow your rules and can't break convention. 
+      
+      Enable your teams, prevent common mistakes, protect your infra. 
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: cars
+        replicationFactor: 1
+        partitions: 1
+
+  - type: PRODUCE
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    messages:
+      - value: '{"type":"Ferrari","color":"red","price":10000}'
+      - value: '{"type":"RollsRoyce","color":"black","price":9000}'
+      - value: '{"type":"Mercedes","color":"black","price":6000}'
+    markdown: |
+      Produce 3 records to the cars topic.
+
+  - type: CONSUME
+    title: Consume the `cars` topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    maxMessages: 3
+    assertSize: 3
+    markdown: |
+      Let's confirm the 3 cars are there by consuming from the `cars` topic.
+
+  - type: DESCRIBE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - cars
+    markdown: |
+      Replication factor is 1? 
+      
+      This is bad: we can lose data!
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's make sure this problem never repeats itself and add a topic creation safeguard. 
+      
+      ... and while we're at it, let's make sure we don't abuse partitions either
+
+    gateway: gateway1
+    vcluster: teamA
+    name: guard-on-create-topic
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin"
+      "priority": "100"
+      "config": {
+        "replicationFactor": {
+          "min": 2,
+          "max": 2
+        },
+        "numPartition": {
+          "min": 1,
+          "max": 3
+        }
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - guard-on-create-topic
+
+  - type: CREATE_TOPICS
+    title: Create a topic that is not within policy
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: roads
+        replicationFactor: 1
+        partitions: 100
+    assertError: true
+    markdown: |
+      Topic creation is denied by our policy
+
+  - type: CREATE_TOPICS
+    title: Let's now create it again, with parameters within our policy
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: roads
+        replicationFactor: 2
+        partitions: 3
+    markdown: |
+      Perfect, it has been created
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's make sure we enforce policies when we alter topics too
+      
+      Here the retention can only be between 1 and 5 days
+    gateway: gateway1
+    vcluster: teamA
+    name: guard-on-alter-topic
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin"
+      "priority": "100"
+      "config": {
+        "retentionMs": {
+          "min": 86400000,
+          "max": 432000000
+        }
+      }
+
+  - type: ALTER_TOPICS
+    title: Update 'cars' with a retention of 60 days
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: roads
+        config:
+          retention.ms: 5184000000
+    assertError: true
+    markdown: |
+      Altering the topic is denied by our policy
+
+  - type: ALTER_TOPICS
+    title: Update 'cars' with a retention of 3 days
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: roads
+        config:
+          retention.ms: 259200000
+    assertError: true
+    markdown: |
+      Topic updated successfully
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's make sure we enforce policies also at produce time!
+      
+      Here message shall be sent with compression and with the right level of resiliency
+    gateway: gateway1
+    vcluster: teamA
+    name: guard-on-produce
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin"
+      "priority": "100"
+      "config": {
+        "acks": {
+          "value": [
+            -1,
+          ],
+          "action": "BLOCK"
+        },
+        "compressions": {
+          "value": [
+            "NONE",
+            "GZIP"
+          ],
+          "action": "BLOCK"
+        }
+      }
+
+  - type: PRODUCE
+    title: Produce sample data to our `cars` topic without the right policies
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    acks: 1
+    compression: snappy
+    messages:
+      - value: '{"type":"Fiat","color":"red","price":-1}'
+    assertError: true
+    markdown: |
+      Produce 1 record ... that do not match our policy
+
+  - type: PRODUCE
+    title: Produce sample data to our `cars` topic that complies with our policy
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    acks: -1
+    compression: gzip
+    messages:
+      - value: '{"type":"Fiat","color":"red","price":-1}'
+    markdown: |
+      Producing a record matching our policy
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add some rate limiting policy on produce
+    gateway: gateway1
+    vcluster: teamA
+    name: produce-rate
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin"
+      "priority": 100
+      "config": {
+        "maximumBytesPerSecond": 1
+      }
+
+  - type: PRODUCE
+    title: Produce sample data
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    acks: -1
+    compression: none
+    messages:
+      - value: '{"type":"Fiat","color":"red","price":-1}'
+    markdown: |
+      Do not match our produce rate policy
+
+  - type: AUDITLOG
+    title: Check in the audit log that produce was throttled
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin")'
+    assertions:
+      - description: Confirm ProducerRateLimitingPolicyPlugin audit has throttled produce
+        value:
+          operator: containsIgnoreCase
+          expected: 'which is more than 1 bytes per second, producer will be throttled'
+
+  - type: REMOVE_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    names:
+      - produce-rate
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add some naming conventions on consumer group names
+    gateway: gateway1
+    vcluster: teamA
+    name: consumer-group-name-policy
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin"
+      "priority": 100
+      "config": {
+        "groupId": {
+          "value": "my-group.*",
+          "action": "BLOCK"
+        }
+      }
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    groupId: group-not-within-policy
+    assertError: true
+
+  - type: AUDITLOG
+    title: Check in the audit log that fetch was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin")'
+    assertions:
+      - description: Confirm ConsumerGroupPolicyPlugin audit has blocked consume
+        value:
+          operator: containsIgnoreCase
+          expected: 'is invalid, naming convention must match with regular expression'
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    groupId: my-group-within-policy
+
+  - type: REMOVE_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    names:
+      - consumer-group-name-policy
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add some connect limitation policy
+    gateway: gateway1
+    vcluster: teamA
+    name: guard-limit-connection
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin"
+      "priority": 100
+      "config": {
+        "maximumConnectionsPerSecond": 1,
+        "action": "BLOCK"
+      }
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    groupId: my-group-id-convention-cars
+    assertError: true
+
+  - type: AUDITLOG
+    title: Check in the audit log that connection was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin")'
+    assertions:
+      - description: Confirm LimitConnectionPolicyPlugin audit has blocked connection
+        value:
+          operator: containsIgnoreCase
+          expected: 'Client connections exceed the limitation of 1 connections per second'
+
+  - type: REMOVE_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    names:
+      - guard-limit-connection
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's block aggressive auto-commits strategies
+    gateway: gateway1
+    vcluster: teamA
+    name: guard-agressive-auto-commit
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin"
+      "priority": 100
+      "config": {
+        "maximumCommitsPerMinute": 1,
+        "action": "BLOCK"
+      }
+
+  - type: CONSUME
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    properties:
+      enable.auto.commit: true
+    topic: cars
+    groupId: group-with-aggressive-autocommit
+
+  - type: AUDITLOG
+    title: Check in the audit log that connection was denied
+    kafka: kafka1
+    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin")'
+    assertions:
+      - description: Confirm LimitCommitOffsetPolicyPlugin audit has blocked commit
+        value:
+          operator: containsIgnoreCase
+          expected: 'Client calls join group (group-with-aggressive-autocommit) exceed the limitation of 1 commits per minute'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Safeguard is really a game changer!

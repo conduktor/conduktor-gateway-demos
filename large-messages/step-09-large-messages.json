@@ -1,0 +1,14 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.LargeMessageHandlingPlugin",
+  "priority" : 100,
+  "config" : {
+    "topic" : "large-messages",
+    "s3Config" : {
+      "accessKey" : "minio",
+      "secretKey" : "minio123",
+      "bucketName" : "bucket",
+      "region" : "eu-south-1",
+      "uri" : "http://minio:9000"
+    }
+  }
+}

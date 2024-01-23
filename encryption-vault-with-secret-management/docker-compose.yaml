@@ -1,0 +1,191 @@
+version: '3.7'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2801
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: nc -zv 0.0.0.0 2801 || exit 1
+      interval: 5s
+      retries: 25
+  kafka1:
+    hostname: kafka1
+    container_name: kafka1
+    image: confluentinc/cp-kafka:latest
+    ports:
+    - 19092:19092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2801
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL_SAME_HOST://:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9092,EXTERNAL_SAME_HOST://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: kafka.authorizer.logger=INFO
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: nc -zv kafka1 9092 || exit 1
+      interval: 5s
+      retries: 25
+  kafka2:
+    hostname: kafka2
+    container_name: kafka2
+    image: confluentinc/cp-kafka:latest
+    ports:
+    - 19093:19093
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2801
+      KAFKA_LISTENERS: INTERNAL://:9093,EXTERNAL_SAME_HOST://:19093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9093,EXTERNAL_SAME_HOST://localhost:19093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: kafka.authorizer.logger=INFO
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: nc -zv kafka2 9093 || exit 1
+      interval: 5s
+      retries: 25
+  kafka3:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+    - 19094:19094
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2801
+      KAFKA_LISTENERS: INTERNAL://:9094,EXTERNAL_SAME_HOST://:19094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka3:9094,EXTERNAL_SAME_HOST://localhost:19094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: kafka.authorizer.logger=INFO
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: nc -zv kafka3 9094 || exit 1
+      interval: 5s
+      retries: 25
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    hostname: schema-registry
+    container_name: schema-registry
+    ports:
+    - 8081:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093,kafka3:9094
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: WARN
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: schema-registry
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+    healthcheck:
+      test: nc -zv schema-registry 8081 || exit 1
+      interval: 5s
+      retries: 25
+  gateway1:
+    image: conduktor/conduktor-gateway:2.5.0
+    hostname: gateway1
+    container_name: gateway1
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093,kafka3:9094
+      GATEWAY_ADVERTISED_HOST: localhost
+      GATEWAY_MODE: VCLUSTER
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+      VAULT_TOKEN: vault-plaintext-root-token
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+    ports:
+    - 6969:6969
+    - 6970:6970
+    - 6971:6971
+    - 8888:8888
+    healthcheck:
+      test: curl localhost:8888/health
+      interval: 5s
+      retries: 25
+  gateway2:
+    image: conduktor/conduktor-gateway:2.5.0
+    hostname: gateway2
+    container_name: gateway2
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093,kafka3:9094
+      GATEWAY_ADVERTISED_HOST: localhost
+      GATEWAY_MODE: VCLUSTER
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+      GATEWAY_START_PORT: 7969
+      VAULT_TOKEN: vault-plaintext-root-token
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+    ports:
+    - 7969:7969
+    - 7970:7970
+    - 7971:7971
+    - 8889:8888
+    healthcheck:
+      test: curl localhost:8888/health
+      interval: 5s
+      retries: 25
+  vault:
+    image: hashicorp/vault
+    healthcheck:
+      test: nc -zv 0.0.0.0 8200
+      interval: 5s
+      retries: 25
+    hostname: vault
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+      VAULT_DEV_ROOT_TOKEN_ID: vault-plaintext-root-token
+    container_name: vault
+    ports:
+    - 8200:8200
+    command:
+    - sh
+    - -c
+    - (while ! nc -z 127.0.0.1 8200; do sleep 1; echo 'waiting for vault service ...';
+      done; export VAULT_ADDR='http://0.0.0.0:8200';vault secrets enable transit;
+      vault secrets enable -version=1 kv; vault secrets enable totp ) & vault server
+      -dev -dev-listen-address=0.0.0.0:8200
+networks:
+  demo: null

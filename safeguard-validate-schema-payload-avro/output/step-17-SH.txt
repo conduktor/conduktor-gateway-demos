@@ -1,0 +1,2 @@
+curl -s http://localhost:8081/subjects/topic-avro/versions
+[1,2]

@@ -1,0 +1,10 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.chaos.SimulateSlowProducersConsumersPlugin",
+  "priority" : 100,
+  "config" : {
+    "topic" : "slow-topic",
+    "rateInPercent" : 100,
+    "minLatencyMs" : 3000,
+    "maxLatencyMs" : 3001
+  }
+}
