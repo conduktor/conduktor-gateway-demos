@@ -9,4 +9,6 @@ tasks:
             curl -O https://packages.confluent.io/archive/7.5/confluent-community-7.5.3.zip
             unzip confluent-community-7.5.3.zip 
 
+            PATH=$PATH:/workspaceconfluent-7.5.3/bin/
             gp env PATH=$PATH:/workspaceconfluent-7.5.3/bin/
+
