@@ -47,8 +47,8 @@ https://www.conduktor.io/gateway/
 * [SQL topics](sql-topics/Readme.md)
 * [SQL topics on passthrough](sql-topics-passthrough/Readme.md)
 * [SQL topics with single tenant](sql-topics-single-tenant/Readme.md)
-* [SSL and Multitenancy](ssl/Readme.md)
-* [SSL and Multitenancy](ssl-and-user-mapping/Readme.md)
+* [mTLS](ssl/Readme.md)
+* [mTLS and Multitenancy](ssl-and-user-mapping/Readme.md)
 * [Throughput](throughput/Readme.md)
 * [Topic Concentration](topic-concentration/Readme.md)
 
