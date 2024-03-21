@@ -1,0 +1,299 @@
+title: Schema Based Encryption and Schema Registry
+ciTags:
+  - NON_REGRESSION
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+  vault:
+    docker:
+      image: hashicorp/vault
+      hostname: vault
+      container_name: vault
+      ports:
+        - "8200:8200"
+      command: [
+        "sh",
+        "-c",
+        "(while ! nc -z 127.0.0.1 8200; \
+                  do \
+                  sleep 1; \
+                  echo 'waiting for vault service ...'; \
+                  done; \
+                  export VAULT_ADDR='http://0.0.0.0:8200';\
+                  vault secrets enable transit; \
+                  vault secrets enable -version=1 kv; \
+                  vault secrets enable totp \
+                  ) & vault server -dev -dev-listen-address=0.0.0.0:8200",
+      ]
+      environment:
+        VAULT_ADDR: "http://0.0.0.0:8200"
+        VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
+      healthcheck:
+        test: nc -zv 0.0.0.0 8200
+        interval: 5s
+        retries: 25
+
+actions:
+  - type: INTRODUCTION
+    title: Schema based field level encryption with Schema Registry
+    markdown: |
+      Yes, it work with Avro, Json Schema with nested fields  
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      We want to encrypt two fields at the root layer, and `location` in the `address` object. 
+      Here we are using an in memory KMS.
+    gateway: gateway1
+    vcluster: teamA
+    name: encrypt
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptSchemaBasedPlugin"
+      "priority": "100"
+      "config": {
+        "kmsConfig": {
+          "vault": {
+            "uri": "http://vault:8200",
+            "token": "vault-plaintext-root-token",
+            "version": 1
+          }
+        },
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        },
+        "defaultKeySecretId": "myDefaultKeySecret",
+        "defaultAlgorithm": {
+          "type": "TINK/AES128_EAX",
+          "kms": "IN_MEMORY"
+        },
+        "tags": [ "PII", "ENCRYPTION" ],
+        "namespace": "conduktor."
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - encrypt
+
+  - type: SH
+    title: Let's send unencrypted json schema message with specified json schema with custom constrains for encryption
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      valueSchema=$(echo '{
+          "title": "Customer",
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "username": { "type": "string" },
+            "password": { "type": "string", "conduktor.keySecretId": "password-secret", "conduktor.algorithm.type": "AES_GCM", "conduktor.algorithm.kms": "IN_MEMORY" },
+            "visa": { "type": "string", "conduktor.keySecretId": "conduktor.visa-secret", "algorithm.type": "AES_GCM", "conduktor.algorithm.kms": "IN_MEMORY" },
+            "address": {
+              "type": "object",
+              "properties": {
+                "location": { "type": "string", "conduktor.tags": ["MY_TAG", "PII", "GDPR", "MY_OTHER_TAG"] },
+                "town": { "type": "string" },
+                "country": { "type": "string" }
+              }
+            }
+          }
+      }' | jq -c)
+      
+      keySchema=$(echo '{
+          "title": "Metadata",
+          "type": "object",
+          "properties": {
+              "sessionId": {"type": "string"},
+              "authenticationToken": {"type": "string", "conduktor.keySecretId": "token-secret"},
+              "deviceInformation": {"type": "string", "conduktor.algorithm": "AES128_CTR_HMAC_SHA256" }
+          }
+      }' | jq -c)
+      
+      invalidKeyTom=$(echo '{
+              "sessionId": "session-id-tom",
+              "authenticationToken": "authentication-token-tom",
+              "deviceInformation": "device-information-tom"
+          }' | jq -c)
+      
+      invalidValueTom=$(echo '{
+              "name": "tom",
+              "username": "tom@conduktor.io",
+              "password": "motorhead",
+              "visa": "#abc123",
+              "address": {
+                "location": "12 Chancery lane",
+                "town": "London",
+                "country": "UK"
+              }
+          }' | jq -c)
+      
+      invalidInputTom="$invalidKeyTom|$invalidValueTom"
+      echo $invalidInputTom | \
+      kafka-json-schema-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic customers \
+              --property schema.registry.url=http://localhost:8081 \
+              --property parse.key=true \
+              --property key.separator="|" \
+              --property value.schema=$valueSchema \
+              --property key.schema=$keySchema 2>&1 /dev/null
+      
+      invalidKeyLaura=$(echo '{
+              "sessionId": "session-id-laura",
+              "authenticationToken": "authentication-token-laura",
+              "deviceInformation": "device-information-laura"
+          }' | jq -c)
+      
+      invalidValueLaura=$(echo '{
+              "name": "laura",
+              "username": "laura@conduktor.io",
+              "password": "kitesurf",
+              "visa": "#888999XZ;",
+              "address": {
+                "location": "4th Street, Jumeirah",
+                "town": "Dubai",
+                "country": "UAE"
+              }
+          }' | jq -c)
+      
+      invalidInputLaura="$invalidKeyLaura|$invalidValueLaura"
+      echo $invalidInputLaura | \
+      kafka-json-schema-console-producer \
+              --bootstrap-server ${BOOTSTRAP_SERVERS} \
+              --producer.config ${KAFKA_CONFIG_FILE} \
+              --topic customers \
+              --property schema.registry.url=http://localhost:8081 \
+              --property parse.key=true \
+              --property key.separator="|" \
+              --property value.schema=$valueSchema \
+              --property key.schema=$keySchema 2>&1 /dev/null
+
+  - type: SH
+    title: Let's make sure they are encrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-json-schema-console-consumer \
+        --bootstrap-server ${BOOTSTRAP_SERVERS} \
+        --consumer.config ${KAFKA_CONFIG_FILE} \
+        --property schema.registry.url=http://localhost:8081 \
+        --property print.key=true \
+        --topic customers \
+        --from-beginning \
+        --max-messages 2 2>&1  /dev/null | grep '{' | jq
+    markdown: |
+      password and visa and the nested field `address.location` are encrypted
+    assertOutputDoesNotContain:
+      - "motorhead"
+      - "#abc123"
+      - "authentication-token-tom"
+      - "device-information-tom"
+      - "kitesurf"
+      - "#888999XZ"
+      - "authentication-token-laura"
+      - "device-information-laura"
+    assertOutputContains:
+      - "tom"
+      - "laura"
+      - "session-id-tom"
+      - "session-id-laura"
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add the decrypt interceptor to decipher messages
+    gateway: gateway1
+    vcluster: teamA
+    name: decrypt
+    interceptor: {
+      "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+      "priority": 100,
+      "config": {
+        "topic": "customers",
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 2
+    assertNames:
+      - encrypt
+      - decrypt
+
+
+  - type: SH
+    title: Let's make sure they are decrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    showOutput: true
+    script: |
+      kafka-json-schema-console-consumer \
+        --bootstrap-server ${BOOTSTRAP_SERVERS} \
+        --consumer.config ${KAFKA_CONFIG_FILE} \
+        --property schema.registry.url=http://localhost:8081 \
+        --property print.key=true \
+        --topic customers \
+        --from-beginning \
+        --max-messages 2 2>&1 | grep '{' | jq
+    markdown: |
+      password and visa and the nested field `address.location` are decrypted
+    assertOutputContains:
+      - "tom"
+      - "motorhead"
+      - "#abc123"
+      - "authentication-token-tom"
+      - "device-information-tom"
+      - "laura"
+      - "kitesurf"
+      - "#888999XZ"
+      - "authentication-token-laura"
+      - "device-information-laura"
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, encryption in the Kafka world can be simple!

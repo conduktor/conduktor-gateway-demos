@@ -1,0 +1,2 @@
+Created topic customers-full-payload-level-encryption.
+Created topic customers-fields-level-encryption.

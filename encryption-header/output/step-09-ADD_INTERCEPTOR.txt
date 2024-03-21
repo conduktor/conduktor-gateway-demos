@@ -1,0 +1,8 @@
+cat: step-09-full: No such file or directory
+cat: payload: No such file or directory
+cat: level: No such file or directory
+cat: encryption: No such file or directory
+cat: for: No such file or directory
+cat: header.json: No such file or directory
+curl: option --data: error encountered when reading a file
+curl: try 'curl --help' for more information

@@ -1,0 +1,5 @@
+cat: step-08-field: No such file or directory
+cat: level: No such file or directory
+cat: encryption.json: No such file or directory
+curl: option --data: error encountered when reading a file
+curl: try 'curl --help' for more information

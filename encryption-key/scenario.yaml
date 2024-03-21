@@ -1,0 +1,241 @@
+title: Encryption key
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    docker:
+      environment:
+        GATEWAY_ADVERTISED_HOST: localhost
+        GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        GATEWAY_FEATURE_FLAGS_MULTI_TENANCY: true
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: Encryption key
+    markdown: |
+      Let's demonstrate encryption for key 
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: FILE
+    title: Review the kafka properties to connect to `teamA`
+    filename: teamA-sa.properties
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers-full-payload-level-encryption
+        replicationFactor: 1
+        partitions: 1
+      - name: customers-fields-level-encryption
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add the encryption interceptor to encrypt fields for key
+    gateway: gateway1
+    vcluster: teamA
+    name: field level encryption
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin"
+      "priority": "100"
+      "config": {
+        "topic": "customers-fields-level-encryption",
+        "recordKey": {
+          "fields": [
+            {
+              "fieldName": "password",
+              "keySecretId": "password-secret",
+              "algorithm": {
+                "type": "AES_GCM",
+                "kms": "IN_MEMORY"
+              }
+            },{
+              "fieldName": "visa",
+              "keySecretId": "visa-secret",
+              "algorithm": {
+                "type": "AES_GCM",
+                "kms": "IN_MEMORY"
+              }
+            }
+          ]
+        }
+      }
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add the encryption interceptor to encrypt full payload for key
+    gateway: gateway1
+    vcluster: teamA
+    name: full payload level encryption
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin"
+      "priority": "100"
+      "config": {
+        "topic": "customers-full-payload-level-encryption",
+        "recordKey": {
+          "payload": {
+            "keySecretId": "payload-secret",
+            "algorithm": {
+              "type": "AES_GCM",
+              "kms": "IN_MEMORY"
+            }
+          }
+        }
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 2
+    assertNames:
+      - field level encryption
+      - full payload level encryption
+
+  - type: PRODUCE
+    title: Let's send unencrypted json to customers-fields-level-encryption topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-fields-level-encryption
+    messages:
+      - key: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+        value: '{"msg": "test msg"}'
+    markdown: |
+      We are using regular kafka tools
+
+  - type: PRODUCE
+    title: Let's send unencrypted json to customers-full-payload-level-encryption topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-full-payload-level-encryption
+    messages:
+      - key: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+        value: '{"msg": "test msg"}'
+    markdown: |
+      We are using regular kafka tools
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm `tom` data is encrypted in customers-fields-level-encryption topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-fields-level-encryption
+    assertSize: 1
+    assertions:
+      - description: Confirm password is encrypted for `tom`
+        key:
+          operator: doesNotContainIgnoringCase
+          expected: 'motorhead'
+      - description: Confirm visa is encrypted for `tom`
+        key:
+          operator: doesNotContainIgnoringCase
+          expected: '#abc123'
+      - description: Confirm name is not encrypted for `tom`
+        key:
+          operator: containsIgnoreCase
+          expected: 'tom'
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm the entire `tom` message is encrypted in customers-full-payload-level-encryption topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-full-payload-level-encryption
+    assertSize: 1
+    assertions:
+      - description: Confirm `tom` message is encrypted
+        key:
+          operator: doesNotContainIgnoringCase
+          expected: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add the decrypt interceptor to decipher message
+    gateway: gateway1
+    vcluster: teamA
+    name: decrypt
+    interceptor: {
+      "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+      "priority": 100,
+      "config": {
+        "topic": ".*",
+        "kmsConfig": {
+          "vault": {
+            "uri": "http://vault:8200",
+            "token": "vault-plaintext-root-token",
+            "version": 1
+          }
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 3
+    assertNames:
+      - field level encryption
+      - full payload level encryption
+      - decrypt
+
+  - type: CONSUME
+    title: Confirm message from `tom` is decrypted in customers-fields-level-encryption topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-fields-level-encryption
+    assertSize: 1
+    showHeaders: true
+    assertions:
+      - description: Confirm key is decrypted for `tom`
+        key:
+          operator: containsIgnoreCase
+          expected: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+
+  - type: CONSUME
+    title: Confirm message from `tom` is decrypted in customers-full-payload-level-encryption topic
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers-full-payload-level-encryption
+    assertSize: 1
+    showHeaders: true
+    assertions:
+      - description: Confirm key is decrypted for `tom`
+        key:
+          operator: containsIgnoreCase
+          expected: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, encryption in the Kafka world can be simple!

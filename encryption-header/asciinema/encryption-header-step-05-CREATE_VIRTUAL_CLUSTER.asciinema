@@ -1,0 +1,3 @@
+{"version": 2, "width": 140, "height": 20, "timestamp": 1711004915, "idle_time_limit": 2.0, "env": {"SHELL": "/usr/bin/zsh", "TERM": null}, "title": "step-05-CREATE_VIRTUAL_CLUSTER"}
+[0.00167, "o", "sh: 1: source: not found\r\nstep-05-CREATE_VIRTUAL_CLUSTER.sh: not found\r\n"]
+[0.053156, "o", "\r\nbootstrap.servers=localhost:6969\r\nsecurity.protocol=SASL_PLAINTEXT\r\nsasl.mechanism=PLAIN\r\nsasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxODc4MDkxNX0.ZLKgWDDgvZboUb_qhNNQndA7Dd8hjc3CH383WayiB90';\r\n\r\n"]

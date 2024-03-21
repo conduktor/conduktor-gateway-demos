@@ -1,0 +1,5 @@
+{"version": 2, "width": 140, "height": 20, "timestamp": 1711005394, "idle_time_limit": 2.0, "env": {"SHELL": "/usr/bin/zsh", "TERM": null}, "title": "step-11-PRODUCE"}
+[0.001734, "o", "sh: 1: source: not found\r\nstep-11-PRODUCE.sh: not found\r\n"]
+[0.785259, "o", "org.apache.kafka.common.KafkaException: No key separator found on line number 1: '{\"name\":\"tom\",\"username\":\"tom@conduktor.io\",\"password\":\"motorhead\",\"visa\":\"#abc123\",\"address\":\"Chancery lane, London\"}\\t{\"msg\": \"test msg\"}'\r\n"]
+[0.785294, "o", "\tat kafka.tools.ConsoleProducer$LineMessageReader.kafka$tools$ConsoleProducer$LineMessageReader$$parse(ConsoleProducer.scala:437)\r\n\tat kafka.tools.ConsoleProducer$LineMessageReader$$anon$3.hasNext(ConsoleProducer.scala:407)\r\n\tat kafka.tools.ConsoleProducer$.loopReader(ConsoleProducer.scala:90)\r\n\tat kafka.tools.ConsoleProducer$.main(ConsoleProducer.scala:99)\r\n"]
+[0.785305, "o", "\tat kafka.tools.ConsoleProducer.main(ConsoleProducer.scala)\r\n"]

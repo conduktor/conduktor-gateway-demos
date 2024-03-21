@@ -1,0 +1,4 @@
+{"version": 2, "width": 140, "height": 20, "timestamp": 1711005392, "idle_time_limit": 2.0, "env": {"SHELL": "/usr/bin/zsh", "TERM": null}, "title": "step-07-CREATE_TOPICS"}
+[0.001538, "o", "sh: 1: source: not found\r\nstep-07-CREATE_TOPICS.sh: not found\r\n"]
+[0.898299, "o", "Created topic customers-full-payload-level-encryption.\r\n"]
+[2.042168, "o", "Created topic customers-fields-level-encryption.\r\n"]

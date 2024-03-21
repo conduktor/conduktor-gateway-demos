@@ -1,0 +1,4 @@
+{"version": 2, "width": 140, "height": 20, "timestamp": 1711005397, "idle_time_limit": 2.0, "env": {"SHELL": "/usr/bin/zsh", "TERM": null}, "title": "step-13-CONSUME"}
+[0.001566, "o", "sh: 1: source: not found\r\nstep-13-CONSUME.sh: not found\r\n"]
+[10.494852, "o", "[2024-03-21 14:16:47,734] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)\r\norg.apache.kafka.common.errors.TimeoutException\r\n"]
+[10.994505, "o", "Processed a total of 0 messages\r\n"]

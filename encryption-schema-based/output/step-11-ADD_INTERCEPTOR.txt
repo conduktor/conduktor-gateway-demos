@@ -1,0 +1,13 @@
+{
+  "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+  "priority": 100,
+  "config": {
+    "topic": "customers",
+    "schemaRegistryConfig": {
+      "host": "http://schema-registry:8081"
+    }
+  }
+}
+{
+  "message": "decrypt is created"
+}

@@ -1,0 +1,4 @@
+jq: parse error: Invalid numeric literal at line 1, column 11
+[2024-03-21 14:15:43,629] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 1 messages
