@@ -1,0 +1,6 @@
+{"version": 2, "width": 140, "height": 20, "timestamp": 1711004918, "idle_time_limit": 2.0, "env": {"SHELL": "/usr/bin/zsh", "TERM": null}, "title": "step-08-ADD_INTERCEPTOR"}
+[0.00164, "o", "sh: 1: source: not found\r\nstep-08-ADD_INTERCEPTOR.sh: not found\r\n"]
+[0.00271, "o", "cat: step-08-field"]
+[0.002772, "o", ": No such file or directory\r\ncat: level: No such file or directory\r\ncat: encryption: No such file or directory\r\ncat: for: No such file or directory\r\ncat: header.json: No such file or directory\r\n"]
+[0.006435, "o", "curl: option --data: error encountered when reading a fil"]
+[0.00646, "o", "e\r\ncurl: try 'curl --help' for more information\r\n"]

@@ -1,0 +1,32 @@
+{
+  "sessionId": "session-id-tom",
+  "authenticationToken": "AAAABQAAAAEAAAA7AUM/orB6mpncj894CV7fq9tPM2qgiuknDdk/lfUoQMHp0DUBFaJJOJKK6s1FdNU7EItEUwfkCefwv+umksqSfAn/X4YoRg63H0WHJUAKya4CFXdEQDKYj0azV6g1NkA3abATDSb8ZflkfRTUntE5UwtVeGbUYXxDCmY=",
+  "deviceInformation": "AAAABQAAAAEAAABnAfkvixSNMJqw5fI/eV0DusQhjpUO0PnrIn4/xGaWpB78yo0pAh7qMUAZ8VCLEAXt9Lh9dOTC2juzwJsHS9Tb/BGaA5KFTOqbXsR59F+fozeGYSr7DiScbmCjfUkIBrVrCLzTmP+XA2rWdMPZ1RhtOJBFmMXJ9sha1c5KsuUgB151BN7szYG3XROmdzSBjrVMz4tqSp8hbQKjXQlDmYHZyixFOcw="
+}
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "AAAABQAAAAEAAAAzAVc196GA0eaQ8sYAomzeiPQv+gE9ROTzMdorA8Qvn6vsR0VEXE5t42IhLlw89tJbPNGvWtInEEEOJx/Xi7Wma/okNagEbwxRd8lxjKGYnwnS61H+rI4yzcB0V+zLtw4=",
+  "visa": "AAAABQAAAAEAAAA7AUpGublvbZ/vgLz7jjTcBeUA0m+how0uo8nzF+TqTVt99q1ODy44vJ7ObpRUVA0TyVY15oAXLQAf1l3MosJpDxjW5fDhJSIZkCpRuU8m+rwXJrWQO9dLBhrDC+D5XeHHMSGQOZAqyE6i",
+  "address": {
+    "location": "AAAABQAAAAEAAAA7AfkvixTy4QejoPMh9Vacz0cDNS1Bfk/m7ZJyYLFAxGjfaJXVpICEI3U/CkYnv4wfEUmTrX5kEAXUBOo1ssGl+KDTOgToPuCJ9GeDircExi71ZR2dsAoQIoHf/m1Mwkj3qr1LgoTbeWTSNb+L3C+kIeqZ",
+    "town": "London",
+    "country": "UK"
+  }
+}
+{
+  "sessionId": "session-id-laura",
+  "authenticationToken": "AAAABQAAAAEAAAA7AUM/orB6mpncj894CV7fq9tPM2qgiuknDdk/lfUoQMHp0DUBFaJJOJKK6s1FdNU7EItEUwfkCefwv+sVllZyjYNkZ38yXhbL7BRMnBPR9KbYP5aybbwjZV1BJKN6BN36ywz0T6nLy2wZ4fjMrdrAZuZGfxBvkBJqQ4smVw==",
+  "deviceInformation": "AAAABQAAAAEAAABnAfkvixSNMJqw5fI/eV0DusQhjpUO0PnrIn4/xGaWpB78yo0pAh7qMUAZ8VCLEAXt9Lh9dOTC2juzwJsHS9Tb/BGaA5KFTOqbXsR59F+fozeGYSr7DiScbmCjfUkIBrVrCLzTmP+XA5vYHu5bZopREHoYd/G/HD/08JsrTqgqJzM0Jwq75vkLXs1beZvpBX+cD8Dge9Tc/3XNCeh1jj4sXCK8hVQ9kA=="
+}
+{
+  "name": "laura",
+  "username": "laura@conduktor.io",
+  "password": "AAAABQAAAAEAAAAzAVc196GA0eaQ8sYAomzeiPQv+gE9ROTzMdorA8Qvn6vsR0VEXE5t42IhLlw89tJbPNGvJYI7vhs4IZH/wOpSSPhDtOyw4UpfWHfSl2FwOnJIBsPyLRWrFC2Q6rPJog==",
+  "visa": "AAAABQAAAAEAAAA7AUpGublvbZ/vgLz7jjTcBeUA0m+how0uo8nzF+TqTVt99q1ODy44vJ7ObpRUVA0TyVY15oAXLQAf1l383eYPMWXJ4QNIjPQIylaOaQyp+iJMPU14yg+gj3t1b3+gi5+7LBnGfqOhgu+KCdas",
+  "address": {
+    "location": "AAAABQAAAAEAAAA7AfkvixTy4QejoPMh9Vacz0cDNS1Bfk/m7ZJyYLFAxGjfaJXVpICEI3U/CkYnv4wfEUmTrX5kEAXUBOq9IJ+2QddPB1gdm4SQPMkdcvgcaJQbEPA6KXMvzQ2xZBjNQFxz1AzD1CjvmSOAOtTXvf8Mr9JDSR3gOg==",
+    "town": "Dubai",
+    "country": "UAE"
+  }
+}

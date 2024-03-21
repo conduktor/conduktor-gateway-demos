@@ -1,0 +1,8 @@
+org.apache.kafka.common.KafkaException: No header key separator found in pair ' London"}' on line number 1
+	at kafka.tools.ConsoleProducer$LineMessageReader.$anonfun$splitHeaders$1(ConsoleProducer.scala:445)
+	at scala.collection.ArrayOps$.map$extension(ArrayOps.scala:932)
+	at kafka.tools.ConsoleProducer$LineMessageReader.kafka$tools$ConsoleProducer$LineMessageReader$$splitHeaders(ConsoleProducer.scala:443)
+	at kafka.tools.ConsoleProducer$LineMessageReader$$anon$3.hasNext(ConsoleProducer.scala:419)
+	at kafka.tools.ConsoleProducer$.loopReader(ConsoleProducer.scala:90)
+	at kafka.tools.ConsoleProducer$.main(ConsoleProducer.scala:99)
+	at kafka.tools.ConsoleProducer.main(ConsoleProducer.scala)

@@ -1,0 +1,179 @@
+title: SNI Routing
+ciTags:
+  - NON_REGRESSION
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:29092,localhost:29093,localhost:29094
+  gateway1:
+    docker:
+      image: harbor.cdkt.dev/conduktor/conduktor-gateway
+      environment:
+        GATEWAY_SECURITY_PROTOCOL: SSL
+        GATEWAY_SSL_KEY_STORE_PATH: /config/keystore.jks
+        GATEWAY_SSL_KEY_STORE_PASSWORD: 123456
+        GATEWAY_SSL_KEY_PASSWORD: 123456
+        GATEWAY_SSL_KEY_TYPE: pkcs12
+        GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+        GATEWAY_ADVERTISED_HOST: gateway-sni.conduktor.local
+        GATEWAY_ADVERTISED_HOST_PREFIX: broker-sni-gateway1
+        GATEWAY_ROUTING_MECHANISM: host
+        # Might help to debug SNI
+        # LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL: DEBUG
+      volumes:
+        - type: bind
+          source: "."
+          target: /config
+          read_only: true
+      networks:
+        default:
+          aliases:
+            - broker-sni-gateway1main1.gateway-sni.conduktor.local
+            - broker-sni-gateway1main2.gateway-sni.conduktor.local
+            - broker-sni-gateway1main3.gateway-sni.conduktor.local
+
+  gateway2:
+    docker:
+      image: harbor.cdkt.dev/conduktor/conduktor-gateway
+      environment:
+        GATEWAY_SECURITY_PROTOCOL: SSL
+        GATEWAY_SSL_KEY_STORE_PATH: /config/keystore.jks
+        GATEWAY_SSL_KEY_STORE_PASSWORD: 123456
+        GATEWAY_SSL_KEY_PASSWORD: 123456
+        GATEWAY_SSL_KEY_TYPE: jks
+        GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+        GATEWAY_ADVERTISED_HOST: gateway-sni.conduktor.local
+        GATEWAY_ADVERTISED_HOST_PREFIX: broker-sni-gateway2
+        GATEWAY_ROUTING_MECHANISM: host
+        # Might help to debug SNI
+        # LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL: DEBUG
+      volumes:
+        - type: bind
+          source: "."
+          target: /config
+          read_only: true
+      networks:
+        default:
+          aliases:
+            - broker-sni-gateway2main1.gateway-sni.conduktor.local
+            - broker-sni-gateway2main2.gateway-sni.conduktor.local
+            - broker-sni-gateway2main3.gateway-sni.conduktor.local
+
+actions:
+  - type: INTRODUCTION
+    title: SNI Routing
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: SH
+    showOutput: true
+    script: |
+
+      rm *jks *key *p12 *crt
+
+      openssl req \
+        -x509 \
+        -newkey rsa:4096 \
+        -sha256 \
+        -days 3560 \
+        -nodes \
+        -keyout san.key \
+        -out san.crt \
+        -subj '/CN=username' \
+        -extensions san \
+        -config openssl.config
+
+        openssl pkcs12 \
+          -export \
+          -in san.crt \
+          -inkey san.key \
+          -name brokers \
+          -out san.p12 \
+          -password "pass:123456"
+
+        keytool \
+          -noprompt \
+          -alias brokers \
+          -importkeystore \
+          -deststorepass 123456 \
+          -destkeystore keystore.jks \
+          -srckeystore san.p12 \
+          -srcstoretype PKCS12 \
+          -srcstorepass 123456
+
+        keytool \
+          -noprompt \
+          -import \
+          -alias brokers \
+          -file san.crt \
+          -keypass 123456 \
+          -destkeystore truststore.jks \
+          -storepass 123456
+
+      echo """
+      security.protocol=SSL
+      ssl.truststore.location=/clientConfig/truststore.jks
+      ssl.truststore.password=123456
+      """ > client.config
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: SH
+    title: Create a topic
+    showOutput: true
+    script: |
+      docker compose exec kafka-client \
+        kafka-topics \
+          --bootstrap-server broker-sni-gateway1main1.gateway-sni.conduktor.local:6969 \
+          --create \
+          --replication-factor 3 \
+          --partitions 1 \
+          --topic clientTopic \
+          --command-config /clientConfig/client.config
+    assertOutputContains:
+      - "Created topic clientTopic."
+
+  - type: SH
+    title: Produce a record to clientTopic using gateway1
+    script: |
+      echo "Hello world 1" | docker compose exec -i kafka-client \
+        kafka-console-producer \
+          --bootstrap-server broker-sni-gateway1main1.gateway-sni.conduktor.local:6969 \
+          --topic clientTopic \
+          --producer.config /clientConfig/client.config
+  - type: SH
+    title: Produce a record to clientTopic using gateway2
+    script: |
+      echo "Hello world 2" | docker compose exec -i kafka-client \
+        kafka-console-producer \
+          --bootstrap-server broker-sni-gateway2main2.gateway-sni.conduktor.local:6969 \
+          --topic clientTopic \
+          --producer.config /clientConfig/client.config
+
+  - type: SH
+    title: Consume records from clientTopic
+    showOutput: true
+    script: |
+      docker compose exec kafka-client \
+        kafka-console-consumer \
+          --bootstrap-server broker-sni-gateway1main3.gateway-sni.conduktor.local:6969 \
+          --topic clientTopic \
+          --from-beginning \
+          --max-messages 2 \
+          --consumer.config /clientConfig/client.config
+    assertOutputContains:
+      - "Hello world 1"
+      - "Hello world 2"
+
+  - type: DOCKER
+    command: docker compose down --volumes

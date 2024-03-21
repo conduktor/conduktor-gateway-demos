@@ -1,0 +1,4 @@
+{"version": 2, "width": 140, "height": 20, "timestamp": 1711006075, "idle_time_limit": 2.0, "env": {"SHELL": "/usr/bin/zsh", "TERM": null}, "title": "step-07-SH"}
+[0.001746, "o", "sh: 1: source: not found\r\n"]
+[0.002048, "o", "step-07-SH.sh: not found\r\n"]
+[0.040282, "o", "the input device is not a TTY\r\n"]

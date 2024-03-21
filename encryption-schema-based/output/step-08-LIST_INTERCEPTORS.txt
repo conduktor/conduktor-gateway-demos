@@ -1,0 +1,32 @@
+{
+  "interceptors": [
+    {
+      "name": "encrypt",
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptSchemaBasedPlugin",
+      "priority": 100,
+      "timeoutMs": 9223372036854775807,
+      "config": {
+        "kmsConfig": {
+          "vault": {
+            "uri": "http://vault:8200",
+            "token": "vault-plaintext-root-token",
+            "version": 1
+          }
+        },
+        "schemaRegistryConfig": {
+          "host": "http://schema-registry:8081"
+        },
+        "defaultKeySecretId": "myDefaultKeySecret",
+        "defaultAlgorithm": {
+          "type": "TINK/AES128_EAX",
+          "kms": "IN_MEMORY"
+        },
+        "tags": [
+          "PII",
+          "ENCRYPTION"
+        ],
+        "namespace": "conduktor."
+      }
+    }
+  ]
+}
