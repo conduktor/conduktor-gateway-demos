@@ -1,4 +1,7 @@
 title: Chaos Simulate Message Corruption
+tag: chaos
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -39,10 +42,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -64,7 +63,7 @@ actions:
         "rateInPercent": 100
       }
     markdown: |
-      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
+      Let's create the interceptor against the virtual cluster teamA, instructing Conduktor Gateway to simulate message corruption by appending random bytes to messages produced.
 
   - type: LIST_INTERCEPTORS
     gateway: gateway1
@@ -86,6 +85,7 @@ actions:
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: with-random-bytes
+    pipeCommand: ""
     assertSize: 1
     assertions:
       - value:
@@ -93,7 +93,10 @@ actions:
           expected: '{"message": "hello world"}'
     markdown: |
       This should produce output similar to this:
+      
+      ```
       {"message": "hello world"}T[�   �X�{�
+      ```
 
   - type: DOCKER
     command: docker compose down --volumes

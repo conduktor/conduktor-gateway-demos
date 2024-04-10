@@ -1,4 +1,7 @@
 title: Chaos Simulate Broken Brokers
+tag: chaos
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -39,10 +42,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -66,7 +65,7 @@ actions:
         }
       }
     markdown: |
-      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues.
+      Let's create the interceptor against the virtual cluster teamA, instructing Conduktor Gateway to inject failures for some Produce requests that are consistent with broker side issues.
 
   - type: LIST_INTERCEPTORS
     gateway: gateway1
@@ -86,14 +85,17 @@ actions:
         --record-size 10 \
         --throughput 1 \
         --num-records 10 \
+        --producer-prop retries=5 \
         --topic my-topic
     assertOutputContains:
       - "Error: CORRUPT_MESSAGE"
     markdown: |
       This should produce output similar to this:
-      [2023-12-19 14:08:09,150] WARN [Producer clientId=producer-1] Got error produce response with correlation id 3 on topic-partition my-topic-0, retrying (2147483646 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
-      [2023-12-19 14:08:09,252] WARN [Producer clientId=producer-1] Got error produce response with correlation id 4 on topic-partition my-topic-0, retrying (2147483645 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
-
+      
+      ```
+      [2023-12-19 14:08:09,150] WARN [Producer clientId=producer-1] Got error produce response with correlation id 3 on topic-partition my-topic-0, retrying (1 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+      [2023-12-19 14:08:09,252] WARN [Producer clientId=producer-1] Got error produce response with correlation id 4 on topic-partition my-topic-0, retrying (1 attempts left). Error: CORRUPT_MESSAGE (org.apache.kafka.clients.producer.internals.Sender)
+      ```
 
   - type: REMOVE_INTERCEPTORS
     gateway: gateway1
@@ -101,7 +103,7 @@ actions:
     names:
       - simulate-broken-brokers
     markdown: |
-      Let's delete the interceptor `simulate-broken-brokers` so we can stop chaos injection
+      Let's delete the interceptor simulate-broken-brokers so we can stop chaos injection
 
   - type: LIST_INTERCEPTORS
     gateway: gateway1

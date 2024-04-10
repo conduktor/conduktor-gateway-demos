@@ -1,4 +1,7 @@
 title: SQL Based Data Quality Producer
+tag: data-quality
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -36,10 +39,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -53,9 +52,9 @@ actions:
       Let's create an interceptor to ensure the data produced is valid.
     gateway: gateway1
     vcluster: teamA
-    name: myDataQualityProducer
+    name: cars-quality
     interceptor:
-      "pluginClass": "io.conduktor.gateway.interceptor.DataQualityProducerPlugin"
+      "pluginClass": "io.conduktor.gateway.interceptor.safeguard.DataQualityProducerPlugin"
       "priority": "100"
       "config": {
         "statement": "SELECT * FROM cars WHERE color = 'red' and record.key.year > 2020",
@@ -64,6 +63,20 @@ actions:
       }
 
   - type: PRODUCE
+    title: Producing an invalid car
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: cars
+    messages:
+      - value: '{"type":"SUV","price":2000,"color":"blue"}'
+    assertError: true
+    assertErrorMessages:
+      - "Request parameters do not satisfy the configured policy: Data quality policy is violated."
+    markdown: |
+      Produce invalid record to the cars topic (record is not produced because color is not red)
+
+  - type: PRODUCE
+    title: Producing an invalid car based on key
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: cars
@@ -77,35 +90,16 @@ actions:
       Produce invalid record to the cars topic (record is not produced because year is not > 2020)
 
   - type: PRODUCE
-    kafka: teamA
-    kafkaConfig: teamA-sa.properties
-    topic: cars
-    messages:
-      - value: '{"type":"SUV","price":2000,"color":"blue"}'
-        key: '{"year":2023,"make":"Mercedes"}'
-    assertError: true
-    assertErrorMessages:
-      - "Request parameters do not satisfy the configured policy: Data quality policy is violated."
-    markdown: |
-      Produce invalid record to the cars topic (record is not produced because color is not red)
-
-  - type: AUDITLOG
-    title: Check in the audit log that message was denied
-    kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.DataQualityProducerInterceptor")'
-    assertions:
-      - description: Confirm audit has been created
-        value:
-          operator: containsIgnoreCase
-          expected: "Data quality policy is violated."
-
-  - type: PRODUCE
+    title: Producing a valid car
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: cars
     messages:
       - value: '{"type":"Trucks","price":2500,"color":"red"}'
         key: '{"year":2023,"make":"Vinfast"}'
+        headers:
+          "X-HEADER-1": "value1"
+          "X-HEADER-2": "value2"
     markdown: |
       Produce valid record to the cars topic
 
@@ -114,6 +108,8 @@ actions:
     kafkaConfig: teamA-sa.properties
     topic: cars
     maxMessages: 1
+    showKey: true
+    showHeaders: true
     assertSize: 1
     assertions:
       - description: Confirm Trucks
@@ -121,11 +117,14 @@ actions:
           operator: containsIgnoreCase
           expected: 'Trucks'
     markdown: |
-      Let's confirm just one record is there by consuming from the `cars` topic.
+      Let's confirm just one record is there by consuming from the cars topic.
 
   - type: CONSUME
+    title: Confirm all invalid cars are in the dead letter topic
     kafka: kafka1
     topic: dead-letter-topic
+    showKey: true
+    showHeaders: true
     maxMessages: 2
     assertSize: 2
     assertions:
@@ -133,9 +132,38 @@ actions:
         value:
           operator: containsIgnoreCase
           expected: 'Sports'
+        headers:
+          "X-ERROR-MSG":
+            operator: containsIgnoreCase
+            expected: "Message does not match the statement [SELECT * FROM cars WHERE color = 'red' and record.key.year > 2020]"
+      # 2.6.0+
+      #          "X-TOPIC":
+      #            operator: containsIgnoreCase
+      #            expected: "cars"
       - description: Confirm Sport is there because it's not red
         value:
           operator: containsIgnoreCase
           expected: 'SUV'
+        headers:
+          "X-ERROR-MSG":
+            operator: containsIgnoreCase
+            expected: "Message does not match the statement [SELECT * FROM cars WHERE color = 'red' and record.key.year > 2020]"
+    # 2.6.0+
+    #          "X-TOPIC":
+    #            operator: containsIgnoreCase
+    #            expected: "cars"
     markdown: |
       Let's confirm the invalid records are in the dead letter topic.
+
+  - type: AUDITLOG
+    title: Check in the audit log that messages denial were captured
+    kafka: kafka1
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.DataQualityProducerInterceptor")'
+    assertions:
+      - description: Confirm audit has been created
+        value:
+          operator: containsIgnoreCase
+          expected: "Data quality policy is violated."
+
+  - type: DOCKER
+    command: docker compose down --volumes

@@ -1,11 +1,6 @@
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config aclCluster-consumer.properties \
-    --topic restricted-topic \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --property print.headers=true 
-NO_HEADERS	{"msg":"test message"}
-[2024-01-22 17:24:37,353] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+[2024-04-09 23:48:46,020] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
+{
+  "msg": "test message"
+}

@@ -1,3 +1,4 @@
+#!/bin/bash
 cat step-11-red-cars.json | jq
 
 curl \

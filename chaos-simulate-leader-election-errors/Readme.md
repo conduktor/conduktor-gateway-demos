@@ -6,16 +6,20 @@ This demo will run you through some of these use cases step-by-step.
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/oNTg85kwLRuDXzNZO90kHGaPp.svg)](https://asciinema.org/a/oNTg85kwLRuDXzNZO90kHGaPp)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/bKSinfj8PVyHKTZpLIHgXnOSs.svg)](https://asciinema.org/a/bKSinfj8PVyHKTZpLIHgXnOSs)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -27,7 +31,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -145,7 +149,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -171,7 +175,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -197,25 +201,18 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null
-```
-
-</details>
-
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          30 seconds ago   Up 17 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          30 seconds ago   Up 17 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            30 seconds ago   Up 23 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            30 seconds ago   Up 23 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            30 seconds ago   Up 23 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   30 seconds ago   Up 17 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         30 seconds ago   Up 29 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
 ```
 
 </details>
@@ -227,43 +224,43 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network chaos-simulate-leader-election-errors_default  Creating
  Network chaos-simulate-leader-election-errors_default  Created
+ Container kafka-client  Creating
  Container zookeeper  Creating
+ Container kafka-client  Created
  Container zookeeper  Created
  Container kafka1  Creating
  Container kafka2  Creating
  Container kafka3  Creating
- Container kafka1  Created
  Container kafka2  Created
  Container kafka3  Created
- Container gateway2  Creating
- Container schema-registry  Creating
+ Container kafka1  Created
  Container gateway1  Creating
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- Container gateway2  Created
+ Container schema-registry  Creating
+ Container gateway2  Creating
  Container gateway1  Created
+ Container gateway2  Created
  Container schema-registry  Created
  Container zookeeper  Starting
+ Container kafka-client  Starting
+ Container kafka-client  Started
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
@@ -271,62 +268,74 @@ docker compose up --detach --wait
  Container zookeeper  Healthy
  Container kafka2  Starting
  Container zookeeper  Healthy
- Container kafka3  Starting
- Container zookeeper  Healthy
  Container kafka1  Starting
+ Container zookeeper  Healthy
+ Container kafka3  Starting
+ Container kafka3  Started
  Container kafka1  Started
  Container kafka2  Started
- Container kafka3  Started
- Container kafka3  Waiting
+ Container kafka1  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
+ Container kafka3  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
- Container kafka1  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Healthy
  Container kafka3  Healthy
- Container kafka2  Healthy
  Container kafka1  Healthy
  Container kafka2  Healthy
  Container kafka2  Healthy
  Container kafka1  Healthy
- Container gateway2  Starting
- Container kafka3  Healthy
  Container schema-registry  Starting
  Container kafka1  Healthy
+ Container gateway2  Starting
+ Container kafka2  Healthy
+ Container kafka3  Healthy
  Container gateway1  Starting
- Container schema-registry  Started
  Container gateway1  Started
+ Container schema-registry  Started
  Container gateway2  Started
- Container zookeeper  Waiting
- Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container schema-registry  Waiting
  Container gateway1  Waiting
  Container gateway2  Waiting
+ Container kafka-client  Waiting
+ Container zookeeper  Waiting
+ Container kafka1  Waiting
  Container kafka3  Healthy
- Container kafka1  Healthy
- Container zookeeper  Healthy
+ Container kafka-client  Healthy
  Container kafka2  Healthy
- Container schema-registry  Healthy
+ Container zookeeper  Healthy
+ Container kafka1  Healthy
  Container gateway1  Healthy
  Container gateway2  Healthy
+ Container schema-registry  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/iR6PXI6Fcj7YkTYT9EBFi3Ykt.svg)](https://asciinema.org/a/iR6PXI6Fcj7YkTYT9EBFi3Ykt)
+
+</details>
+
+## Creating virtual cluster teamA
+
+Creating virtual cluster `teamA` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `teamA`
-
-Creating virtual cluster `teamA` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster teamA with service account sa
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
     --header 'Content-Type: application/json' \
@@ -334,35 +343,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
-""" > teamA-sa.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `teamA`](images/step-05-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -370,38 +351,45 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
 """ > teamA-sa.properties
 
-```
-
-</details>
-      
-
-
-### Review the kafka properties to connect to `teamA`
-
-Review the kafka properties to connect to `teamA`
-
-```sh
+# Review file
 cat teamA-sa.properties
 ```
 
-<details on>
-  <summary>File content</summary>
 
-```properties
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxMzcxOTA3Mn0.NT4L2ufPjDStjy7M2Gy5QMF_UPf9IaH7qMbcB_FyhKA';
-bootstrap.servers=localhost:6969
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ2OTgyOX0.6aZc1yzaw94jwEtZYnubMfeVmKKjuZOmKowjOlvNlrg';
+
+
 ```
 
 </details>
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/0WKiPl4bzdrOe6NoVGk7huBWY.svg)](https://asciinema.org/a/0WKiPl4bzdrOe6NoVGk7huBWY)
 
-## Creating topic `my-topic` on `teamA`
+</details>
 
-Creating topic `my-topic` on `teamA`
+## Creating topic my-topic on teamA
+
+Creating on `teamA`:
+
 * Topic `my-topic` with partitions:1 and replication-factor:1
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-topics \
     --bootstrap-server localhost:6969 \
@@ -412,38 +400,28 @@ kafka-topics \
     --topic my-topic
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `my-topic` on `teamA`](images/step-07-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic my-topic
+```
 Created topic my-topic.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/JbeVf8cxGx9jthnKZvVYOs2Oi.svg)](https://asciinema.org/a/JbeVf8cxGx9jthnKZvVYOs2Oi)
 
-## Adding interceptor `simulate-leader-elections-errors`
+</details>
 
-Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
+## Adding interceptor simulate-leader-elections-errors
 
+Let's create the interceptor against the virtual cluster teamA, instructing Conduktor Gateway to simulate a leader election on partitions being produced to through Conduktor Gateway.
 
 Creating the interceptor named `simulate-leader-elections-errors` of the plugin `io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin` using the following payload
 
@@ -459,31 +437,29 @@ Creating the interceptor named `simulate-leader-elections-errors` of the plugin 
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-08-simulate-leader-elections-errors.json | jq
+cat step-07-simulate-leader-elections-errors.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/simulate-leader-elections-errors" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-08-simulate-leader-elections-errors.json | jq
+    --data @step-07-simulate-leader-elections-errors.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `simulate-leader-elections-errors`](images/step-08-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-08-simulate-leader-elections-errors.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
   "priority": 100,
@@ -491,13 +467,6 @@ cat step-08-simulate-leader-elections-errors.json | jq
     "rateInPercent": 50
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/simulate-leader-elections-errors" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-08-simulate-leader-elections-errors.json | jq
 {
   "message": "simulate-leader-elections-errors is created"
 }
@@ -505,12 +474,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/tra00vC5BMIIfvZhGyVFfGzNp.svg)](https://asciinema.org/a/tra00vC5BMIIfvZhGyVFfGzNp)
 
-## Listing interceptors for `teamA`
+</details>
+
+## Listing interceptors for teamA
 
 Listing interceptors on `gateway1` for virtual cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 curl \
@@ -520,30 +498,18 @@ curl \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing interceptors for `teamA`](images/step-09-LIST_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request GET 'http://localhost:8888/admin/interceptors/v1/vcluster/teamA' \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent | jq
+```json
 {
   "interceptors": [
     {
       "name": "simulate-leader-elections-errors",
       "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateLeaderElectionsErrorsPlugin",
-      "apiKey": null,
       "priority": 100,
       "timeoutMs": 9223372036854775807,
       "config": {
@@ -556,14 +522,26 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/sQY1i0K7FFAlV9blX5hCyU89k.svg)](https://asciinema.org/a/sQY1i0K7FFAlV9blX5hCyU89k)
+
+</details>
 
 ## Let's produce some records to our created topic.
 
 This should produce output similar to this:
+
+```
 [2023-12-18 12:58:57,041] WARN [Producer clientId=producer-1] Got error produce response with correlation id 25 on topic-partition my-topic-0, retrying (2147483646 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
 [2023-12-18 12:58:57,041] WARN [Producer clientId=producer-1] Received invalid metadata error in produce request on partition my-topic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
+```
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-producer-perf-test \
@@ -571,40 +549,36 @@ kafka-producer-perf-test \
   --producer.config teamA-sa.properties \
   --record-size 10 \
   --throughput 1 \
+  --producer-prop retries=5 \
   --num-records 10 \
   --topic my-topic
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's produce some records to our created topic.](images/step-10-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-producer-perf-test \
-  --producer-props bootstrap.servers=localhost:6969 \
-  --producer.config teamA-sa.properties \
-  --record-size 10 \
-  --throughput 1 \
-  --num-records 10 \
-  --topic my-topic
-7 records sent, 1,3 records/sec (0,00 MB/sec), 69,4 ms avg latency, 281,0 ms max latency.
-[2024-01-22 18:05:24,117] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 11 on topic-partition my-topic-0, retrying (2147483646 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
-[2024-01-22 18:05:24,118] WARN [Producer clientId=perf-producer-client] Received invalid metadata error in produce request on partition my-topic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
-10 records sent, 1,081198 records/sec (0,00 MB/sec), 70,10 ms avg latency, 281,00 ms max latency, 33 ms 50th, 281 ms 95th, 281 ms 99th, 281 ms 99.9th.
+```
+[2024-04-10 00:17:16,209] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 8 on topic-partition my-topic-0, retrying (4 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
+[2024-04-10 00:17:16,224] WARN [Producer clientId=perf-producer-client] Received invalid metadata error in produce request on partition my-topic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
+7 records sent, 1,3 records/sec (0,00 MB/sec), 84,6 ms avg latency, 244,0 ms max latency.
+[2024-04-10 00:17:19,115] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 13 on topic-partition my-topic-0, retrying (4 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
+[2024-04-10 00:17:19,115] WARN [Producer clientId=perf-producer-client] Received invalid metadata error in produce request on partition my-topic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
+[2024-04-10 00:17:19,241] WARN [Producer clientId=perf-producer-client] Got error produce response with correlation id 15 on topic-partition my-topic-0, retrying (3 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
+[2024-04-10 00:17:19,241] WARN [Producer clientId=perf-producer-client] Received invalid metadata error in produce request on partition my-topic-0 due to org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader. For requests intended for any replica, this error indicates that the broker is not a replica of the topic partition.. Going to request metadata update now (org.apache.kafka.clients.producer.internals.Sender)
+10 records sent, 1,080380 records/sec (0,00 MB/sec), 99,00 ms avg latency, 369,00 ms max latency, 36 ms 50th, 369 ms 95th, 369 ms 99th, 369 ms 99.9th.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/lwvgvjNSSfvNoI3Hx7XUkkYCT.svg)](https://asciinema.org/a/lwvgvjNSSfvNoI3Hx7XUkkYCT)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -612,48 +586,50 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-11-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
+```
+ Container kafka-client  Stopping
+ Container gateway2  Stopping
  Container schema-registry  Stopping
  Container gateway1  Stopping
- Container gateway2  Stopping
- Container gateway2  Stopped
- Container gateway2  Removing
- Container gateway2  Removed
  Container gateway1  Stopped
  Container gateway1  Removing
  Container gateway1  Removed
+ Container gateway2  Stopped
+ Container gateway2  Removing
+ Container gateway2  Removed
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
  Container kafka2  Stopping
  Container kafka1  Stopping
  Container kafka3  Stopping
- Container kafka1  Stopped
- Container kafka1  Removing
- Container kafka1  Removed
- Container kafka2  Stopped
- Container kafka2  Removing
- Container kafka2  Removed
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka2  Stopped
+ Container kafka2  Removing
+ Container kafka2  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -664,8 +640,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/RTOO3pNj5aI5yBU3lUjg1SfC6.svg)](https://asciinema.org/a/RTOO3pNj5aI5yBU3lUjg1SfC6)
+
+</details>
 
 # Conclusion
 

@@ -1,4 +1,7 @@
-title: ACLs with GATEWAY_SECURITY
+title: ACLs with GATEWAY_SECURITY mode
+tag: security
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -65,7 +68,7 @@ actions:
     }
 
   - type: CREATE_TOPICS
-    title: try to create a topic as a consumer
+    title: Try to create a topic as a consumer
     kafka: aclCluster
     kafkaConfig: aclCluster-consumer.properties
     topics:
@@ -85,7 +88,7 @@ actions:
         partitions: 1
 
   - type: LIST_TOPICS
-    title: List topics with consumer-sa not throw an error, but also no topic
+    title: List topics with aclCluster-sa does not throw error but gets no topic
     kafka: aclCluster
     kafkaConfig: aclCluster-consumer.properties
     assertSize: 0
@@ -97,16 +100,17 @@ actions:
     showOutput: true
     script: |
       kafka-acls \
-        --bootstrap-server ${BOOTSTRAP_SERVERS} \
-        --command-config ${KAFKA_CONFIG_FILE} \
-        --add \
-        --allow-principal User:consumer \
-        --operation read \
-        --topic restricted-topic
+          --bootstrap-server ${BOOTSTRAP_SERVERS} \
+          --command-config ${KAFKA_CONFIG_FILE} \
+          --add \
+          --allow-principal User:consumer \
+          --operation read \
+          --topic restricted-topic
 
   - type: CONSUME
     kafka: kafka1
-    topic: _acls
+    topic: _conduktor_gateway_acls
+    showKey: true
     assertSize: 1
     assertions:
       - description: Assert expected message
@@ -121,13 +125,13 @@ actions:
     showOutput: true
     script: |
       kafka-acls \
-        --bootstrap-server ${BOOTSTRAP_SERVERS} \
-        --command-config ${KAFKA_CONFIG_FILE} \
-        --add \
-        --allow-principal User:consumer \
-        --operation read \
-        --group console-consumer \
-        --resource-pattern-type prefixed
+          --bootstrap-server ${BOOTSTRAP_SERVERS} \
+          --command-config ${KAFKA_CONFIG_FILE} \
+          --add \
+          --allow-principal User:consumer \
+          --operation read \
+          --group console-consumer \
+          --resource-pattern-type prefixed
       
   - type: LIST_TOPICS
     kafka: aclCluster
@@ -142,12 +146,12 @@ actions:
     showOutput: true
     script: |
       kafka-acls \
-        --bootstrap-server ${BOOTSTRAP_SERVERS} \
-        --command-config ${KAFKA_CONFIG_FILE} \
-        --add \
-        --allow-principal User:producer \
-        --operation write \
-        --topic restricted-topic 
+          --bootstrap-server ${BOOTSTRAP_SERVERS} \
+          --command-config ${KAFKA_CONFIG_FILE} \
+          --add \
+          --allow-principal User:producer \
+          --operation write \
+          --topic restricted-topic 
       
   - type: LIST_TOPICS
     kafka: aclCluster
@@ -171,7 +175,6 @@ actions:
     properties:
       group.id: console-consumer-xxx
     assertSize: 1
-    showHeaders: true
     assertions:
       - description: Assert expected message
         value:

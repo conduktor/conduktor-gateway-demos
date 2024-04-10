@@ -1,24 +1,17 @@
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic customers \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-[2024-01-22 23:26:28,485] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+[2024-04-10 02:01:59,514] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
-  "name": "florent",
-  "username": "florent@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MToxQ2tDTlJ3SUl3MVNtV043THUxMFFWdmVVZFR1MERoMThTdEpHUjFRWTVGRzBtdUhhZ1dnUkdSa3EweGtvdz09WgxcihDR4uLBv8VI0aHah9cyglAia8S/NnqMlB6OazIz8bRyp81cOUQ3vA==",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTpFRG03S3RObzcrdko1RGZGQnpVSG9Wb1JLY0hnWWZsekdYeldmRjg0SU5uQm05OStoV3BsNkI4SWw3QmdxUT09U5K307Vwb0xKEu6BG934BOZ3rGgy0NEB1sbwMDwbm/2B6Z4lh3rs1tltrK4=",
+  "name": "laura",
+  "username": "laura@conduktor.io",
+  "password": "AAAABQAAAAEAAABJdmF1bHQ6djE6bzdFdmVxSEEvVVBPSHdjSi93WkZ0NUFMMmRORC9aMEhpc1dncmtabkZwVGlsUGl2ekFJTGYyNGpwN2JrU2c9PS3I5hL2w7YKmTgTBvfRFrg7puvYvXz4bspWKwmpD3ZdadzVI5p9EX9vzUw=",
+  "visa": "AAAABQAAAAEAAABJdmF1bHQ6djE6bzdFdmVxSEEvVVBPSHdjSi93WkZ0NUFMMmRORC9aMEhpc1dncmtabkZwVGlsUGl2ekFJTGYyNGpwN2JrU2c9PUl3AIAtkm7IC09QX/SFMlvVYUnQFxIkULguQpH4HaWiXeXaJpDEy3QYShXp",
   "address": "Dubai, UAE"
 }
 {
   "name": "tom",
   "username": "tom@conduktor.io",
-  "password": "AAAABQAAAEl2YXVsdDp2MTpuU0owTEJBK0h3cDZlMW9qejVIckJ0LzRPNTNLbVVtMjFHT2JzNEs4dy9VbTVFK3dwVmo5eGt1SU5JdU82UT09N5hfEuOngPqiOxH/QdqEoL/bYVLz3an5Q6yFFsS0xl9nTmoYmBjgVDvmpHc=",
-  "visa": "AAAABQAAAEl2YXVsdDp2MTpaZHY5MjI1bTNWNzQ3S3hFY3h1WWszbmJLbnZ4VU15VFpuK1pVY1J0K09yUmJQKzBjUnNwdklYaVJmOXlsZz09USpDKkPzsn11e6Yvyy2aRAoZxjMvnT1Ob8AOli4SRLi/CAR0tLebNQ63",
+  "password": "AAAABQAAAAEAAABJdmF1bHQ6djE6UGN2ZWdYSEY0OXdOck1ZWGZwRmtDZUxaYzYwMDlyUlVQSENHSmJlTHJWOGRwamVEL2ZRTkdUQVpLNnk2MWc9PfJ/X2/EtJ0QpAcyJjeZJq4UWEwNtAOsmRBMICAZ7Co6cqnR8BMZsbNGMtSm",
+  "visa": "AAAABQAAAAEAAABJdmF1bHQ6djE6UGN2ZWdYSEY0OXdOck1ZWGZwRmtDZUxaYzYwMDlyUlVQSENHSmJlTHJWOGRwamVEL2ZRTkdUQVpLNnk2MWc9PYxnBe+5gmjwiO23f8fLmiUGtW395i7IDhLHBz/Jy+FSOs8Id7TquxcZog==",
   "address": "Chancery lane, London"
 }

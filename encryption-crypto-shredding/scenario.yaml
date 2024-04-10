@@ -1,4 +1,7 @@
-title: Crypto Shredding
+title: Encryption with Crypto Shredding
+tag: encryption
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -98,18 +101,12 @@ actions:
           {
             "fieldName": "password",
             "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
-            "algorithm": {
-              "type": "AES_GCM",
-              "kms": "VAULT"
-            }
+            "algorithm": "AES_GCM"
           },
           {
             "fieldName": "visa",
             "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
-            "algorithm": {
-              "type": "AES_GCM",
-              "kms": "VAULT"
-            }
+            "algorithm": "AES_GCM"
           }
         ]
       }
@@ -123,34 +120,34 @@ actions:
       - crypto-shredding-encrypt
 
   - type: PRODUCE
-    title: Let's produce sample data for `tom` and `florent`
+    title: Let's produce sample data for tom and laura
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers-shredding
     messages:
-      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
       - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
 
   - type: CONSUME
-    title: Let's consume the message, and confirm `tom` and `florent` are encrypted
+    title: Let's consume the message, and confirm tom and laura are encrypted
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers-shredding
     assertSize: 2
     assertions:
-      - description: Confirm password is encrypted for `tom`
+      - description: Confirm password is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: 'motorhead'
-      - description: Confirm visa is encrypted for `tom`
+      - description: Confirm visa is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: '#abc123'
-      - description: Confirm password is encrypted for `florent`
+      - description: Confirm password is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: 'kitesurf'
-      - description: Confirm visa is encrypted for `florent`
+      - description: Confirm visa is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: '#888999XZ'
@@ -167,6 +164,7 @@ actions:
       "config": {
         "topic": "customers-shredding",
         "kmsConfig": {
+          "keyTtlMs": 200,
           "vault": {
             "uri": "http://vault:8200",
             "token": "vault-plaintext-root-token",
@@ -185,25 +183,25 @@ actions:
       - crypto-shredding-decrypt
 
   - type: CONSUME
-    title: Confirm message from `tom` and `florent` are encrypted
+    title: Confirm message from tom and laura are encrypted
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers-shredding
     assertSize: 2
     assertions:
-      - description: Confirm password is decrypted for `tom`
+      - description: Confirm password is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: 'motorhead'
-      - description: Confirm visa is decrypted for `tom`
+      - description: Confirm visa is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: '#abc123'
-      - description: Confirm password is decrypted for `florent`
+      - description: Confirm password is decrypted for laura
         value:
           operator: containsIgnoreCase
           expected: 'kitesurf'
-      - description: Confirm visa is decrypted for `florent`
+      - description: Confirm visa is decrypted for laura
         value:
           operator: containsIgnoreCase
           expected: '#888999XZ'
@@ -220,43 +218,43 @@ actions:
         --header "X-Vault-Token: vault-plaintext-root-token" | jq -r ".data.keys"
 
   - type: SH
-    title: Remove `florent` related keys
+    title: Remove laura related keys
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     showOutput: true
     script: |
       curl \
-        --request POST 'http://localhost:8200/v1/transit/keys/secret-for-florent/config' \
+        --request POST 'http://localhost:8200/v1/transit/keys/secret-for-laura/config' \
         --silent \
         --header "X-Vault-Token: vault-plaintext-root-token" \
         --header "content-type: application/json" \
         --data-raw '{"min_decryption_version":"1","min_encryption_version":1,"deletion_allowed":true,"auto_rotate_period":0}' > /dev/null
-     
+      
       curl \
-        --request DELETE http://localhost:8200/v1/transit/keys/secret-for-florent \
+        --request DELETE http://localhost:8200/v1/transit/keys/secret-for-laura \
         --silent \
         --header "X-Vault-Token: vault-plaintext-root-token"
 
   - type: CONSUME
-    title: Let's make sure `florent` data are no more readable!
+    title: Let's make sure laura data are no more readable!
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers-shredding
     assertSize: 2
     assertions:
-      - description: Confirm password is decrypted for `tom`
+      - description: Confirm password is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: 'motorhead'
-      - description: Confirm visa is decrypted for `tom`
+      - description: Confirm visa is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: '#abc123'
-      - description: Confirm password is encrypted for `florent`
+      - description: Confirm password is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: 'kitesurf'
-      - description: Confirm visa is encrypted for `florent`
+      - description: Confirm visa is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: '#888999XZ'

@@ -6,16 +6,20 @@ This demo will run you through some of these use cases step-by-step.
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/fGbfkdB9i8x56UfjPMdsSY6pZ.svg)](https://asciinema.org/a/fGbfkdB9i8x56UfjPMdsSY6pZ)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/f0q5DZ9KSv6TuWiEMjP0SHzFs.svg)](https://asciinema.org/a/f0q5DZ9KSv6TuWiEMjP0SHzFs)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -27,7 +31,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -145,7 +149,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -171,7 +175,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -197,25 +201,18 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null
-```
-
-</details>
-
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          28 seconds ago   Up 16 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          28 seconds ago   Up 16 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            28 seconds ago   Up 22 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            28 seconds ago   Up 22 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            28 seconds ago   Up 22 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   28 seconds ago   Up 16 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         28 seconds ago   Up 27 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
 ```
 
 </details>
@@ -227,70 +224,68 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network chaos-simulate-slow-broker_default  Creating
  Network chaos-simulate-slow-broker_default  Created
+ Container kafka-client  Creating
  Container zookeeper  Creating
  Container zookeeper  Created
- Container kafka3  Creating
- Container kafka1  Creating
+ Container kafka-client  Created
  Container kafka2  Creating
- Container kafka2  Created
- Container kafka3  Created
+ Container kafka1  Creating
+ Container kafka3  Creating
  Container kafka1  Created
+ Container kafka3  Created
+ Container kafka2  Created
  Container gateway2  Creating
- Container schema-registry  Creating
  Container gateway1  Creating
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
+ Container schema-registry  Creating
+ Container schema-registry  Created
  Container gateway2  Created
  Container gateway1  Created
- Container schema-registry  Created
  Container zookeeper  Starting
+ Container kafka-client  Starting
  Container zookeeper  Started
+ Container kafka-client  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Waiting
+ Container zookeeper  Healthy
+ Container kafka1  Starting
  Container zookeeper  Healthy
  Container kafka2  Starting
  Container zookeeper  Healthy
  Container kafka3  Starting
- Container zookeeper  Healthy
- Container kafka1  Starting
- Container kafka3  Started
  Container kafka1  Started
+ Container kafka3  Started
  Container kafka2  Started
- Container kafka1  Waiting
- Container kafka2  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
+ Container kafka1  Waiting
+ Container kafka1  Waiting
+ Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
- Container kafka1  Waiting
- Container kafka3  Healthy
  Container kafka3  Healthy
  Container kafka2  Healthy
  Container kafka1  Healthy
- Container schema-registry  Starting
  Container kafka1  Healthy
  Container kafka2  Healthy
  Container kafka3  Healthy
@@ -298,35 +293,49 @@ docker compose up --detach --wait
  Container gateway2  Starting
  Container kafka2  Healthy
  Container gateway1  Starting
+ Container kafka3  Healthy
+ Container schema-registry  Starting
  Container gateway1  Started
- Container gateway2  Started
  Container schema-registry  Started
- Container schema-registry  Waiting
- Container gateway1  Waiting
- Container gateway2  Waiting
+ Container gateway2  Started
  Container zookeeper  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
- Container kafka3  Healthy
+ Container schema-registry  Waiting
+ Container gateway1  Waiting
+ Container gateway2  Waiting
+ Container kafka-client  Waiting
+ Container kafka-client  Healthy
  Container kafka2  Healthy
- Container kafka1  Healthy
  Container zookeeper  Healthy
+ Container kafka3  Healthy
+ Container kafka1  Healthy
+ Container gateway2  Healthy
  Container schema-registry  Healthy
  Container gateway1  Healthy
- Container gateway2  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/u2IY5LM9WIDDhrACMAVmR3XFm.svg)](https://asciinema.org/a/u2IY5LM9WIDDhrACMAVmR3XFm)
+
+</details>
+
+## Creating virtual cluster teamA
+
+Creating virtual cluster `teamA` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `teamA`
-
-Creating virtual cluster `teamA` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster teamA with service account sa
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
     --header 'Content-Type: application/json' \
@@ -334,35 +343,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
-""" > teamA-sa.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `teamA`](images/step-05-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -370,38 +351,45 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
 """ > teamA-sa.properties
 
-```
-
-</details>
-      
-
-
-### Review the kafka properties to connect to `teamA`
-
-Review the kafka properties to connect to `teamA`
-
-```sh
+# Review file
 cat teamA-sa.properties
 ```
 
-<details on>
-  <summary>File content</summary>
 
-```properties
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxMzcxOTYwM30.ppgNvdcTG9PlBjQx3SSaKOAIWMVsAYj6jLN_24EdzW8';
-bootstrap.servers=localhost:6969
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ3MDQzMX0.EjKZwXYB7D3EzcLdwqKTOXj0GHUeQ8X3dNsVlJm-hws';
+
+
 ```
 
 </details>
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/UWfroOLWwc8immBp9QTTby92z.svg)](https://asciinema.org/a/UWfroOLWwc8immBp9QTTby92z)
 
-## Creating topic `slow-topic` on `teamA`
+</details>
 
-Creating topic `slow-topic` on `teamA`
+## Creating topic slow-topic on teamA
+
+Creating on `teamA`:
+
 * Topic `slow-topic` with partitions:1 and replication-factor:1
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-topics \
     --bootstrap-server localhost:6969 \
@@ -412,38 +400,28 @@ kafka-topics \
     --topic slow-topic
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `slow-topic` on `teamA`](images/step-07-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic slow-topic
+```
 Created topic slow-topic.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/ZFESoE5w6k2HrCMi93mPbRUHV.svg)](https://asciinema.org/a/ZFESoE5w6k2HrCMi93mPbRUHV)
 
-## Adding interceptor `simulate-slow-broker`
+</details>
 
-Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to simulate slow responses from brokers.
+## Adding interceptor simulate-slow-broker
 
+Let's create the interceptor against the virtual cluster teamA, instructing Conduktor Gateway to simulate slow responses from brokers.
 
 Creating the interceptor named `simulate-slow-broker` of the plugin `io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin` using the following payload
 
@@ -461,31 +439,29 @@ Creating the interceptor named `simulate-slow-broker` of the plugin `io.condukto
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-08-simulate-slow-broker.json | jq
+cat step-07-simulate-slow-broker.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/simulate-slow-broker" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-08-simulate-slow-broker.json | jq
+    --data @step-07-simulate-slow-broker.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `simulate-slow-broker`](images/step-08-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-08-simulate-slow-broker.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin",
   "priority": 100,
@@ -495,13 +471,6 @@ cat step-08-simulate-slow-broker.json | jq
     "maxLatencyMs": 2001
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/simulate-slow-broker" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-08-simulate-slow-broker.json | jq
 {
   "message": "simulate-slow-broker is created"
 }
@@ -509,12 +478,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/LfbaWQEoWrH060M6ZUcKBLdxt.svg)](https://asciinema.org/a/LfbaWQEoWrH060M6ZUcKBLdxt)
 
-## Listing interceptors for `teamA`
+</details>
+
+## Listing interceptors for teamA
 
 Listing interceptors on `gateway1` for virtual cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 curl \
@@ -524,30 +502,18 @@ curl \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing interceptors for `teamA`](images/step-09-LIST_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request GET 'http://localhost:8888/admin/interceptors/v1/vcluster/teamA' \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent | jq
+```json
 {
   "interceptors": [
     {
       "name": "simulate-slow-broker",
       "pluginClass": "io.conduktor.gateway.interceptor.chaos.SimulateSlowBrokerPlugin",
-      "apiKey": null,
       "priority": 100,
       "timeoutMs": 9223372036854775807,
       "config": {
@@ -562,15 +528,27 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/1eXffwBmLZLD0rKeLZbwjaw2e.svg)](https://asciinema.org/a/1eXffwBmLZLD0rKeLZbwjaw2e)
+
+</details>
 
 ## Let's produce some records to our created topic
 
 This should produce output similar to this:
+
+```
 11 records sent, 2,1 records/sec (0,00 MB/sec), 2683,6 ms avg latency, 4303,0 ms max latency.
 64 records sent, 11,2 records/sec (0,00 MB/sec), 3067,1 ms avg latency, 4210,0 ms max latency.
 100 records sent, 7,738141 records/sec (0,00 MB/sec), 3022,77 ms avg latency, 4303,00 ms max latency, 2960 ms 50th, 3902 ms 95th, 4303 ms 99th, 4303 ms 99.9th.
+```
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-producer-perf-test \
@@ -581,34 +559,26 @@ kafka-producer-perf-test \
   --topic slow-topic
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's produce some records to our created topic](images/step-10-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-producer-perf-test \
-  --producer.config teamA-sa.properties \
-  --record-size 10 \
-  --throughput 1 \
-  --num-records 10 \
-  --topic slow-topic
-5 records sent, 1,0 records/sec (0,00 MB/sec), 2082,4 ms avg latency, 2259,0 ms max latency.
-5 records sent, 1,0 records/sec (0,00 MB/sec), 2039,0 ms avg latency, 2052,0 ms max latency.
-10 records sent, 0,968804 records/sec (0,00 MB/sec), 2060,70 ms avg latency, 2259,00 ms max latency, 2040 ms 50th, 2259 ms 95th, 2259 ms 99th, 2259 ms 99.9th.
+```
+5 records sent, 1,0 records/sec (0,00 MB/sec), 2093,4 ms avg latency, 2300,0 ms max latency.
+5 records sent, 1,0 records/sec (0,00 MB/sec), 2018,0 ms avg latency, 2025,0 ms max latency.
+10 records sent, 0,972290 records/sec (0,00 MB/sec), 2055,70 ms avg latency, 2300,00 ms max latency, 2025 ms 50th, 2300 ms 95th, 2300 ms 99th, 2300 ms 99.9th.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/7YsrvC1nwH4EvtNVnWZxDFTML.svg)](https://asciinema.org/a/7YsrvC1nwH4EvtNVnWZxDFTML)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -616,27 +586,26 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-11-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
- Container gateway2  Stopping
+```
  Container schema-registry  Stopping
+ Container kafka-client  Stopping
  Container gateway1  Stopping
+ Container gateway2  Stopping
  Container gateway1  Stopped
  Container gateway1  Removing
  Container gateway1  Removed
@@ -646,18 +615,21 @@ docker compose down --volumes
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
- Container kafka3  Stopping
  Container kafka1  Stopping
+ Container kafka3  Stopping
  Container kafka2  Stopping
- Container kafka2  Stopped
- Container kafka2  Removing
- Container kafka2  Removed
- Container kafka3  Stopped
- Container kafka3  Removing
- Container kafka3  Removed
  Container kafka1  Stopped
  Container kafka1  Removing
  Container kafka1  Removed
+ Container kafka2  Stopped
+ Container kafka2  Removing
+ Container kafka2  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka3  Stopped
+ Container kafka3  Removing
+ Container kafka3  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -668,8 +640,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/zV9ZR8urrF5BN5RctZXJcxhQL.svg)](https://asciinema.org/a/zV9ZR8urrF5BN5RctZXJcxhQL)
+
+</details>
 
 # Conclusion
 

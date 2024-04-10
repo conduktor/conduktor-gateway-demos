@@ -1,5 +1,8 @@
+#!/bin/bash
 
-rm *jks *key *p12 *crt
+pwd > /tmp/ici
+pwd 
+rm -f *jks *key *p12 *crt
 
 openssl req \
   -x509 \
@@ -13,32 +16,32 @@ openssl req \
   -extensions san \
   -config openssl.config
 
-  openssl pkcs12 \
-    -export \
-    -in san.crt \
-    -inkey san.key \
-    -name brokers \
-    -out san.p12 \
-    -password "pass:123456"
+openssl pkcs12 \
+  -export \
+  -in san.crt \
+  -inkey san.key \
+  -name brokers \
+  -out san.p12 \
+  -password "pass:123456"
 
-  keytool \
-    -noprompt \
-    -alias brokers \
-    -importkeystore \
-    -deststorepass 123456 \
-    -destkeystore keystore.jks \
-    -srckeystore san.p12 \
-    -srcstoretype PKCS12 \
-    -srcstorepass 123456
+keytool \
+  -noprompt \
+  -alias brokers \
+  -importkeystore \
+  -deststorepass 123456 \
+  -destkeystore keystore.jks \
+  -srckeystore san.p12 \
+  -srcstoretype PKCS12 \
+  -srcstorepass 123456
 
-  keytool \
-    -noprompt \
-    -import \
-    -alias brokers \
-    -file san.crt \
-    -keypass 123456 \
-    -destkeystore truststore.jks \
-    -storepass 123456
+keytool \
+  -noprompt \
+  -import \
+  -alias brokers \
+  -file san.crt \
+  -keypass 123456 \
+  -destkeystore truststore.jks \
+  -storepass 123456
 
 echo """
 bootstrap.servers=localhost:6969
@@ -47,4 +50,4 @@ ssl.truststore.location=$PWD/truststore.jks
 ssl.truststore.password=123456
 ssl.keystore.location=$PWD/keystore.jks
 ssl.keystore.password=123456
-""" > client.config
+""" > client.config      

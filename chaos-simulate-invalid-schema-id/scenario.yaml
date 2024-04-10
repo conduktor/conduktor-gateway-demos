@@ -1,4 +1,7 @@
 title: Chaos Simulate Invalid Schema Id
+tag: chaos
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -39,10 +42,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -64,7 +63,7 @@ actions:
         "target": "CONSUME"
       }
     markdown: |
-      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
+      Let's create the interceptor against the virtual cluster teamA, instructing Conduktor Gateway to inject Schema Ids into messages, simulating a situation where clients cannot deserialize messages with the schema information provided.
 
   - type: LIST_INTERCEPTORS
     gateway: gateway1

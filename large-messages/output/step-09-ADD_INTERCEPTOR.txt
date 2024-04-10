@@ -1,4 +1,3 @@
-cat step-09-large-messages.json | jq
 {
   "pluginClass": "io.conduktor.gateway.interceptor.LargeMessageHandlingPlugin",
   "priority": 100,
@@ -13,13 +12,6 @@ cat step-09-large-messages.json | jq
     }
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/large-messages" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-09-large-messages.json | jq
 {
   "message": "large-messages is created"
 }

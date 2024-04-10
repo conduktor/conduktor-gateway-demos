@@ -1,4 +1,7 @@
 title: Encryption for third party
+tag: encryption
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -38,12 +41,8 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_VIRTUAL_CLUSTER
-    title: Let's create a service account `third-party` for `teamA` virtual cluster
+    title: Let's create a service account third-party for teamA virtual cluster
     gateway: gateway1
     name: teamA
     serviceAccount: third-party
@@ -70,23 +69,18 @@ actions:
         "fields": [ {
           "fieldName": "password",
           "keySecretId": "password-secret",
-          "algorithm": {
-            "type": "AES_GCM",
-            "kms": "IN_MEMORY"
-          }
+          "algorithm": "AES_GCM"
         },{
           "fieldName": "visa",
           "keySecretId": "visa-secret",
-          "algorithm": {
-            "type": "AES_GCM",
-            "kms": "IN_MEMORY"
-          }
+          "algorithm": "AES_GCM"
         } ]
       }
 
   - type: LIST_INTERCEPTORS
     gateway: gateway1
     vcluster: teamA
+    username: third-party
     assertSize: 1
     assertNames:
       - encrypt-on-consume
@@ -98,52 +92,52 @@ actions:
     topic: customers
     messages:
       - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
-      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
 
   - type: CONSUME
-    title: Confirm `tom` and `florent` data is not encrypted for `teamA`
+    title: Confirm tom and laura data is not encrypted for teamA
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
     assertions:
-      - description: Confirm password is not encrypted for `tom`
+      - description: Confirm password is not encrypted for tom
         value:
           operator: containsIgnoreCase
           expected: 'motorhead'
-      - description: Confirm visa is not encrypted for `tom`
+      - description: Confirm visa is not encrypted for tom
         value:
           operator: containsIgnoreCase
           expected: '#abc123'
-      - description: Confirm password is not encrypted for `florent`
+      - description: Confirm password is not encrypted for laura
         value:
           operator: containsIgnoreCase
           expected: 'kitesurf'
-      - description: Confirm visa is not encrypted for `florent`
+      - description: Confirm visa is not encrypted for laura
         value:
           operator: containsIgnoreCase
           expected: '#888999XZ'
 
   - type: CONSUME
-    title: Confirm `tom` and `florent` data is encrypted for `third-party`
+    title: Confirm tom and laura data is encrypted for third-party
     kafka: teamA
     kafkaConfig: teamA-third-party.properties
     topic: customers
     assertSize: 2
     assertions:
-      - description: Confirm password is encrypted for `tom`
+      - description: Confirm password is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: 'motorhead'
-      - description: Confirm visa is encrypted for `tom`
+      - description: Confirm visa is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: '#abc123'
-      - description: Confirm password is encrypted for `florent`
+      - description: Confirm password is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: 'kitesurf'
-      - description: Confirm visa is encrypted for `florent`
+      - description: Confirm visa is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: '#888999XZ'

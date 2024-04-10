@@ -7,5 +7,10 @@
 
 .idea
 .env
-record-asciinema.sh
-record-output.sh
+record-*sh
+upload-asciinema.sh
+Readme-doc.md
+Readme-doc.md-asciinema
+images/
+asciinema/
+output/

@@ -1,4 +1,7 @@
 title: Encryption performance
+tag: encryption
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -36,10 +39,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -61,17 +60,11 @@ actions:
         "fields": [ {
           "fieldName": "password",
           "keySecretId": "password-secret",
-          "algorithm": {
-            "type": "AES_GCM",
-            "kms": "IN_MEMORY"
-          }
+          "algorithm": "AES_GCM"
         },{
           "fieldName": "visa",
           "keySecretId": "visa-secret",
-          "algorithm": {
-            "type": "AES_GCM",
-            "kms": "IN_MEMORY"
-          }
+          "algorithm": "AES_GCM"
         } ]
       }
 
@@ -105,11 +98,11 @@ actions:
       - decrypt
 
   - type: SH
-    title: Running `kafka-producer-perf-test` bundled with Apache Kafka
+    title: Running kafka-producer-perf-test bundled with Apache Kafka
     kafka: teamA
     iteration: 3
     kafkaConfig: teamA-sa.properties
-    script: |      
+    script: |
       kafka-producer-perf-test \
         --topic customers \
         --throughput -1 \

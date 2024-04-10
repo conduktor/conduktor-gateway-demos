@@ -1,20 +1,4 @@
-schema='{
-            "type": "record",
-            "name": "car",
-            "fields": [
-              {"name": "type", "type": "string"},
-              {"name": "price", "type": "long"},
-              {"name": "color", "type": "string"}
-            ]
-          }'
-echo '{"type":"Sports","price":75,"color":"blue"}' | \
-    kafka-avro-console-producer  \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic cars \
-        --property schema.registry.url=http://localhost:8081 \
-        --property "value.schema=$schema"
-[2024-01-23 02:35:20,424] INFO KafkaAvroSerializerConfig values: 
+[2024-04-10 04:14:06,215] INFO KafkaAvroSerializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.remove.java.properties = false
@@ -76,15 +60,7 @@ echo '{"type":"Sports","price":75,"color":"blue"}' | \
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
  (io.confluent.kafka.serializers.KafkaAvroSerializerConfig:376)
-
-echo '{"type":"SUV","price":55,"color":"red"}' | \
-    kafka-avro-console-producer  \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic cars \
-        --property schema.registry.url=http://localhost:8081 \
-        --property "value.schema=$schema"
-[2024-01-23 02:35:21,989] INFO KafkaAvroSerializerConfig values: 
+[2024-04-10 04:14:07,843] INFO KafkaAvroSerializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.remove.java.properties = false

@@ -1,4 +1,8 @@
 title: Large message support
+tag: ops
+ciTags:
+  - PULL_REQUEST
+  - NON_REGRESSION
 services:
   kafka1:
     environment:
@@ -147,7 +151,6 @@ actions:
         --consumer.config ${KAFKA_CONFIG_FILE} \
         --topic large-messages \
         --from-beginning \
-        --property print.headers=true \
         --max-messages 1 > from-kafka.bin
 
   - type: SH

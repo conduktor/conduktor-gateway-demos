@@ -1,21 +1,23 @@
 {
-  "$id":"https://example.com/user-schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
       "minLength": 3,
-      "maxLength": 50
+      "maxLength": 50,
+      "expression": "size(name) >= 3"
     },
     "age": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 120
+      "maximum": 120,
+      "expression": "age >= 0 && age <= 120"
     },
     "email": {
       "type": "string",
-      "format": "email"
+      "format": "email",
+      "expression": "email.contains('foo')"
     },
     "address": {
       "type": "object",
@@ -23,21 +25,48 @@
         "street": {
           "type": "string",
           "minLength": 5,
-          "maxLength": 15
+          "maxLength": 15,
+          "expression": "size(street) >= 5 && size(street) <= 15"
         },
         "city": {
           "type": "string",
           "minLength": 2,
           "maxLength": 50
         }
-      }
+      },
+      "expression": "size(address.street) > 1 && address.street.contains('paris') || address.city == 'paris'"
     },
     "hobbies": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "minItems": 2
+      "minItems": 2,
+      "expression": "size(hobbies) >= 2"
     }
+  },
+  "metadata": {
+    "rules": [
+      {
+        "name": "check hobbies size",
+        "expression": "size(message.hobbies) == 2",
+        "message": "hobbies must have 2 items"
+      },
+      {
+        "name": "checkAge",
+        "expression": "message.age >= 18",
+        "message": "age must be greater than or equal to 18"
+      },
+      {
+        "name": "check email",
+        "expression": "message.email.endsWith('example.com')",
+        "message": "email should end with 'example.com'"
+      },
+      {
+        "name": "check street",
+        "expression": "size(message.address.street) >= 3",
+        "message": "address.street length must be greater than equal to 3"
+      }
+    ]
   }
 }

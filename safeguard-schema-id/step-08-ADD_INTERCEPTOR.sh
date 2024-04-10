@@ -1,3 +1,4 @@
+#!/bin/bash
 cat step-08-schema-id.json | jq
 
 curl \

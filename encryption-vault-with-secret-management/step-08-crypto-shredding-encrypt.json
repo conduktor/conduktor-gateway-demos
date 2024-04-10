@@ -13,17 +13,11 @@
     "fields" : [ {
       "fieldName" : "password",
       "keySecretId" : "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
-      "algorithm" : {
-        "type" : "AES_GCM",
-        "kms" : "VAULT"
-      }
+      "algorithm" : "AES_GCM"
     }, {
       "fieldName" : "visa",
       "keySecretId" : "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
-      "algorithm" : {
-        "type" : "AES_GCM",
-        "kms" : "VAULT"
-      }
+      "algorithm" : "AES_GCM"
     } ]
   }
 }

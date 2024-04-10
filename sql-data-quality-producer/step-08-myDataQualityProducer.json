@@ -1,9 +1,0 @@
-{
-  "pluginClass" : "io.conduktor.gateway.interceptor.DataQualityProducerPlugin",
-  "priority" : 100,
-  "config" : {
-    "statement" : "SELECT * FROM cars WHERE color = 'red' and record.key.year > 2020",
-    "action" : "BLOCK_WHOLE_BATCH",
-    "deadLetterTopic" : "dead-letter-topic"
-  }
-}

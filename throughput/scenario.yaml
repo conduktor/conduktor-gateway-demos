@@ -1,4 +1,7 @@
 title: Throughput
+tag: performance
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -38,7 +41,7 @@ actions:
         partitions: 10
 
   - type: SH
-    title: Let's use `kafka-producer-perf-test` that comes bundled with Kafka
+    title: Let's use kafka-producer-perf-test that comes bundled with Kafka
     kafka: kafka1
     script: |
       kafka-producer-perf-test \
@@ -54,10 +57,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -67,9 +66,9 @@ actions:
         partitions: 10
 
   - type: SH
+    title: Let's use kafka-producer-perf-test that comes bundled with Kafka
     kafka: teamA
     kafkaConfig: teamA-sa.properties
-    title: Let's use `kafka-producer-perf-test` that comes bundled with Kafka
     iteration: 3
     script: |
       kafka-producer-perf-test \

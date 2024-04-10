@@ -1,4 +1,7 @@
 title: SQL topic with Avro
+tag: sql
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     environment:
@@ -109,7 +112,7 @@ actions:
 
   - type: ADD_INTERCEPTOR
     markdown: |
-      Let's create the interceptor to filter out the red cars from the `cars` topic.
+      Let's create the interceptor to filter out the red cars from the cars topic.
     gateway: gateway1
     vcluster: teamA
     name: red-cars

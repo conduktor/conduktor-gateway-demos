@@ -3,21 +3,22 @@
   "type": "record",
   "name": "User",
   "fields": [
-    {"name": "name", "type": "string", "minLength": 3, "maxLength": 50},
-    {"name": "age", "type": "int", "minimum": 0, "maximum": 120},
-    {"name": "email", "type": "string", "format": "email"},
+    {"name": "name", "type": "string", "minLength": 3, "maxLength": 50, "expression": "size(name) >= 3 && size(name) <= 50"},
+    {"name": "age", "type": "int", "minimum": 0, "maximum": 120, "expression": "age >= 0 && age <= 120"},
+    {"name": "email", "type": "string", "format": "email", "expression": "email.contains('foo')"},
     {
       "name": "address",
       "type": {
         "type": "record",
         "name": "AddressRecord",
         "fields": [
-          {"name": "street", "type": "string", "minLength": 5, "maxLength": 15},
+          {"name": "street", "type": "string", "minLength": 5, "maxLength": 15, "expression": "size(street) >= 5 && size(street) <= 15"},
           {"name": "city", "type": "string", "minLength": 2, "maxLength": 50}
         ]
-      }
+      },
+      "expression": "size(address.street) >= 5 && address.street.contains('paris') || address.city == 'paris'"
     },
-    {"name": "hobbies", "type": {"type": "array", "items": "string"}, "minItems": 2},
+    {"name": "hobbies", "type": {"type": "array", "items": "string"}, "minItems": 2, "expression": "size(hobbies) >= 2"},
     {
       "name": "friends",
       "type": {
@@ -26,11 +27,35 @@
           "type": "record",
           "name": "Friend",
           "fields": [
-            {"name": "name", "type": "string"},
+            {"name": "name", "type": "string", "expression": "size(name) <= 4"},
             {"name": "age", "type": "int", "minimum": 2, "maximum": 10}
           ]
         }
       }
     }
-  ]
+  ],
+  "metadata": {
+    "rules": [
+      {
+        "name": "check hobbies size",
+        "expression": "size(message.hobbies) == 2",
+        "message": "hobbies must have 2 items"
+      },
+      {
+        "name": "checkAge",
+        "expression": "message.age >= 18",
+        "message": "age must be greater than or equal to 18"
+      },
+      {
+        "name": "check email",
+        "expression": "message.email.endsWith('example.com')",
+        "message": "email should end with 'example.com'"
+      },
+      {
+        "name": "check street",
+        "expression": "size(message.address.street) >= 3",
+        "message": "address.street length must be greater than equal to 3"
+      }
+    ]
+  }
 }

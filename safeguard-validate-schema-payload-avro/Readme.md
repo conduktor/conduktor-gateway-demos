@@ -10,18 +10,28 @@ This is similar to the validations provided by JsonSchema, such as:
 - **String**: `minLength`, `maxLength`, `pattern`, `format`
 - **Collections**: `maxItems`, `minItems`
 
+This interceptor also supports validating payload against specific custom constraints `expression`,
+which uses a simple language familiar with devs is [CEL (Common Expression Language)](https://github.com/google/cel-spec)
+
+This interceptor also supports validating payload against specific custom `metadata.rules` object in the schema
+using CEL, too.
+
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/bXYJaRuhOjYcMlSPBFElv0PdJ.svg)](https://asciinema.org/a/bXYJaRuhOjYcMlSPBFElv0PdJ)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/nX8aO7Yl4s738hfG3oWh2si5p.svg)](https://asciinema.org/a/nX8aO7Yl4s738hfG3oWh2si5p)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -33,7 +43,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -151,7 +161,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -177,7 +187,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -203,25 +213,18 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null
-```
-
-</details>
-
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          27 seconds ago   Up 15 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          27 seconds ago   Up 15 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            27 seconds ago   Up 21 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            27 seconds ago   Up 21 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            27 seconds ago   Up 21 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   27 seconds ago   Up 15 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         27 seconds ago   Up 27 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
 ```
 
 </details>
@@ -233,43 +236,43 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network safeguard-validate-schema-payload-avro_default  Creating
  Network safeguard-validate-schema-payload-avro_default  Created
  Container zookeeper  Creating
+ Container kafka-client  Creating
+ Container kafka-client  Created
  Container zookeeper  Created
- Container kafka3  Creating
- Container kafka2  Creating
  Container kafka1  Creating
+ Container kafka2  Creating
+ Container kafka3  Creating
  Container kafka2  Created
- Container kafka3  Created
  Container kafka1  Created
+ Container kafka3  Created
+ Container gateway2  Creating
  Container schema-registry  Creating
  Container gateway1  Creating
- Container gateway2  Creating
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- Container gateway2  Created
  Container gateway1  Created
+ Container gateway2  Created
  Container schema-registry  Created
+ Container kafka-client  Starting
  Container zookeeper  Starting
+ Container kafka-client  Started
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
@@ -277,62 +280,74 @@ docker compose up --detach --wait
  Container zookeeper  Healthy
  Container kafka2  Starting
  Container zookeeper  Healthy
- Container kafka3  Starting
- Container zookeeper  Healthy
  Container kafka1  Starting
- Container kafka2  Started
+ Container zookeeper  Healthy
+ Container kafka3  Starting
  Container kafka1  Started
  Container kafka3  Started
- Container kafka3  Waiting
- Container kafka1  Waiting
+ Container kafka2  Started
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
- Container kafka2  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
+ Container kafka2  Waiting
+ Container kafka3  Waiting
+ Container kafka1  Waiting
+ Container kafka1  Healthy
+ Container kafka1  Healthy
  Container kafka1  Healthy
  Container kafka2  Healthy
  Container kafka2  Healthy
- Container kafka2  Healthy
- Container kafka1  Healthy
- Container kafka1  Healthy
  Container kafka3  Healthy
+ Container kafka2  Healthy
+ Container gateway2  Starting
  Container kafka3  Healthy
- Container schema-registry  Starting
  Container gateway1  Starting
  Container kafka3  Healthy
- Container gateway2  Starting
- Container gateway2  Started
+ Container schema-registry  Starting
  Container schema-registry  Started
  Container gateway1  Started
- Container gateway1  Waiting
- Container gateway2  Waiting
+ Container gateway2  Started
  Container zookeeper  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container schema-registry  Waiting
+ Container gateway1  Waiting
+ Container gateway2  Waiting
+ Container kafka-client  Waiting
  Container kafka2  Healthy
- Container kafka3  Healthy
- Container zookeeper  Healthy
  Container kafka1  Healthy
- Container schema-registry  Healthy
- Container gateway1  Healthy
+ Container kafka3  Healthy
+ Container kafka-client  Healthy
+ Container zookeeper  Healthy
  Container gateway2  Healthy
+ Container gateway1  Healthy
+ Container schema-registry  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/LU1zfwNG1PSx4QZad7pXkknQw.svg)](https://asciinema.org/a/LU1zfwNG1PSx4QZad7pXkknQw)
+
+</details>
+
+## Creating virtual cluster teamA
+
+Creating virtual cluster `teamA` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `teamA`
-
-Creating virtual cluster `teamA` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster teamA with service account sa
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
     --header 'Content-Type: application/json' \
@@ -340,35 +355,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
-""" > teamA-sa.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `teamA`](images/step-05-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -376,38 +363,45 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
 """ > teamA-sa.properties
 
-```
-
-</details>
-      
-
-
-### Review the kafka properties to connect to `teamA`
-
-Review the kafka properties to connect to `teamA`
-
-```sh
+# Review file
 cat teamA-sa.properties
 ```
 
-<details on>
-  <summary>File content</summary>
 
-```properties
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxMzc0MzUzNX0.QS_FeEsdKE8-s16R72YfGQFBBuS3Pv4lMN_IAv3IZC4';
-bootstrap.servers=localhost:6969
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ4MTMyOH0.K6_wV3fDelJG6IohMZ4twOfVmY20FMl7z2wXYUIlKRo';
+
+
 ```
 
 </details>
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/iqO8GusVhNl7fehGIVqzMI8eC.svg)](https://asciinema.org/a/iqO8GusVhNl7fehGIVqzMI8eC)
 
-## Creating topic `topic-avro` on `teamA`
+</details>
 
-Creating topic `topic-avro` on `teamA`
+## Creating topic topic-avro on teamA
+
+Creating on `teamA`:
+
 * Topic `topic-avro` with partitions:1 and replication-factor:1
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-topics \
     --bootstrap-server localhost:6969 \
@@ -418,35 +412,26 @@ kafka-topics \
     --topic topic-avro
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `topic-avro` on `teamA`](images/step-07-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic topic-avro
+```
 Created topic topic-avro.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/OMUAtaqHFdvja2BKRbrZS9BEB.svg)](https://asciinema.org/a/OMUAtaqHFdvja2BKRbrZS9BEB)
 
-### Review the example avro schema
+</details>
+
+## Review the example avro schema
 
 Review the example avro schema
 
@@ -455,7 +440,7 @@ cat user-schema.avsc
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```avsc
 {
@@ -498,11 +483,15 @@ cat user-schema.avsc
 
 </details>
 
-
 ## Let's register it to the Schema Registry
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 curl -s \
   http://localhost:8081/subjects/topic-avro/versions \
@@ -511,33 +500,26 @@ curl -s \
   --data "{\"schemaType\": \"AVRO\", \"schema\": $(cat user-schema.avsc | jq tostring)}"
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's register it to the Schema Registry](images/step-09-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl -s \
-  http://localhost:8081/subjects/topic-avro/versions \
-  -X POST \
-  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  --data "{\"schemaType\": \"AVRO\", \"schema\": $(cat user-schema.avsc | jq tostring)}"
-cat user-schema.avsc | jq tostring
+```
 {"id":1}
+
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/2SqxZWQbSXjxJ84PkGSB5sIaw.svg)](https://asciinema.org/a/2SqxZWQbSXjxJ84PkGSB5sIaw)
 
-### Review invalid payload
+</details>
+
+## Review invalid payload
 
 Review invalid payload
 
@@ -546,7 +528,7 @@ cat invalid-payload.json
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```json
 {
@@ -562,11 +544,11 @@ cat invalid-payload.json
   ],
   "friends": [
     {
-      "name": "Tom",
+      "name": "Tommy",
       "age": 17
     },
     {
-      "name": "Emma",
+      "name": "Emma Watson",
       "age": 18
     }
   ]
@@ -575,8 +557,12 @@ cat invalid-payload.json
 
 </details>
 
-
 ## Let's send invalid data
+
+
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -590,27 +576,14 @@ cat invalid-payload.json | jq -c | \
         --property value.schema.id=1
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's send invalid data](images/step-11-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat invalid-payload.json | jq -c | \
-    kafka-avro-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic topic-avro \
-        --property schema.registry.url=http://localhost:8081 \
-        --property value.schema.id=1
-[2024-01-23 00:53:06,043] INFO KafkaAvroSerializerConfig values: 
+```
+[2024-04-10 03:28:51,039] INFO KafkaAvroSerializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.remove.java.properties = false
@@ -676,12 +649,21 @@ cat invalid-payload.json | jq -c | \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/UrAeATVuxb8pvmVXrr9exdIIC.svg)](https://asciinema.org/a/UrAeATVuxb8pvmVXrr9exdIIC)
+
+</details>
 
 ## Let's consume it back
 
 That's pretty bad, you are going to propagate wrong data within your system!
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-avro-console-consumer \
@@ -692,26 +674,14 @@ kafka-avro-console-consumer \
     --timeout-ms 3000
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's consume it back](images/step-12-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-avro-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic topic-avro \
-    --from-beginning \
-    --timeout-ms 3000
-[2024-01-23 00:53:07,586] INFO KafkaAvroDeserializerConfig values: 
+```
+[2024-04-10 03:28:52,533] INFO KafkaAvroDeserializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.use.logical.type.converters = false
@@ -775,23 +745,26 @@ kafka-avro-console-consumer \
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
  (io.confluent.kafka.serializers.KafkaAvroDeserializerConfig:376)
-{"name":"D","age":17,"email":"bad email","address":{"street":"a way too lond adress that will not fit in your database","city":""},"hobbies":["reading"],"friends":[{"name":"Tom","age":17},{"name":"Emma","age":18}]}
-[2024-01-23 00:53:11,378] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
+{"name":"D","age":17,"email":"bad email","address":{"street":"a way too lond adress that will not fit in your database","city":""},"hobbies":["reading"],"friends":[{"name":"Tommy","age":17},{"name":"Emma Watson","age":18}]}
+[2024-04-10 03:28:56,294] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
 org.apache.kafka.common.errors.TimeoutException
-[2024-01-23 00:53:11,378] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
+[2024-04-10 03:28:56,294] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/MnpKwKmq4SDSTHW9MAnGgzSUS.svg)](https://asciinema.org/a/MnpKwKmq4SDSTHW9MAnGgzSUS)
 
-## Adding interceptor `guard-schema-payload-validate`
+</details>
+
+## Adding interceptor guard-schema-payload-validate
 
 Add Schema Payload Validation Policy Interceptor
-
 
 Creating the interceptor named `guard-schema-payload-validate` of the plugin `io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin` using the following payload
 
@@ -813,31 +786,29 @@ Creating the interceptor named `guard-schema-payload-validate` of the plugin `io
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-13-guard-schema-payload-validate.json | jq
+cat step-12-guard-schema-payload-validate.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-schema-payload-validate" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-13-guard-schema-payload-validate.json | jq
+    --data @step-12-guard-schema-payload-validate.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `guard-schema-payload-validate`](images/step-13-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-13-guard-schema-payload-validate.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin",
   "priority": 100,
@@ -851,13 +822,6 @@ cat step-13-guard-schema-payload-validate.json | jq
     "action": "BLOCK"
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-schema-payload-validate" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-13-guard-schema-payload-validate.json | jq
 {
   "message": "guard-schema-payload-validate is created"
 }
@@ -865,12 +829,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/wBYnqWCdGp0zkum6qf3qFSlJM.svg)](https://asciinema.org/a/wBYnqWCdGp0zkum6qf3qFSlJM)
 
-## Listing interceptors for `teamA`
+</details>
+
+## Listing interceptors for teamA
 
 Listing interceptors on `gateway1` for virtual cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 curl \
@@ -880,30 +853,18 @@ curl \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing interceptors for `teamA`](images/step-14-LIST_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request GET 'http://localhost:8888/admin/interceptors/v1/vcluster/teamA' \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent | jq
+```json
 {
   "interceptors": [
     {
       "name": "guard-schema-payload-validate",
       "pluginClass": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin",
-      "apiKey": null,
       "priority": 100,
       "timeoutMs": 9223372036854775807,
       "config": {
@@ -922,10 +883,14 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/SpKmm1bCJYrxiNqt2lwHwxIp8.svg)](https://asciinema.org/a/SpKmm1bCJYrxiNqt2lwHwxIp8)
 
-### Review the avro schema with validation rules
+</details>
+
+## Review the avro schema with validation rules
 
 Review the avro schema with validation rules
 
@@ -934,7 +899,7 @@ cat user-schema-with-validation-rules.avsc
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```avsc
 {
@@ -942,21 +907,22 @@ cat user-schema-with-validation-rules.avsc
   "type": "record",
   "name": "User",
   "fields": [
-    {"name": "name", "type": "string", "minLength": 3, "maxLength": 50},
-    {"name": "age", "type": "int", "minimum": 0, "maximum": 120},
-    {"name": "email", "type": "string", "format": "email"},
+    {"name": "name", "type": "string", "minLength": 3, "maxLength": 50, "expression": "size(name) >= 3 && size(name) <= 50"},
+    {"name": "age", "type": "int", "minimum": 0, "maximum": 120, "expression": "age >= 0 && age <= 120"},
+    {"name": "email", "type": "string", "format": "email", "expression": "email.contains('foo')"},
     {
       "name": "address",
       "type": {
         "type": "record",
         "name": "AddressRecord",
         "fields": [
-          {"name": "street", "type": "string", "minLength": 5, "maxLength": 15},
+          {"name": "street", "type": "string", "minLength": 5, "maxLength": 15, "expression": "size(street) >= 5 && size(street) <= 15"},
           {"name": "city", "type": "string", "minLength": 2, "maxLength": 50}
         ]
-      }
+      },
+      "expression": "size(address.street) >= 5 && address.street.contains('paris') || address.city == 'paris'"
     },
-    {"name": "hobbies", "type": {"type": "array", "items": "string"}, "minItems": 2},
+    {"name": "hobbies", "type": {"type": "array", "items": "string"}, "minItems": 2, "expression": "size(hobbies) >= 2"},
     {
       "name": "friends",
       "type": {
@@ -965,23 +931,51 @@ cat user-schema-with-validation-rules.avsc
           "type": "record",
           "name": "Friend",
           "fields": [
-            {"name": "name", "type": "string"},
+            {"name": "name", "type": "string", "expression": "size(name) <= 4"},
             {"name": "age", "type": "int", "minimum": 2, "maximum": 10}
           ]
         }
       }
     }
-  ]
+  ],
+  "metadata": {
+    "rules": [
+      {
+        "name": "check hobbies size",
+        "expression": "size(message.hobbies) == 2",
+        "message": "hobbies must have 2 items"
+      },
+      {
+        "name": "checkAge",
+        "expression": "message.age >= 18",
+        "message": "age must be greater than or equal to 18"
+      },
+      {
+        "name": "check email",
+        "expression": "message.email.endsWith('example.com')",
+        "message": "email should end with 'example.com'"
+      },
+      {
+        "name": "check street",
+        "expression": "size(message.address.street) >= 3",
+        "message": "address.street length must be greater than equal to 3"
+      }
+    ]
+  }
 }
 ```
 
 </details>
 
-
 ## Let's update the schema with our validation rules
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 curl -s \
   http://localhost:8081/subjects/topic-avro/versions \
@@ -990,60 +984,56 @@ curl -s \
   --data "{\"schemaType\": \"AVRO\", \"schema\": $(cat user-schema-with-validation-rules.avsc | jq tostring)}"
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's update the schema with our validation rules](images/step-16-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl -s \
-  http://localhost:8081/subjects/topic-avro/versions \
-  -X POST \
-  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  --data "{\"schemaType\": \"AVRO\", \"schema\": $(cat user-schema-with-validation-rules.avsc | jq tostring)}"
-cat user-schema-with-validation-rules.avsc | jq tostring
+```
 {"id":2}
+
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/JxbCPk7jymgqo6COKwfu2xkfz.svg)](https://asciinema.org/a/JxbCPk7jymgqo6COKwfu2xkfz)
+
+</details>
 
 ## Let's asserts number of registered schemas
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 curl -s http://localhost:8081/subjects/topic-avro/versions
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's asserts number of registered schemas](images/step-17-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl -s http://localhost:8081/subjects/topic-avro/versions
+```
 [1,2]
+
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/BDZEfS0q6hQ00aLQvgL0kis3p.svg)](https://asciinema.org/a/BDZEfS0q6hQ00aLQvgL0kis3p)
+
+</details>
 
 ## Let's produce the same invalid payload again
 
@@ -1051,8 +1041,13 @@ The payload has been rejected with useful errors
 
 ```
 org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. 
-Topic 'topic-avro' has invalid avro schema payload: name is too short (1 < 3), email does not match format 'email', street is too long (56 > 15), city is too short (0 < 2), hobbies has too few items (1 < 2), age is greater than 10, age is greater than 10
+Topic 'topic-avro' has invalid avro schema payload: hobbies must have 2 items, age must be greater than or equal to 18, email should end with 'example.com', name is too short (1 < 3), name does not match expression 'size(name) >= 3 && size(name) <= 50', email does not match format 'email', email does not match expression 'email.contains('foo')', street is too long (56 > 15), street does not match expression 'size(street) >= 5 && size(street) <= 15', city is too short (0 < 2), address does not match expression 'size(address.street) >= 5 && address.street.contains('paris') || address.city == 'paris'', hobbies has too few items (1 < 2), hobbies does not match expression 'size(hobbies) >= 2', name does not match expression 'size(name) <= 4', age is greater than 10, name does not match expression 'size(name) <= 4', age is greater than 10
 ```
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 cat invalid-payload.json | jq -c | \
@@ -1064,27 +1059,14 @@ cat invalid-payload.json | jq -c | \
         --property value.schema.id=2
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's produce the same invalid payload again](images/step-18-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat invalid-payload.json | jq -c | \
-    kafka-avro-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic topic-avro \
-        --property schema.registry.url=http://localhost:8081 \
-        --property value.schema.id=2
-[2024-01-23 00:53:12,968] INFO KafkaAvroSerializerConfig values: 
+```
+[2024-04-10 03:28:57,613] INFO KafkaAvroSerializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.remove.java.properties = false
@@ -1146,104 +1128,104 @@ cat invalid-payload.json | jq -c | \
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
  (io.confluent.kafka.serializers.KafkaAvroSerializerConfig:376)
-[2024-01-23 00:53:13,794] ERROR Error when sending message to topic topic-avro with key: null, value: 99 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback:52)
-org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: name is too short (1 < 3), email does not match format 'email', street is too long (56 > 15), city is too short (0 < 2), hobbies has too few items (1 < 2), age is greater than 10, age is greater than 10
-[2024-01-23 00:53:13,794] ERROR Error when sending message to topic topic-avro with key: null, value: 99 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback:52)
-org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: name is too short (1 < 3), email does not match format 'email', street is too long (56 > 15), city is too short (0 < 2), hobbies has too few items (1 < 2), age is greater than 10, age is greater than 10
+[2024-04-10 03:28:58,555] ERROR Error when sending message to topic topic-avro with key: null, value: 108 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback:52)
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: hobbies must have 2 items, age must be greater than or equal to 18, email should end with 'example.com', name is too short (1 < 3), name does not match expression 'size(name) >= 3 step-17-SH-OUTPUTstep-17-SH-OUTPUT size(name) <= 50', email does not match format 'email', email does not match expression 'email.contains('foo')', street is too long (56 > 15), street does not match expression 'size(street) >= 5 step-17-SH-OUTPUTstep-17-SH-OUTPUT size(street) <= 15', city is too short (0 < 2), address does not match expression 'size(address.street) >= 5 step-17-SH-OUTPUTstep-17-SH-OUTPUT address.street.contains('paris') || address.city == 'paris'', hobbies has too few items (1 < 2), hobbies does not match expression 'size(hobbies) >= 2', name does not match expression 'size(name) <= 4', age is greater than 10, name does not match expression 'size(name) <= 4', age is greater than 10
+[2024-04-10 03:28:58,555] ERROR Error when sending message to topic topic-avro with key: null, value: 108 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback:52)
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: hobbies must have 2 items, age must be greater than or equal to 18, email should end with 'example.com', name is too short (1 < 3), name does not match expression 'size(name) >= 3 step-17-SH-OUTPUTstep-17-SH-OUTPUT size(name) <= 50', email does not match format 'email', email does not match expression 'email.contains('foo')', street is too long (56 > 15), street does not match expression 'size(street) >= 5 step-17-SH-OUTPUTstep-17-SH-OUTPUT size(street) <= 15', city is too short (0 < 2), address does not match expression 'size(address.street) >= 5 step-17-SH-OUTPUTstep-17-SH-OUTPUT address.street.contains('paris') || address.city == 'paris'', hobbies has too few items (1 < 2), hobbies does not match expression 'size(hobbies) >= 2', name does not match expression 'size(name) <= 4', age is greater than 10, name does not match expression 'size(name) <= 4', age is greater than 10
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/8xk0CWRBugq5bFdhyNvdO5afO.svg)](https://asciinema.org/a/8xk0CWRBugq5bFdhyNvdO5afO)
+
+</details>
 
 ## Check in the audit log that message was denied
 
 Check in the audit log that message was denied in cluster `kafka1`
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
+    --topic _conduktor_gateway_auditlogs \
     --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+    --timeout-ms 3000 \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
 ```
 
 
+returns 1 event
 ```json
 {
-  "id" : "6760dab7-7eaa-4e58-9528-b6f17c18c4e5",
-  "source" : "krn://cluster=aCSmu_9tRb-7HPbsYVGq9A",
+  "id" : "6c35d7d5-36d3-4580-8a42-5308955c577a",
+  "source" : "krn://cluster=KByjP2eESMGyqbD9agMurQ",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:27053"
+    "remoteAddress" : "/192.168.65.1:26467"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:52:25.010746800Z",
+  "time" : "2024-04-09T23:28:15.000552507Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin",
-    "message" : "Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: name is too short (1 < 3), email does not match format 'email', street is too long (56 > 15), city is too short (0 < 2), hobbies has too few items (1 < 2), age is greater than 10, age is greater than 10"
+    "message" : "Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: hobbies must have 2 items, age must be greater than or equal to 18, email should end with 'example.com', name is too short (1 < 3), name does not match expression 'size(name) >= 3 && size(name) <= 50', email does not match format 'email', email does not match expression 'email.contains('foo')', street is too long (56 > 15), street does not match expression 'size(street) >= 5 && size(street) <= 15', city is too short (0 < 2), address does not match expression 'size(address.street) >= 5 && address.street.contains('paris') || address.city == 'paris'', hobbies has too few items (1 < 2), hobbies does not match expression 'size(hobbies) >= 2', name does not match expression 'size(name) <= 4', age is greater than 10, name does not match expression 'size(name) <= 4', age is greater than 10"
   }
 }
 ```
 
 
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Check in the audit log that message was denied](images/step-19-AUDITLOG.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
-    --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
-[2024-01-23 00:53:18,185] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```
+{"id":"7c85c5c5-16b5-4593-9b2b-bd7eca8f16ae","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.192.7:8888","remoteAddress":"192.168.65.1:38263"},"specVersion":"0.1.0","time":"2024-04-09T23:28:48.735590092Z","eventData":{"method":"POST","path":"/admin/vclusters/v1/vcluster/teamA/username/sa","body":"{\"lifeTimeSeconds\": 7776000}"}}
+{"id":"eb90be63-b125-4264-84ab-573902b6f1c5","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6969","remoteAddress":"/192.168.65.1:26853"},"specVersion":"0.1.0","time":"2024-04-09T23:28:49.637197217Z","eventData":"SUCCESS"}
+{"id":"fa11fa80-a659-444e-a98b-984c56b5f4ea","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6969","remoteAddress":"/192.168.65.1:26854"},"specVersion":"0.1.0","time":"2024-04-09T23:28:49.687859509Z","eventData":"SUCCESS"}
+{"id":"aee81739-0b79-4872-b9ec-13b45ec6e6a5","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6969","remoteAddress":"/192.168.65.1:26857"},"specVersion":"0.1.0","time":"2024-04-09T23:28:51.592936552Z","eventData":"SUCCESS"}
+{"id":"4cf0060b-9c47-420a-8572-a4412b2e536b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6969","remoteAddress":"/192.168.65.1:26858"},"specVersion":"0.1.0","time":"2024-04-09T23:28:51.637482635Z","eventData":"SUCCESS"}
+{"id":"85fb2bb6-455b-4836-84c6-f4899d9ba80a","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6969","remoteAddress":"/192.168.65.1:26859"},"specVersion":"0.1.0","time":"2024-04-09T23:28:52.969162136Z","eventData":"SUCCESS"}
+{"id":"63abdbf4-1dad-4fde-a9cf-d631716f8b93","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6970","remoteAddress":"/192.168.65.1:42750"},"specVersion":"0.1.0","time":"2024-04-09T23:28:53.007224177Z","eventData":"SUCCESS"}
+{"id":"1a92572c-64a1-4b48-a8b5-682c702b410d","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6969","remoteAddress":"/192.168.65.1:26861"},"specVersion":"0.1.0","time":"2024-04-09T23:28:53.148052011Z","eventData":"SUCCESS"}
+{"id":"2499c0c3-983d-48b3-ad19-fe05b305a1dc","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.192.7:8888","remoteAddress":"192.168.65.1:38286"},"specVersion":"0.1.0","time":"2024-04-09T23:28:56.812639887Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-schema-payload-validate","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"schemaRegistryConfig\" : {      \"host\" : \"http://schema-registry:8081\"    },    \"topic\" : \"topic-.*\",    \"schemaIdRequired\" : true,    \"validateSchema\" : true,    \"action\" : \"BLOCK\"  }}"}}
+{"id":"b826a716-3831-4b5a-800d-ba00251c7636","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.192.7:8888","remoteAddress":"192.168.65.1:38287"},"specVersion":"0.1.0","time":"2024-04-09T23:28:57.016332512Z","eventData":{"method":"GET","path":"/admin/interceptors/v1/vcluster/teamA","body":null}}
+{"id":"90ce8682-f264-4d80-87a1-553fb793f5c7","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6969","remoteAddress":"/192.168.65.1:26868"},"specVersion":"0.1.0","time":"2024-04-09T23:28:58.146805596Z","eventData":"SUCCESS"}
+{"id":"e3bd5738-4f92-45ae-9756-6217b91c39cc","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.192.7:6969","remoteAddress":"/192.168.65.1:26869"},"specVersion":"0.1.0","time":"2024-04-09T23:28:58.193770763Z","eventData":"SUCCESS"}
+{"id":"74fe0abe-d623-4928-a918-791d7598b12c","source":"krn://cluster=_XfjId1DQqK6pkg4pa64JA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:26869"},"specVersion":"0.1.0","time":"2024-04-09T23:28:58.545039597Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: hobbies must have 2 items, age must be greater than or equal to 18, email should end with 'example.com', name is too short (1 < 3), name does not match expression 'size(name) >= 3 step-18-AUDITLOG-OUTPUTstep-18-AUDITLOG-OUTPUT size(name) <= 50', email does not match format 'email', email does not match expression 'email.contains('foo')', street is too long (56 > 15), street does not match expression 'size(street) >= 5 step-18-AUDITLOG-OUTPUTstep-18-AUDITLOG-OUTPUT size(street) <= 15', city is too short (0 < 2), address does not match expression 'size(address.street) >= 5 step-18-AUDITLOG-OUTPUTstep-18-AUDITLOG-OUTPUT address.street.contains('paris') || address.city == 'paris'', hobbies has too few items (1 < 2), hobbies does not match expression 'size(hobbies) >= 2', name does not match expression 'size(name) <= 4', age is greater than 10, name does not match expression 'size(name) <= 4', age is greater than 10"}}
+[2024-04-10 03:29:02,953] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 13 messages
-{
-  "id": "cdff5355-b16e-436b-9367-52c70c647ff2",
-  "source": "krn://cluster=S9jtg032SKy10ucNl47giA",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:53130"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:53:13.770807128Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin",
-    "message": "Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: name is too short (1 < 3), email does not match format 'email', street is too long (56 > 15), city is too short (0 < 2), hobbies has too few items (1 < 2), age is greater than 10, age is greater than 10"
-  }
-}
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/6sfpFBVenmyLAS7WmjugdDXua.svg)](https://asciinema.org/a/6sfpFBVenmyLAS7WmjugdDXua)
+
+</details>
 
 ## Let's now produce a valid payload
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 cat valid-payload.json | jq -c | \
     kafka-avro-console-producer \
@@ -1254,27 +1236,14 @@ cat valid-payload.json | jq -c | \
         --property value.schema.id=2
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's now produce a valid payload](images/step-20-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat valid-payload.json | jq -c | \
-    kafka-avro-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic topic-avro \
-        --property schema.registry.url=http://localhost:8081 \
-        --property value.schema.id=2
-[2024-01-23 00:53:19,147] INFO KafkaAvroSerializerConfig values: 
+```
+[2024-04-10 03:29:03,906] INFO KafkaAvroSerializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.remove.java.properties = false
@@ -1340,10 +1309,19 @@ cat valid-payload.json | jq -c | \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/Gn2GhL1xMsVvEKcMINkdhGVB2.svg)](https://asciinema.org/a/Gn2GhL1xMsVvEKcMINkdhGVB2)
+
+</details>
 
 ## And consume it back
+
+
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -1356,26 +1334,14 @@ kafka-avro-console-consumer \
     --timeout-ms 3000
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![And consume it back](images/step-21-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-avro-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic topic-avro \
-    --from-beginning \
-    --timeout-ms 3000
-[2024-01-23 00:53:20,629] INFO KafkaAvroDeserializerConfig values: 
+```
+[2024-04-10 03:29:05,388] INFO KafkaAvroDeserializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
 	avro.use.logical.type.converters = false
@@ -1439,19 +1405,23 @@ kafka-avro-console-consumer \
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
  (io.confluent.kafka.serializers.KafkaAvroDeserializerConfig:376)
-{"name":"D","age":17,"email":"bad email","address":{"street":"a way too lond adress that will not fit in your database","city":""},"hobbies":["reading"],"friends":[{"name":"Tom","age":17},{"name":"Emma","age":18}]}
-{"name":"Doe","age":17,"email":"john.doe@example.com","address":{"street":"123 Main St","city":"Anytown"},"hobbies":["reading","cycling"],"friends":[{"name":"Tom","age":9},{"name":"Emma","age":10}]}
-[2024-01-23 00:53:24,319] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
+{"name":"D","age":17,"email":"bad email","address":{"street":"a way too lond adress that will not fit in your database","city":""},"hobbies":["reading"],"friends":[{"name":"Tommy","age":17},{"name":"Emma Watson","age":18}]}
+{"name":"Doe","age":18,"email":"foo.doe@example.com","address":{"street":"123 Main paris","city":"Anytown paris"},"hobbies":["reading","cycling"],"friends":[{"name":"Tom","age":9},{"name":"Emma","age":10}]}
+[2024-04-10 03:29:09,046] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
 org.apache.kafka.common.errors.TimeoutException
-[2024-01-23 00:53:24,319] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
+[2024-04-10 03:29:09,046] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/GuvcuIanb4wfmePurbxmxtpr2.svg)](https://asciinema.org/a/GuvcuIanb4wfmePurbxmxtpr2)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -1459,48 +1429,50 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-22-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
+```
  Container gateway1  Stopping
+ Container kafka-client  Stopping
  Container gateway2  Stopping
  Container schema-registry  Stopping
- Container gateway2  Stopped
- Container gateway2  Removing
- Container gateway2  Removed
  Container gateway1  Stopped
  Container gateway1  Removing
  Container gateway1  Removed
+ Container gateway2  Stopped
+ Container gateway2  Removing
+ Container gateway2  Removed
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
- Container kafka2  Stopping
  Container kafka3  Stopping
  Container kafka1  Stopping
- Container kafka3  Stopped
- Container kafka3  Removing
- Container kafka3  Removed
+ Container kafka2  Stopping
  Container kafka2  Stopped
  Container kafka2  Removing
  Container kafka2  Removed
  Container kafka1  Stopped
  Container kafka1  Removing
  Container kafka1  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka3  Stopped
+ Container kafka3  Removing
+ Container kafka3  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -1511,8 +1483,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/iYYj8506nh8ZgtC7HUasLsNbT.svg)](https://asciinema.org/a/iYYj8506nh8ZgtC7HUasLsNbT)
+
+</details>
 
 # Conclusion
 

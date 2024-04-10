@@ -1,11 +1,14 @@
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --list
-concentrated-compact
-concentrated-compact-delete
-concentrated-delete
-concentrated-delete-compact
-concentrated-large-retention
-concentrated-normal
-concentrated-small-retention
+__consumer_offsets
+_conduktor_gateway_acls
+_conduktor_gateway_auditlogs
+_conduktor_gateway_consumer_offsets
+_conduktor_gateway_consumer_subscriptions
+_conduktor_gateway_encryption_configs
+_conduktor_gateway_interceptor_configs
+_conduktor_gateway_license
+_conduktor_gateway_topicmappings
+_conduktor_gateway_usermappings
+_schemas
+hold_many_concentrated_topics
+hold_many_concentrated_topics_compacted
+hold_many_concentrated_topics_compacted_deleted

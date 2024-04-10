@@ -1,4 +1,7 @@
 title: Client Id validation
+tag: safeguard
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -77,7 +80,7 @@ actions:
     assertError: true
 
   - type: SH
-    title: Let
+    title: Let's update the client id to match the convention
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     showOutput: true
@@ -97,7 +100,7 @@ actions:
   - type: AUDITLOG
     title: Check in the audit log that produce was denied
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ClientIdRequiredPolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ClientIdRequiredPolicyPlugin")'
     assertions:
       - description: Confirm ClientIdRequiredPolicyPlugin audit entry
         value:

@@ -1,3 +1,4 @@
+#!/bin/bash
 kafka-producer-perf-test \
     --topic physical-kafka \
     --throughput -1 \

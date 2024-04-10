@@ -8,16 +8,20 @@ Enable your teams, prevent common mistakes, protect your infra.
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/QzilZiq9KPXN5gmHw6UAhink6.svg)](https://asciinema.org/a/QzilZiq9KPXN5gmHw6UAhink6)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/arD2teccUpSI9zRo30Q835pOh.svg)](https://asciinema.org/a/arD2teccUpSI9zRo30Q835pOh)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -29,7 +33,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -147,7 +151,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -173,7 +177,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -199,25 +203,18 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null
-```
-
-</details>
-
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            33 seconds ago   Up 27 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            33 seconds ago   Up 27 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            33 seconds ago   Up 27 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         33 seconds ago   Up 32 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
 ```
 
 </details>
@@ -229,106 +226,118 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network safeguard_default  Creating
  Network safeguard_default  Created
  Container zookeeper  Creating
+ Container kafka-client  Creating
  Container zookeeper  Created
+ Container kafka-client  Created
  Container kafka3  Creating
  Container kafka2  Creating
  Container kafka1  Creating
  Container kafka3  Created
- Container kafka2  Created
  Container kafka1  Created
- Container gateway2  Creating
+ Container kafka2  Created
  Container schema-registry  Creating
+ Container gateway2  Creating
  Container gateway1  Creating
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
  Container gateway1  Created
  Container gateway2  Created
  Container schema-registry  Created
  Container zookeeper  Starting
+ Container kafka-client  Starting
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Waiting
- Container zookeeper  Healthy
- Container kafka1  Starting
- Container zookeeper  Healthy
- Container kafka3  Starting
+ Container kafka-client  Started
  Container zookeeper  Healthy
  Container kafka2  Starting
- Container kafka1  Started
+ Container zookeeper  Healthy
+ Container zookeeper  Healthy
+ Container kafka3  Starting
+ Container kafka1  Starting
  Container kafka3  Started
+ Container kafka1  Started
  Container kafka2  Started
- Container kafka1  Waiting
- Container kafka2  Waiting
- Container kafka3  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
+ Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
+ Container kafka2  Waiting
  Container kafka3  Waiting
- Container kafka1  Healthy
+ Container kafka1  Waiting
  Container kafka3  Healthy
- Container kafka1  Healthy
+ Container kafka3  Healthy
+ Container kafka3  Healthy
+ Container kafka2  Healthy
  Container kafka2  Healthy
  Container kafka1  Healthy
- Container kafka2  Healthy
- Container kafka3  Healthy
  Container gateway2  Starting
- Container kafka3  Healthy
- Container schema-registry  Starting
- Container kafka2  Healthy
+ Container kafka1  Healthy
+ Container kafka1  Healthy
  Container gateway1  Starting
- Container gateway2  Started
- Container schema-registry  Started
+ Container kafka2  Healthy
+ Container schema-registry  Starting
  Container gateway1  Started
+ Container schema-registry  Started
+ Container gateway2  Started
+ Container gateway2  Waiting
+ Container kafka-client  Waiting
+ Container zookeeper  Waiting
+ Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container schema-registry  Waiting
  Container gateway1  Waiting
- Container gateway2  Waiting
- Container zookeeper  Waiting
- Container kafka1  Waiting
+ Container kafka3  Healthy
+ Container kafka-client  Healthy
+ Container kafka2  Healthy
  Container zookeeper  Healthy
  Container kafka1  Healthy
- Container kafka3  Healthy
- Container kafka2  Healthy
- Container schema-registry  Healthy
- Container gateway1  Healthy
  Container gateway2  Healthy
+ Container gateway1  Healthy
+ Container schema-registry  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/gQuXseelhQ7btm1eCSOIlIIXZ.svg)](https://asciinema.org/a/gQuXseelhQ7btm1eCSOIlIIXZ)
+
+</details>
+
+## Creating virtual cluster teamA
+
+Creating virtual cluster `teamA` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `teamA`
-
-Creating virtual cluster `teamA` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster teamA with service account sa
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
     --header 'Content-Type: application/json' \
@@ -336,35 +345,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
-""" > teamA-sa.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `teamA`](images/step-05-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -372,38 +353,45 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
 """ > teamA-sa.properties
 
-```
-
-</details>
-      
-
-
-### Review the kafka properties to connect to `teamA`
-
-Review the kafka properties to connect to `teamA`
-
-```sh
+# Review file
 cat teamA-sa.properties
 ```
 
-<details on>
-  <summary>File content</summary>
 
-```properties
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxMzc0MTYzNH0.l23nxTUqZrBxd8k0GzZlJ4wU-20CYgMtqPjiXrHnx88';
-bootstrap.servers=localhost:6969
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ3OTQyOH0.NplDti0SEj4iAdXhugvkH0CBWYlqA_icLAFHnDRTo3M';
+
+
 ```
 
 </details>
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/XDGGIrtqwbLcycAvdjSZasbQa.svg)](https://asciinema.org/a/XDGGIrtqwbLcycAvdjSZasbQa)
 
-## Creating topic `cars` on `teamA`
+</details>
 
-Creating topic `cars` on `teamA`
+## Creating topic cars on teamA
+
+Creating on `teamA`:
+
 * Topic `cars` with partitions:1 and replication-factor:1
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-topics \
     --bootstrap-server localhost:6969 \
@@ -414,38 +402,55 @@ kafka-topics \
     --topic cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `cars` on `teamA`](images/step-07-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic cars
+```
 Created topic cars.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/ybq17SDpGwIXmPPWcqFDvEKQE.svg)](https://asciinema.org/a/ybq17SDpGwIXmPPWcqFDvEKQE)
 
-## Producing 3 messages in `cars`
+</details>
+
+## Producing 3 messages in cars
 
 Produce 3 records to the cars topic.
 
+<details>
+<summary>Command</summary>
+
+
+
+Sending 3 events
+```json
+{
+  "type" : "Ferrari",
+  "color" : "red",
+  "price" : 10000
+}
+{
+  "type" : "RollsRoyce",
+  "color" : "black",
+  "price" : 9000
+}
+{
+  "type" : "Mercedes",
+  "color" : "black",
+  "price" : 6000
+}
+```
+with
+
+
 ```sh
 echo '{"type":"Ferrari","color":"red","price":10000}' | \
     kafka-console-producer \
@@ -466,46 +471,32 @@ echo '{"type":"Mercedes","color":"black","price":6000}' | \
         --topic cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Producing 3 messages in `cars`](images/step-08-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"type":"Ferrari","color":"red","price":10000}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic cars
-
-echo '{"type":"RollsRoyce","color":"black","price":9000}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic cars
-
-echo '{"type":"Mercedes","color":"black","price":6000}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic cars
+```
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/1f68nbj5hnei4Wv4XgCU9Lmxe.svg)](https://asciinema.org/a/1f68nbj5hnei4Wv4XgCU9Lmxe)
+
+</details>
+
+## Consume the cars topic
+
+Let's confirm the 3 cars are there by consuming from the cars topic.
+
+<details open>
+<summary>Command</summary>
 
 
-## Consume the `cars` topic
-
-Let's confirm the 3 cars are there by consuming from the `cars` topic.
 
 ```sh
 kafka-console-consumer \
@@ -514,31 +505,16 @@ kafka-console-consumer \
     --topic cars \
     --from-beginning \
     --max-messages 3 \
-    --timeout-ms 10000 \
- | jq
+    --timeout-ms 10000 | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Consume the `cars` topic](images/step-09-CONSUME.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic cars \
-    --from-beginning \
-    --max-messages 3 \
-    --timeout-ms 10000 \
- | jq
+```json
 Processed a total of 3 messages
 {
   "type": "Ferrari",
@@ -559,15 +535,24 @@ Processed a total of 3 messages
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/9e54oIcbH2ienTCGv4oX3XRCe.svg)](https://asciinema.org/a/9e54oIcbH2ienTCGv4oX3XRCe)
 
-## Describing topic `cars`
+</details>
+
+## Describing topic cars
 
 Replication factor is 1? 
 
 This is bad: we can lose data!
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-topics \
     --bootstrap-server localhost:6969 \
@@ -576,39 +561,31 @@ kafka-topics \
     --topic cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Describing topic `cars`](images/step-10-DESCRIBE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --describe \
-    --topic cars
-Topic: cars	TopicId: itGe3ZQXTwWqZTq1RdfxZw	PartitionCount: 1	ReplicationFactor: 1	Configs: 
-	Topic: cars	Partition: 0	Leader: 3	Replicas: 3	Isr: 3
+```
+Topic: cars	TopicId: bCvkKkk7TcGl88e25h53PA	PartitionCount: 1	ReplicationFactor: 1	Configs: 
+	Topic: cars	Partition: 0	Leader: 2	Replicas: 2	Isr: 2
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/813ZB1qvuSFgNZ8m8BtBQEkOc.svg)](https://asciinema.org/a/813ZB1qvuSFgNZ8m8BtBQEkOc)
 
-## Adding interceptor `guard-on-create-topic`
+</details>
+
+## Adding interceptor guard-on-create-topic
 
 Let's make sure this problem never repeats itself and add a topic creation safeguard. 
 
 ... and while we're at it, let's make sure we don't abuse partitions either
-
 
 Creating the interceptor named `guard-on-create-topic` of the plugin `io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin` using the following payload
 
@@ -631,31 +608,29 @@ Creating the interceptor named `guard-on-create-topic` of the plugin `io.condukt
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-11-guard-on-create-topic.json | jq
+cat step-10-guard-on-create-topic.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-create-topic" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-11-guard-on-create-topic.json | jq
+    --data @step-10-guard-on-create-topic.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `guard-on-create-topic`](images/step-11-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-11-guard-on-create-topic.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin",
   "priority": 100,
@@ -670,13 +645,6 @@ cat step-11-guard-on-create-topic.json | jq
     }
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-create-topic" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-11-guard-on-create-topic.json | jq
 {
   "message": "guard-on-create-topic is created"
 }
@@ -684,12 +652,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/XetiViIFRWs0LlNDzI545hy0U.svg)](https://asciinema.org/a/XetiViIFRWs0LlNDzI545hy0U)
 
-## Listing interceptors for `teamA`
+</details>
+
+## Listing interceptors for teamA
 
 Listing interceptors on `gateway1` for virtual cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 curl \
@@ -699,30 +676,18 @@ curl \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing interceptors for `teamA`](images/step-12-LIST_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request GET 'http://localhost:8888/admin/interceptors/v1/vcluster/teamA' \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent | jq
+```json
 {
   "interceptors": [
     {
       "name": "guard-on-create-topic",
       "pluginClass": "io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin",
-      "apiKey": null,
       "priority": 100,
       "timeoutMs": 9223372036854775807,
       "config": {
@@ -742,12 +707,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/8DL6hYbUG1dRV2U3cVxU5hq8K.svg)](https://asciinema.org/a/8DL6hYbUG1dRV2U3cVxU5hq8K)
+
+</details>
 
 ## Create a topic that is not within policy
 
 Topic creation is denied by our policy
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-topics \
@@ -771,40 +745,36 @@ kafka-topics \
 
 
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Create a topic that is not within policy](images/step-13-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --replication-factor 1 \
-    --partitions 100 \
-    --create --if-not-exists \
-    --topic roads
+```
 Error while executing topic command : Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2
-[2024-01-23 00:22:38,511] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2
- (kafka.admin.TopicCommand$)
+[2024-04-10 02:57:19,271] ERROR org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2
+ (org.apache.kafka.tools.TopicCommand)
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/UOUqJ64ZxlnkL0ziYKhXilLLG.svg)](https://asciinema.org/a/UOUqJ64ZxlnkL0ziYKhXilLLG)
+
+</details>
 
 ## Let's now create it again, with parameters within our policy
 
 Perfect, it has been created
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-topics \
     --bootstrap-server localhost:6969 \
@@ -815,40 +785,30 @@ kafka-topics \
     --topic roads
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's now create it again, with parameters within our policy](images/step-14-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --replication-factor 2 \
-    --partitions 3 \
-    --create --if-not-exists \
-    --topic roads
+```
 Created topic roads.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/JIW2xGyjWBm60w3CQegRYgJ1Y.svg)](https://asciinema.org/a/JIW2xGyjWBm60w3CQegRYgJ1Y)
 
-## Adding interceptor `guard-on-alter-topic`
+</details>
+
+## Adding interceptor guard-on-alter-topic
 
 Let's make sure we enforce policies when we alter topics too
 
 Here the retention can only be between 1 and 5 days
-
 
 Creating the interceptor named `guard-on-alter-topic` of the plugin `io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin` using the following payload
 
@@ -867,31 +827,29 @@ Creating the interceptor named `guard-on-alter-topic` of the plugin `io.condukto
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-15-guard-on-alter-topic.json | jq
+cat step-14-guard-on-alter-topic.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-alter-topic" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-15-guard-on-alter-topic.json | jq
+    --data @step-14-guard-on-alter-topic.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `guard-on-alter-topic`](images/step-15-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-15-guard-on-alter-topic.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin",
   "priority": 100,
@@ -902,13 +860,6 @@ cat step-15-guard-on-alter-topic.json | jq
     }
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-alter-topic" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-15-guard-on-alter-topic.json | jq
 {
   "message": "guard-on-alter-topic is created"
 }
@@ -916,12 +867,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/m3I7sWjldEkXxttTYekawx5yL.svg)](https://asciinema.org/a/m3I7sWjldEkXxttTYekawx5yL)
+
+</details>
 
 ## Update 'cars' with a retention of 60 days
 
 Altering the topic is denied by our policy
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-configs \
@@ -943,33 +903,20 @@ kafka-configs \
 
 
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Update 'cars' with a retention of 60 days](images/step-16-ALTER_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-configs \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --alter \
-    --entity-type topics \
-    --entity-name roads \
-    --add-config retention.ms=5184000000
+```
 Error while executing config command with args '--bootstrap-server localhost:6969 --command-config teamA-sa.properties --alter --entity-type topics --entity-name roads --add-config retention.ms=5184000000'
 java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Resource 'roads' with retention.ms is '5184000000', must not be greater than '432000000'
 	at java.base/java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:396)
 	at java.base/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2096)
 	at org.apache.kafka.common.internals.KafkaFutureImpl.get(KafkaFutureImpl.java:180)
-	at kafka.admin.ConfigCommand$.alterConfig(ConfigCommand.scala:361)
-	at kafka.admin.ConfigCommand$.processCommand(ConfigCommand.scala:328)
+	at kafka.admin.ConfigCommand$.alterConfig(ConfigCommand.scala:374)
+	at kafka.admin.ConfigCommand$.processCommand(ConfigCommand.scala:341)
 	at kafka.admin.ConfigCommand$.main(ConfigCommand.scala:97)
 	at kafka.admin.ConfigCommand.main(ConfigCommand.scala)
 Caused by: org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Resource 'roads' with retention.ms is '5184000000', must not be greater than '432000000'
@@ -977,13 +924,22 @@ Caused by: org.apache.kafka.common.errors.PolicyViolationException: Request para
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/1PlXWcTl122vf0w4hItTNYcOA.svg)](https://asciinema.org/a/1PlXWcTl122vf0w4hItTNYcOA)
+
+</details>
 
 ## Update 'cars' with a retention of 3 days
 
 Topic updated successfully
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-configs \
     --bootstrap-server localhost:6969 \
@@ -994,40 +950,30 @@ kafka-configs \
     --add-config retention.ms=259200000
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Update 'cars' with a retention of 3 days](images/step-17-ALTER_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-configs \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --alter \
-    --entity-type topics \
-    --entity-name roads \
-    --add-config retention.ms=259200000
+```
 Completed updating config for topic roads.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/sHpX8r6PyWxP5i6kok3m8YqE5.svg)](https://asciinema.org/a/sHpX8r6PyWxP5i6kok3m8YqE5)
 
-## Adding interceptor `guard-on-produce`
+</details>
+
+## Adding interceptor guard-on-produce
 
 Let's make sure we enforce policies also at produce time!
 
 Here message shall be sent with compression and with the right level of resiliency
-
 
 Creating the interceptor named `guard-on-produce` of the plugin `io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin` using the following payload
 
@@ -1050,31 +996,29 @@ Creating the interceptor named `guard-on-produce` of the plugin `io.conduktor.ga
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-18-guard-on-produce.json | jq
+cat step-17-guard-on-produce.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-produce" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-18-guard-on-produce.json | jq
+    --data @step-17-guard-on-produce.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `guard-on-produce`](images/step-18-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-18-guard-on-produce.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin",
   "priority": 100,
@@ -1094,13 +1038,6 @@ cat step-18-guard-on-produce.json | jq
     }
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-produce" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-18-guard-on-produce.json | jq
 {
   "message": "guard-on-produce is created"
 }
@@ -1108,12 +1045,32 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/GCzetDq70TVcwjtTKtd6AEGQT.svg)](https://asciinema.org/a/GCzetDq70TVcwjtTKtd6AEGQT)
 
-## Produce sample data to our `cars` topic without the right policies
+</details>
+
+## Produce sample data to our cars topic without the right policies
 
 Produce 1 record ... that do not match our policy
+
+<details open>
+<summary>Command</summary>
+
+
+
+Sending 1 event
+```json
+{
+  "type" : "Fiat",
+  "color" : "red",
+  "price" : -1
+}
+```
+with
+
 
 ```sh
 echo '{"type":"Fiat","color":"red","price":-1}' | \
@@ -1137,39 +1094,46 @@ echo '{"type":"Fiat","color":"red","price":-1}' | \
 
 
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Produce sample data to our `cars` topic without the right policies](images/step-19-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"type":"Fiat","color":"red","price":-1}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --request-required-acks 1 \
-        --compression-codec snappy \
-        --topic cars
-[2024-01-23 00:22:45,453] ERROR Error when sending message to topic cars with key: null, value: 40 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+```
+[2024-04-10 02:57:25,872] ERROR Error when sending message to topic cars with key: null, value: 40 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
 org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'cars' with invalid value for 'acks': 1. Valid value is one of the values: -1. Topic 'cars' with invalid value for 'compressions': SNAPPY. Valid value is one of the values: [GZIP, NONE]
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/IKDvlejJDG5t1pMUcBxkpZMYg.svg)](https://asciinema.org/a/IKDvlejJDG5t1pMUcBxkpZMYg)
 
-## Produce sample data to our `cars` topic that complies with our policy
+</details>
+
+## Produce sample data to our cars topic that complies with our policy
 
 Producing a record matching our policy
 
+<details open>
+<summary>Command</summary>
+
+
+
+Sending 1 event
+```json
+{
+  "type" : "Fiat",
+  "color" : "red",
+  "price" : -1
+}
+```
+with
+
+
 ```sh
 echo '{"type":"Fiat","color":"red","price":-1}' | \
     kafka-console-producer \
@@ -1180,37 +1144,27 @@ echo '{"type":"Fiat","color":"red","price":-1}' | \
         --topic cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Produce sample data to our `cars` topic that complies with our policy](images/step-20-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"type":"Fiat","color":"red","price":-1}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --request-required-acks -1 \
-        --compression-codec gzip \
-        --topic cars
+```
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/avlYU4UFsAwkynQryMm39ef7a.svg)](https://asciinema.org/a/avlYU4UFsAwkynQryMm39ef7a)
 
-## Adding interceptor `produce-rate`
+</details>
+
+## Adding interceptor produce-rate
 
 Let's add some rate limiting policy on produce
-
 
 Creating the interceptor named `produce-rate` of the plugin `io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin` using the following payload
 
@@ -1226,31 +1180,29 @@ Creating the interceptor named `produce-rate` of the plugin `io.conduktor.gatewa
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-21-produce-rate.json | jq
+cat step-20-produce-rate.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-21-produce-rate.json | jq
+    --data @step-20-produce-rate.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `produce-rate`](images/step-21-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-21-produce-rate.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin",
   "priority": 100,
@@ -1258,13 +1210,6 @@ cat step-21-produce-rate.json | jq
     "maximumBytesPerSecond": 1
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-21-produce-rate.json | jq
 {
   "message": "produce-rate is created"
 }
@@ -1272,13 +1217,33 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/fTd4SlfXNdfZrHgCxpTCTRkjq.svg)](https://asciinema.org/a/fTd4SlfXNdfZrHgCxpTCTRkjq)
+
+</details>
 
 ## Produce sample data
 
 Do not match our produce rate policy
 
+<details open>
+<summary>Command</summary>
+
+
+
+Sending 1 event
+```json
+{
+  "type" : "Fiat",
+  "color" : "red",
+  "price" : -1
+}
+```
+with
+
+
 ```sh
 echo '{"type":"Fiat","color":"red","price":-1}' | \
     kafka-console-producer \
@@ -1289,143 +1254,161 @@ echo '{"type":"Fiat","color":"red","price":-1}' | \
         --topic cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Produce sample data](images/step-22-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"type":"Fiat","color":"red","price":-1}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --request-required-acks -1 \
-        --compression-codec none \
-        --topic cars
+```
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/ESM97sH0gDgr17a3Duh8yJPh8.svg)](https://asciinema.org/a/ESM97sH0gDgr17a3Duh8yJPh8)
+
+</details>
 
 ## Check in the audit log that produce was throttled
 
 Check in the audit log that produce was throttled in cluster `kafka1`
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
+    --topic _conduktor_gateway_auditlogs \
     --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin")'
+    --timeout-ms 3000 \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin")'
 ```
 
 
+returns 1 event
 ```json
 {
-  "id" : "a72db2e1-55c6-4b8d-b630-daba82e2e4dc",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "bb3743f3-3b0a-4295-abe6-0606c5164463",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19537"
+    "remoteAddress" : "/192.168.65.1:16536"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:36.712918709Z",
+  "time" : "2024-04-09T22:55:35.507223211Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin",
-    "message" : "Client produced (108) bytes, which is more than 1 bytes per second, producer will be throttled by 942 milliseconds"
+    "message" : "Client produced (108) bytes, which is more than 1 bytes per second, producer will be throttled by 969 milliseconds"
   }
 }
 ```
 
 
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Check in the audit log that produce was throttled](images/step-23-AUDITLOG.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
-    --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin")'
-[2024-01-23 00:22:52,795] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```
+{"id":"ad5d2cbf-2bd1-4dce-8d29-1c42939922e1","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28491"},"specVersion":"0.1.0","time":"2024-04-09T22:57:08.780478796Z","eventData":{"method":"POST","path":"/admin/vclusters/v1/vcluster/teamA/username/sa","body":"{\"lifeTimeSeconds\": 7776000}"}}
+{"id":"7419d31b-b9ac-468b-bc30-b0d6d29837ce","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17069"},"specVersion":"0.1.0","time":"2024-04-09T22:57:09.742668879Z","eventData":"SUCCESS"}
+{"id":"4263b2d4-ad38-4d7e-a4c0-59d9f6521456","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32960"},"specVersion":"0.1.0","time":"2024-04-09T22:57:09.827216255Z","eventData":"SUCCESS"}
+{"id":"b9574b20-5776-4e71-a362-e18556218757","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17071"},"specVersion":"0.1.0","time":"2024-04-09T22:57:11.336087922Z","eventData":"SUCCESS"}
+{"id":"ca2f053b-c936-4a7f-92f2-4b21f62d2252","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32962"},"specVersion":"0.1.0","time":"2024-04-09T22:57:11.373917880Z","eventData":"SUCCESS"}
+{"id":"ab746ef4-9793-4b29-81df-0e7fae1538d3","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17073"},"specVersion":"0.1.0","time":"2024-04-09T22:57:12.764087214Z","eventData":"SUCCESS"}
+{"id":"60dcba90-1cf1-4018-a9a7-19b3eec5ed55","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32964"},"specVersion":"0.1.0","time":"2024-04-09T22:57:12.796650298Z","eventData":"SUCCESS"}
+{"id":"eb2d20fb-24de-44d4-bdf2-033ba9e8e281","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17075"},"specVersion":"0.1.0","time":"2024-04-09T22:57:14.123940465Z","eventData":"SUCCESS"}
+{"id":"21b4840a-af5d-4785-a79e-a4fddd4acd3b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32966"},"specVersion":"0.1.0","time":"2024-04-09T22:57:14.158265590Z","eventData":"SUCCESS"}
+{"id":"e88a3bcf-1bdb-4a79-aebd-7afc09064716","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17077"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.534253132Z","eventData":"SUCCESS"}
+{"id":"c0178ae2-dd59-45de-a835-74161eb10843","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32968"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.565131466Z","eventData":"SUCCESS"}
+{"id":"451b2171-737d-4506-a0f7-2c4ac6e78f53","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32969"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.693036716Z","eventData":"SUCCESS"}
+{"id":"34f347bf-e604-4f18-b2e0-ee2968086384","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17092"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.579152217Z","eventData":"SUCCESS"}
+{"id":"d02d0408-fac0-42eb-8be4-f0649aedffb2","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32983"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.597597925Z","eventData":"SUCCESS"}
+{"id":"08438b0d-c1f1-4fa4-afdc-1843f88fbcf8","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17094"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.624725050Z","eventData":"SUCCESS"}
+{"id":"cdc7a87b-9fe1-4016-8e46-7a45ccd66d46","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28530"},"specVersion":"0.1.0","time":"2024-04-09T22:57:18.119768675Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-create-topic","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"replicationFactor\" : {      \"min\" : 2,      \"max\" : 2    },    \"numPartition\" : {      \"min\" : 1,      \"max\" : 3    }  }}"}}
+{"id":"2cc00de7-bb9d-4c28-b305-135de9138061","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28531"},"specVersion":"0.1.0","time":"2024-04-09T22:57:18.318868092Z","eventData":{"method":"GET","path":"/admin/interceptors/v1/vcluster/teamA","body":null}}
+{"id":"63b9ef30-2fd7-4db1-9d16-7610cfdf9272","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17109"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.217374842Z","eventData":"SUCCESS"}
+{"id":"36de93e8-b1a6-47ff-bacf-d79a3b89b717","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33000"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.238897509Z","eventData":"SUCCESS"}
+{"id":"35607bf6-05ea-4f83-b87a-2e9130f21fcc","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33000"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.258906592Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2"}}
+{"id":"bc94cc84-51f9-4dca-b918-9d09fe18fffd","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17111"},"specVersion":"0.1.0","time":"2024-04-09T22:57:20.582032760Z","eventData":"SUCCESS"}
+{"id":"1f2a13e1-79d8-4741-a7cf-663b8c69a1a9","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33002"},"specVersion":"0.1.0","time":"2024-04-09T22:57:20.603914426Z","eventData":"SUCCESS"}
+{"id":"13aa671a-eba1-4822-8b4a-790b19e6f517","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28536"},"specVersion":"0.1.0","time":"2024-04-09T22:57:21.149915843Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-alter-topic","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"retentionMs\" : {      \"min\" : 86400000,      \"max\" : 432000000    }  }}"}}
+{"id":"0322d61d-f26b-4897-b190-ef31faeb144a","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17114"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.234666177Z","eventData":"SUCCESS"}
+{"id":"12a03f8c-eb46-4297-ac05-c0d43f7c6a45","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6971","remoteAddress":"/192.168.65.1:44385"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.258857260Z","eventData":"SUCCESS"}
+{"id":"ac9d937d-daa7-482a-95e8-7e21c55ff51e","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:44385"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.322798385Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Resource 'roads' with retention.ms is '5184000000', must not be greater than '432000000'"}}
+{"id":"1c5884ec-6ea6-4974-846e-0fc3a1881bb8","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17116"},"specVersion":"0.1.0","time":"2024-04-09T22:57:23.728982886Z","eventData":"SUCCESS"}
+{"id":"3854b5d0-bb85-4735-be81-0597237ad8b1","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33007"},"specVersion":"0.1.0","time":"2024-04-09T22:57:23.748231761Z","eventData":"SUCCESS"}
+{"id":"fee03330-e546-4297-bf83-8038a2f0ed55","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28541"},"specVersion":"0.1.0","time":"2024-04-09T22:57:24.302672303Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-produce","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"acks\" : {      \"value\" : [ -1 ],      \"action\" : \"BLOCK\"    },    \"compressions\" : {      \"value\" : [ \"NONE\", \"GZIP\" ],      \"action\" : \"BLOCK\"    }  }}"}}
+{"id":"930007bb-3325-45f7-875e-b374ebc54548","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17119"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.298030595Z","eventData":"SUCCESS"}
+{"id":"164bdf3d-d1b8-4849-9188-5ef823d8cd0b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33010"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.813463304Z","eventData":"SUCCESS"}
+{"id":"b18e0515-feb4-45d8-aadc-50bc76a75c5d","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33010"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.864088137Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'cars' with invalid value for 'acks': 1. Valid value is one of the values: -1. Topic 'cars' with invalid value for 'compressions': SNAPPY. Valid value is one of the values: [GZIP, NONE]"}}
+{"id":"2d45242b-ea94-43d1-8055-c4972f6b8481","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17121"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.192247179Z","eventData":"SUCCESS"}
+{"id":"c49ce88e-8f18-48c4-bf71-66f11607c03e","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33012"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.220203596Z","eventData":"SUCCESS"}
+{"id":"b7710805-24c4-4c2a-a4ab-53701928a435","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28558"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.680550388Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"maximumBytesPerSecond\" : 1  }}"}}
+{"id":"4659321f-3f7f-4564-a5aa-e8179a0682b7","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17148"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.620101472Z","eventData":"SUCCESS"}
+{"id":"78366d0c-a400-4365-9f7d-41e3c7030bb3","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33039"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.648120222Z","eventData":"SUCCESS"}
+{"id":"1cf909c0-2610-412c-b257-15a5af81b682","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33039"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.662161305Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin","message":"Client produced (108) bytes, which is more than 1 bytes per second, producer will be throttled by 44 milliseconds"}}
+[2024-04-10 02:57:33,143] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
-Processed a total of 37 messages
+Processed a total of 38 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/Ne68ohQitbX7Ja8g8mvjYWbvA.svg)](https://asciinema.org/a/Ne68ohQitbX7Ja8g8mvjYWbvA)
+
+</details>
+
+## Remove interceptor produce-rate
 
 
-## Remove interceptor `produce-rate`
+
+<details open>
+<summary>Command</summary>
 
 
 
 ```sh
 curl \
     --request DELETE "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate" \
-    --header 'Content-Type: application/json'
+    --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Remove interceptor `produce-rate`](images/step-24-REMOVE_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request DELETE "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate" \
-    --header 'Content-Type: application/json'
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-    --user 'admin:conduktor' \
-    --silent | jq
-step-24-REMOVE_INTERCEPTORS.sh: line 4: --user: command not found
+```json
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/Ae9Hp63rVbicsertPoy0smzVW.svg)](https://asciinema.org/a/Ae9Hp63rVbicsertPoy0smzVW)
 
-## Adding interceptor `consumer-group-name-policy`
+</details>
+
+## Adding interceptor consumer-group-name-policy
 
 Let's add some naming conventions on consumer group names
-
 
 Creating the interceptor named `consumer-group-name-policy` of the plugin `io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin` using the following payload
 
@@ -1444,31 +1427,29 @@ Creating the interceptor named `consumer-group-name-policy` of the plugin `io.co
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-25-consumer-group-name-policy.json | jq
+cat step-24-consumer-group-name-policy.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-25-consumer-group-name-policy.json | jq
+    --data @step-24-consumer-group-name-policy.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `consumer-group-name-policy`](images/step-25-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-25-consumer-group-name-policy.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin",
   "priority": 100,
@@ -1479,13 +1460,6 @@ cat step-25-consumer-group-name-policy.json | jq
     }
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-25-consumer-group-name-policy.json | jq
 {
   "message": "consumer-group-name-policy is created"
 }
@@ -1493,12 +1467,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/Vb3IUoCQoXUoaDxOXAkkQ6zj4.svg)](https://asciinema.org/a/Vb3IUoCQoXUoaDxOXAkkQ6zj4)
+
+</details>
+
+## Consuming from cars
+
+Consuming from cars in cluster `teamA`
+
+<details open>
+<summary>Command</summary>
 
 
-## Consuming from `cars`
-
-Consuming from `cars` in cluster `teamA`
 
 ```sh
 kafka-console-consumer \
@@ -1507,8 +1490,7 @@ kafka-console-consumer \
     --topic cars \
     --from-beginning \
     --timeout-ms 10000 \
-    --group group-not-within-policy \
- | jq
+    --group group-not-within-policy | jq
 ```
 
 > [!IMPORTANT]
@@ -1520,44 +1502,31 @@ kafka-console-consumer \
 
 
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Consuming from `cars`](images/step-26-CONSUME.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic cars \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --group group-not-within-policy \
- | jq
-[2024-01-23 00:22:54,420] ERROR [Consumer clientId=console-consumer, groupId=group-not-within-policy] JoinGroup failed due to unexpected error: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
-[2024-01-23 00:22:54,420] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```json
+[2024-04-10 02:57:34,753] ERROR [Consumer clientId=console-consumer, groupId=group-not-within-policy] JoinGroup failed due to unexpected error: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2024-04-10 02:57:34,754] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.KafkaException: Unexpected error in join group response: Request parameters do not satisfy the configured policy.
-	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$JoinGroupResponseHandler.handle(AbstractCoordinator.java:711)
-	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$JoinGroupResponseHandler.handle(AbstractCoordinator.java:603)
-	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$CoordinatorResponseHandler.onSuccess(AbstractCoordinator.java:1270)
-	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$CoordinatorResponseHandler.onSuccess(AbstractCoordinator.java:1245)
+	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$JoinGroupResponseHandler.handle(AbstractCoordinator.java:741)
+	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$JoinGroupResponseHandler.handle(AbstractCoordinator.java:631)
+	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$CoordinatorResponseHandler.onSuccess(AbstractCoordinator.java:1300)
+	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$CoordinatorResponseHandler.onSuccess(AbstractCoordinator.java:1275)
 	at org.apache.kafka.clients.consumer.internals.RequestFuture$1.onSuccess(RequestFuture.java:206)
 	at org.apache.kafka.clients.consumer.internals.RequestFuture.fireSuccess(RequestFuture.java:169)
 	at org.apache.kafka.clients.consumer.internals.RequestFuture.complete(RequestFuture.java:129)
-	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient$RequestFutureCompletionHandler.fireCompletion(ConsumerNetworkClient.java:617)
-	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.firePendingCompletedRequests(ConsumerNetworkClient.java:427)
-	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.poll(ConsumerNetworkClient.java:312)
-	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.poll(ConsumerNetworkClient.java:251)
-	at org.apache.kafka.clients.consumer.KafkaConsumer.pollForFetches(KafkaConsumer.java:1255)
-	at org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1186)
-	at org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1159)
+	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient$RequestFutureCompletionHandler.fireCompletion(ConsumerNetworkClient.java:616)
+	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.firePendingCompletedRequests(ConsumerNetworkClient.java:428)
+	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.poll(ConsumerNetworkClient.java:313)
+	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.poll(ConsumerNetworkClient.java:252)
+	at org.apache.kafka.clients.consumer.internals.LegacyKafkaConsumer.pollForFetches(LegacyKafkaConsumer.java:686)
+	at org.apache.kafka.clients.consumer.internals.LegacyKafkaConsumer.poll(LegacyKafkaConsumer.java:617)
+	at org.apache.kafka.clients.consumer.internals.LegacyKafkaConsumer.poll(LegacyKafkaConsumer.java:590)
+	at org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:874)
 	at kafka.tools.ConsoleConsumer$ConsumerWrapper.receive(ConsoleConsumer.scala:473)
 	at kafka.tools.ConsoleConsumer$.process(ConsoleConsumer.scala:103)
 	at kafka.tools.ConsoleConsumer$.run(ConsoleConsumer.scala:77)
@@ -1568,36 +1537,45 @@ Processed a total of 0 messages
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/kusW9g5Nsc8GnAXOKCZVeXO2t.svg)](https://asciinema.org/a/kusW9g5Nsc8GnAXOKCZVeXO2t)
+
+</details>
 
 ## Check in the audit log that fetch was denied
 
 Check in the audit log that fetch was denied in cluster `kafka1`
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
+    --topic _conduktor_gateway_auditlogs \
     --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin")'
+    --timeout-ms 3000 \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin")'
 ```
 
 
+returns 1 event
 ```json
 {
-  "id" : "3ec3038c-0a79-4380-bd25-d818f63a5a5f",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "5f8a5b25-49f6-4bd3-8999-42ef84051101",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:47107"
+    "remoteAddress" : "/192.168.65.1:43837"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:39.931147669Z",
+  "time" : "2024-04-09T22:55:38.805738754Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin",
@@ -1607,56 +1585,77 @@ kafka-console-consumer \
 ```
 
 
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Check in the audit log that fetch was denied](images/step-27-AUDITLOG.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
-    --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin")'
-[2024-01-23 00:22:58,935] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```
+{"id":"ad5d2cbf-2bd1-4dce-8d29-1c42939922e1","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28491"},"specVersion":"0.1.0","time":"2024-04-09T22:57:08.780478796Z","eventData":{"method":"POST","path":"/admin/vclusters/v1/vcluster/teamA/username/sa","body":"{\"lifeTimeSeconds\": 7776000}"}}
+{"id":"7419d31b-b9ac-468b-bc30-b0d6d29837ce","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17069"},"specVersion":"0.1.0","time":"2024-04-09T22:57:09.742668879Z","eventData":"SUCCESS"}
+{"id":"4263b2d4-ad38-4d7e-a4c0-59d9f6521456","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32960"},"specVersion":"0.1.0","time":"2024-04-09T22:57:09.827216255Z","eventData":"SUCCESS"}
+{"id":"b9574b20-5776-4e71-a362-e18556218757","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17071"},"specVersion":"0.1.0","time":"2024-04-09T22:57:11.336087922Z","eventData":"SUCCESS"}
+{"id":"ca2f053b-c936-4a7f-92f2-4b21f62d2252","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32962"},"specVersion":"0.1.0","time":"2024-04-09T22:57:11.373917880Z","eventData":"SUCCESS"}
+{"id":"ab746ef4-9793-4b29-81df-0e7fae1538d3","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17073"},"specVersion":"0.1.0","time":"2024-04-09T22:57:12.764087214Z","eventData":"SUCCESS"}
+{"id":"60dcba90-1cf1-4018-a9a7-19b3eec5ed55","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32964"},"specVersion":"0.1.0","time":"2024-04-09T22:57:12.796650298Z","eventData":"SUCCESS"}
+{"id":"eb2d20fb-24de-44d4-bdf2-033ba9e8e281","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17075"},"specVersion":"0.1.0","time":"2024-04-09T22:57:14.123940465Z","eventData":"SUCCESS"}
+{"id":"21b4840a-af5d-4785-a79e-a4fddd4acd3b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32966"},"specVersion":"0.1.0","time":"2024-04-09T22:57:14.158265590Z","eventData":"SUCCESS"}
+{"id":"e88a3bcf-1bdb-4a79-aebd-7afc09064716","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17077"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.534253132Z","eventData":"SUCCESS"}
+{"id":"c0178ae2-dd59-45de-a835-74161eb10843","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32968"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.565131466Z","eventData":"SUCCESS"}
+{"id":"451b2171-737d-4506-a0f7-2c4ac6e78f53","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32969"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.693036716Z","eventData":"SUCCESS"}
+{"id":"34f347bf-e604-4f18-b2e0-ee2968086384","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17092"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.579152217Z","eventData":"SUCCESS"}
+{"id":"d02d0408-fac0-42eb-8be4-f0649aedffb2","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32983"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.597597925Z","eventData":"SUCCESS"}
+{"id":"08438b0d-c1f1-4fa4-afdc-1843f88fbcf8","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17094"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.624725050Z","eventData":"SUCCESS"}
+{"id":"cdc7a87b-9fe1-4016-8e46-7a45ccd66d46","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28530"},"specVersion":"0.1.0","time":"2024-04-09T22:57:18.119768675Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-create-topic","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"replicationFactor\" : {      \"min\" : 2,      \"max\" : 2    },    \"numPartition\" : {      \"min\" : 1,      \"max\" : 3    }  }}"}}
+{"id":"2cc00de7-bb9d-4c28-b305-135de9138061","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28531"},"specVersion":"0.1.0","time":"2024-04-09T22:57:18.318868092Z","eventData":{"method":"GET","path":"/admin/interceptors/v1/vcluster/teamA","body":null}}
+{"id":"63b9ef30-2fd7-4db1-9d16-7610cfdf9272","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17109"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.217374842Z","eventData":"SUCCESS"}
+{"id":"36de93e8-b1a6-47ff-bacf-d79a3b89b717","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33000"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.238897509Z","eventData":"SUCCESS"}
+{"id":"35607bf6-05ea-4f83-b87a-2e9130f21fcc","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33000"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.258906592Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2"}}
+{"id":"bc94cc84-51f9-4dca-b918-9d09fe18fffd","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17111"},"specVersion":"0.1.0","time":"2024-04-09T22:57:20.582032760Z","eventData":"SUCCESS"}
+{"id":"1f2a13e1-79d8-4741-a7cf-663b8c69a1a9","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33002"},"specVersion":"0.1.0","time":"2024-04-09T22:57:20.603914426Z","eventData":"SUCCESS"}
+{"id":"13aa671a-eba1-4822-8b4a-790b19e6f517","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28536"},"specVersion":"0.1.0","time":"2024-04-09T22:57:21.149915843Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-alter-topic","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"retentionMs\" : {      \"min\" : 86400000,      \"max\" : 432000000    }  }}"}}
+{"id":"0322d61d-f26b-4897-b190-ef31faeb144a","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17114"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.234666177Z","eventData":"SUCCESS"}
+{"id":"12a03f8c-eb46-4297-ac05-c0d43f7c6a45","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6971","remoteAddress":"/192.168.65.1:44385"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.258857260Z","eventData":"SUCCESS"}
+{"id":"ac9d937d-daa7-482a-95e8-7e21c55ff51e","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:44385"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.322798385Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Resource 'roads' with retention.ms is '5184000000', must not be greater than '432000000'"}}
+{"id":"1c5884ec-6ea6-4974-846e-0fc3a1881bb8","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17116"},"specVersion":"0.1.0","time":"2024-04-09T22:57:23.728982886Z","eventData":"SUCCESS"}
+{"id":"3854b5d0-bb85-4735-be81-0597237ad8b1","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33007"},"specVersion":"0.1.0","time":"2024-04-09T22:57:23.748231761Z","eventData":"SUCCESS"}
+{"id":"fee03330-e546-4297-bf83-8038a2f0ed55","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28541"},"specVersion":"0.1.0","time":"2024-04-09T22:57:24.302672303Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-produce","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"acks\" : {      \"value\" : [ -1 ],      \"action\" : \"BLOCK\"    },    \"compressions\" : {      \"value\" : [ \"NONE\", \"GZIP\" ],      \"action\" : \"BLOCK\"    }  }}"}}
+{"id":"930007bb-3325-45f7-875e-b374ebc54548","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17119"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.298030595Z","eventData":"SUCCESS"}
+{"id":"164bdf3d-d1b8-4849-9188-5ef823d8cd0b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33010"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.813463304Z","eventData":"SUCCESS"}
+{"id":"b18e0515-feb4-45d8-aadc-50bc76a75c5d","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33010"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.864088137Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'cars' with invalid value for 'acks': 1. Valid value is one of the values: -1. Topic 'cars' with invalid value for 'compressions': SNAPPY. Valid value is one of the values: [GZIP, NONE]"}}
+{"id":"2d45242b-ea94-43d1-8055-c4972f6b8481","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17121"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.192247179Z","eventData":"SUCCESS"}
+{"id":"c49ce88e-8f18-48c4-bf71-66f11607c03e","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33012"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.220203596Z","eventData":"SUCCESS"}
+{"id":"b7710805-24c4-4c2a-a4ab-53701928a435","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28558"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.680550388Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"maximumBytesPerSecond\" : 1  }}"}}
+{"id":"4659321f-3f7f-4564-a5aa-e8179a0682b7","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17148"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.620101472Z","eventData":"SUCCESS"}
+{"id":"78366d0c-a400-4365-9f7d-41e3c7030bb3","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33039"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.648120222Z","eventData":"SUCCESS"}
+{"id":"1cf909c0-2610-412c-b257-15a5af81b682","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33039"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.662161305Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin","message":"Client produced (108) bytes, which is more than 1 bytes per second, producer will be throttled by 44 milliseconds"}}
+{"id":"f310f6a4-54ab-46fd-b956-9177bdde8416","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28577"},"specVersion":"0.1.0","time":"2024-04-09T22:57:33.671817502Z","eventData":{"method":"DELETE","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate","body":null}}
+{"id":"17f183eb-56c6-4d0b-bc4f-e7b01f0d9ee1","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28578"},"specVersion":"0.1.0","time":"2024-04-09T22:57:33.726142043Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"groupId\" : {      \"value\" : \"my-group.*\",      \"action\" : \"BLOCK\"    }  }}"}}
+{"id":"c2092f02-6d9d-447d-912c-07a3d9fdd04d","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17156"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.717949919Z","eventData":"SUCCESS"}
+{"id":"8b2f1ed7-4d7b-426a-a105-d3961ae8c6a0","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6971","remoteAddress":"/192.168.65.1:44427"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.745343752Z","eventData":"SUCCESS"}
+{"id":"cac027b2-a847-48b2-be7a-0abc76d70e2a","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:44427"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.751896794Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin","message":"Request parameters do not satisfy the configured policy. GroupId 'group-not-within-policy' is invalid, naming convention must match with regular expression my-group.*"}}
+[2024-04-10 02:57:39,203] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
-Processed a total of 41 messages
-{
-  "id": "6ec9eb8a-1db6-4ea6-a2ed-9840883312be",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:21738"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:22:54.411529634Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin",
-    "message": "Request parameters do not satisfy the configured policy. GroupId 'group-not-within-policy' is invalid, naming convention must match with regular expression my-group.*"
-  }
-}
+Processed a total of 43 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/RPFbG7XhlT1ZiTwCntBW4oFYm.svg)](https://asciinema.org/a/RPFbG7XhlT1ZiTwCntBW4oFYm)
+
+</details>
+
+## Consuming from cars
+
+Consuming from cars in cluster `teamA`
+
+<details open>
+<summary>Command</summary>
 
 
-## Consuming from `cars`
-
-Consuming from `cars` in cluster `teamA`
 
 ```sh
 kafka-console-consumer \
@@ -1665,32 +1664,17 @@ kafka-console-consumer \
     --topic cars \
     --from-beginning \
     --timeout-ms 10000 \
-    --group my-group-within-policy \
- | jq
+    --group my-group-within-policy | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Consuming from `cars`](images/step-28-CONSUME.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic cars \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --group my-group-within-policy \
- | jq
-[2024-01-23 00:23:10,517] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```json
+[2024-04-10 02:57:50,788] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 5 messages
 {
@@ -1722,54 +1706,51 @@ Processed a total of 5 messages
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/RllC4uk2neps9MnJ3zEMGtK7g.svg)](https://asciinema.org/a/RllC4uk2neps9MnJ3zEMGtK7g)
+
+</details>
+
+## Remove interceptor consumer-group-name-policy
 
 
-## Remove interceptor `consumer-group-name-policy`
+
+<details open>
+<summary>Command</summary>
 
 
 
 ```sh
 curl \
     --request DELETE "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy" \
-    --header 'Content-Type: application/json'
+    --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Remove interceptor `consumer-group-name-policy`](images/step-29-REMOVE_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request DELETE "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy" \
-    --header 'Content-Type: application/json'
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-    --user 'admin:conduktor' \
-    --silent | jq
-step-29-REMOVE_INTERCEPTORS.sh: line 4: --user: command not found
+```json
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/zYy0SS8HBFZoBO10P9BWBz2qx.svg)](https://asciinema.org/a/zYy0SS8HBFZoBO10P9BWBz2qx)
 
-## Adding interceptor `guard-limit-connection`
+</details>
+
+## Adding interceptor guard-limit-connection
 
 Let's add some connect limitation policy
-
 
 Creating the interceptor named `guard-limit-connection` of the plugin `io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin` using the following payload
 
@@ -1786,31 +1767,29 @@ Creating the interceptor named `guard-limit-connection` of the plugin `io.conduk
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-30-guard-limit-connection.json | jq
+cat step-29-guard-limit-connection.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-limit-connection" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-30-guard-limit-connection.json | jq
+    --data @step-29-guard-limit-connection.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `guard-limit-connection`](images/step-30-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-30-guard-limit-connection.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
   "priority": 100,
@@ -1819,13 +1798,6 @@ cat step-30-guard-limit-connection.json | jq
     "action": "BLOCK"
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-limit-connection" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-30-guard-limit-connection.json | jq
 {
   "message": "guard-limit-connection is created"
 }
@@ -1833,49 +1805,59 @@ curl \
 ```
 
 </details>
-      
-
-
-## Consuming from `cars`
-
-Consuming from `cars` in cluster `teamA`
-
-```sh
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic cars \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --group my-group-id-convention-cars \
- | jq
-```
-
 <details>
-  <summary>Realtime command output</summary>
+<summary>Recording</summary>
 
-  ![Consuming from `cars`](images/step-31-CONSUME.gif)
+[![asciicast](https://asciinema.org/a/rKWWnsadARkUXiCV4t8YXrNPl.svg)](https://asciinema.org/a/rKWWnsadARkUXiCV4t8YXrNPl)
 
 </details>
 
+## Consuming from cars
 
-<details>
-<summary>Command output</summary>
+Consuming from cars in cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
-
 kafka-console-consumer \
     --bootstrap-server localhost:6969 \
     --consumer.config teamA-sa.properties \
     --topic cars \
     --from-beginning \
     --timeout-ms 10000 \
-    --group my-group-id-convention-cars \
- | jq
-[2024-01-23 00:23:13,283] WARN [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Received error POLICY_VIOLATION from node 3 when making an ApiVersionsRequest with correlation id 9. Disconnecting. (org.apache.kafka.clients.NetworkClient)
-[2024-01-23 00:23:13,566] WARN [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Received error POLICY_VIOLATION from node 1 when making an ApiVersionsRequest with correlation id 10. Disconnecting. (org.apache.kafka.clients.NetworkClient)
-[2024-01-23 00:23:23,542] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+    --group my-group-id-convention-cars | jq
+```
+
+> [!IMPORTANT]
+> We get the following exception
+>
+> ```sh
+> Request parameters do not satisfy the configured policy.
+> ```
+
+
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```json
+[2024-04-10 02:57:53,161] WARN [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Received error POLICY_VIOLATION from node 2147483646 when making an ApiVersionsRequest with correlation id 5. Disconnecting. (org.apache.kafka.clients.NetworkClient)
+[2024-04-10 02:57:53,968] WARN [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Received error POLICY_VIOLATION from node 1 when making an ApiVersionsRequest with correlation id 7. Disconnecting. (org.apache.kafka.clients.NetworkClient)
+[2024-04-10 02:57:55,044] WARN [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Received error POLICY_VIOLATION from node 2147483646 when making an ApiVersionsRequest with correlation id 12. Disconnecting. (org.apache.kafka.clients.NetworkClient)
+[2024-04-10 02:57:55,294] WARN [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Received error POLICY_VIOLATION from node 2147483646 when making an ApiVersionsRequest with correlation id 17. Disconnecting. (org.apache.kafka.clients.NetworkClient)
+[2024-04-10 02:58:05,816] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
+[2024-04-10 02:58:06,351] ERROR [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Offset commit failed on partition cars-0 at offset 5: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2024-04-10 02:58:06,353] ERROR [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Offset commit failed on partition cars-0 at offset 5: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2024-04-10 02:58:06,353] WARN [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Asynchronous auto-commit of offsets {cars-0=OffsetAndMetadata{offset=5, leaderEpoch=0, metadata=''}} failed: Unexpected error in commit: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2024-04-10 02:58:06,353] WARN [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] Synchronous auto-commit of offsets {cars-0=OffsetAndMetadata{offset=5, leaderEpoch=0, metadata=''}} failed: Unexpected error in commit: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2024-04-10 02:58:07,382] ERROR [Consumer clientId=console-consumer, groupId=my-group-id-convention-cars] LeaveGroup request with Generation{generationId=1, memberId='console-consumer-bc446a2d-8fad-42a6-a2fe-d3d50fcb23bc', protocol='range'} failed with error: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
 Processed a total of 5 messages
 {
   "type": "Ferrari",
@@ -1906,36 +1888,45 @@ Processed a total of 5 messages
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/iscwxper6Tpsmz9XmTrsbDJK6.svg)](https://asciinema.org/a/iscwxper6Tpsmz9XmTrsbDJK6)
+
+</details>
 
 ## Check in the audit log that connection was denied
 
 Check in the audit log that connection was denied in cluster `kafka1`
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
+    --topic _conduktor_gateway_auditlogs \
     --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin")'
+    --timeout-ms 3000 \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin")'
 ```
 
 
+returns 15 events
 ```json
 {
-  "id" : "889ee5eb-912b-4ac2-94d5-7d7b740bfc0a",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "b8d4a746-bc68-478d-8394-7812a6399846",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
+    "remoteAddress" : "/192.168.65.1:16601"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:53.875919758Z",
+  "time" : "2024-04-09T22:55:52.513955969Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -1943,17 +1934,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "84e2fb64-37f7-40a5-a552-ce70c989477d",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "19f9e2ed-5530-4abe-8d30-51ee370b91ae",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19554"
+    "remoteAddress" : "/192.168.65.1:16524"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:54.068550217Z",
+  "time" : "2024-04-09T22:55:52.641155511Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -1961,17 +1952,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "1f22c558-3c47-4f2f-9ba9-69c67e55e280",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "282791d0-a80f-4cb4-b54f-64b50d8fd464",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
+    "remoteAddress" : "/192.168.65.1:16602"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:54.141790467Z",
+  "time" : "2024-04-09T22:55:52.868845011Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -1979,17 +1970,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "37b24da0-4884-4425-8ae8-8cd7255a924f",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "ca52f0a6-1e23-4140-9d82-0fd7c8c30cff",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21346"
+    "remoteAddress" : "/192.168.65.1:16524"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:54.233646092Z",
+  "time" : "2024-04-09T22:55:52.991739219Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -1997,17 +1988,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "08ab8ec7-e786-4e9f-8fed-8cd822cf5fb1",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "9e865a4c-55c2-436a-934c-7e1390d87f92",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
+    "remoteAddress" : "/192.168.65.1:32493"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:54.747386176Z",
+  "time" : "2024-04-09T22:55:53.159412928Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2015,17 +2006,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "8349c27d-c769-4aad-896a-e48f610f30b1",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "55ad6533-862b-4377-9dc9-74122924f314",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19557"
+    "remoteAddress" : "/192.168.65.1:43874"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:55.192520509Z",
+  "time" : "2024-04-09T22:55:54.024294595Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2033,17 +2024,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "a23c05c7-e6f6-410d-a4d3-b885e18e8544",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "280dfff8-54d8-4c7c-935d-42ac1e480ac4",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
+    "remoteAddress" : "/192.168.65.1:32462"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:55.595506426Z",
+  "time" : "2024-04-09T22:55:54.551201595Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2051,17 +2042,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "fecb8898-fefb-4b51-9e4b-29b16718863a",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "1d68a2e7-7b49-41e6-b136-131f3bccf75c",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
+    "remoteAddress" : "/192.168.65.1:16606"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:55.776284468Z",
+  "time" : "2024-04-09T22:55:54.641131720Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2069,17 +2060,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "90c4b870-30ea-4aa7-a8f0-4005dc72d6f4",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "7aea66fc-1d34-4e5f-b66e-600bd9844879",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
+    "remoteAddress" : "/192.168.65.1:32462"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:56.054942926Z",
+  "time" : "2024-04-09T22:55:55.118344470Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2087,17 +2078,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "cf4f6016-8d23-421f-848c-11e0cda922fe",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "cca8ba40-03e4-4eb5-a224-9ea946de8b34",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
+    "remoteAddress" : "/192.168.65.1:16607"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:56.096950843Z",
+  "time" : "2024-04-09T22:55:55.247603970Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2105,17 +2096,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "88e836fa-ef2d-4e0c-b42d-6abaec780c88",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "c6884272-c8b4-4bcc-9e33-c49d2d7384c1",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19556"
+    "remoteAddress" : "/192.168.65.1:32462"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:56.287724176Z",
+  "time" : "2024-04-09T22:55:55.841341512Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2123,17 +2114,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "3988c491-8096-4c71-9513-4f7857a1ed97",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "c4814506-eee9-46f1-b126-f2931c6f5234",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
+    "remoteAddress" : "/192.168.65.1:16608"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:56.854031635Z",
+  "time" : "2024-04-09T22:55:56.105952804Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2141,17 +2132,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "120e5353-1c20-4f01-a742-7d0a06b7c95c",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "4640f9e1-e4a9-4831-b744-249cb12d15b2",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
+    "remoteAddress" : "/192.168.65.1:32462"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:56.953551677Z",
+  "time" : "2024-04-09T22:55:56.516627596Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2159,17 +2150,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "6980461a-76cb-459b-9dbc-4837f9af417d",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "1fc48081-c301-4e66-aeb2-27ae71065285",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19556"
+    "remoteAddress" : "/192.168.65.1:16605"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:57.053074677Z",
+  "time" : "2024-04-09T22:55:57.271249055Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2177,413 +2168,17 @@ kafka-console-consumer \
   }
 }
 {
-  "id" : "47a5fa46-1ddd-4d59-b7b6-29b96396cee3",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "0863dfe0-7aec-4592-a42b-ab8cc953ab8b",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
+    "remoteAddress" : "/192.168.65.1:32462"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:57.728568927Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "39f31664-1b95-4693-96b2-143fd230d28c",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:58.028819094Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "32ba70cc-3d98-4f6f-86a9-7998f17bcf53",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:58.057530135Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "33ae3526-23ec-4dea-bde8-bc627a1d56a8",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:59.143797803Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "ff2e88be-27d7-48dc-a88f-4e80a972f6ce",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:59.222904136Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "85bb2f1f-9950-4456-becf-f761957b5f84",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19556"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:59.349630719Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "1c65e219-4f36-4c11-b8a2-e05507c66694",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:59.661199011Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "96ff2e19-f380-4bc6-8665-7b9ed07b73b3",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:20:59.711108553Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "b0bf6fc0-d0b3-46e9-8224-fede52fba7e3",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21316"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:00.263639387Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "e46b6731-afb3-40e9-8a6a-15a440feb642",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:00.654150512Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "c03fc498-81af-49dc-b2de-5e9a8fdb2d34",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19556"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:00.930566179Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "662d6945-ef3e-410c-bc75-ef58532d81ee",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19556"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:01.398883345Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "6a567d65-29c7-4146-bb7e-79e2f30da313",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:01.731915554Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "bca6521a-b924-48cc-b6d9-581f85dc256d",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:02.007826929Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "c7229ecb-b251-44b0-b1e8-4362d6e8728c",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19556"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:02.091056971Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "84acc9b2-4b7c-4545-ab16-c39476f083de",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:02.421299054Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "2654ed75-685a-4bed-8326-23e93cab1481",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19556"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:02.485021804Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "2ffb2ef5-9eeb-448f-babf-3fcef37354bb",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:02.929359429Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "0b1f435c-07a6-4c3a-9074-cc912f253ea4",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:03.521446721Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "5335b84d-255b-4ed7-84b0-13b7eb389875",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19556"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:04.093383013Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "c243fe1e-d358-4aa6-9d21-31d659971b45",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:04.107369638Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "55a5a182-3d51-4d19-bb07-193d254bb894",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:04.512757222Z",
-  "eventData" : {
-    "level" : "error",
-    "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message" : "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id" : "785ce248-d07f-4d48-bed1-9ee78f3274e4",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
-  "type" : "SAFEGUARD",
-  "authenticationPrincipal" : "teamA",
-  "userName" : "sa",
-  "connection" : {
-    "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:21340"
-  },
-  "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:05.357740791Z",
+  "time" : "2024-04-09T22:55:57.678578513Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
@@ -2593,224 +2188,132 @@ kafka-console-consumer \
 ```
 
 
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Check in the audit log that connection was denied](images/step-32-AUDITLOG.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
-    --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin")'
-{
-  "id": "f464a103-d455-4e3d-888a-46078f1c291e",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:21749"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:23:13.232996003Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message": "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id": "48c25392-7d44-41d9-a300-0ab256839916",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:47522"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:23:13.561642045Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message": "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id": "e4d5c2dd-bad7-4672-ae71-b31460f1f17d",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:21751"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:23:16.543739422Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message": "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id": "9e598604-89a1-4c69-80af-36023f51cb5e",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:21751"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:23:17.701786422Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message": "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id": "c6e05a74-f3f5-40a7-98c4-70d059589d8a",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:21751"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:23:18.413187173Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message": "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id": "bd4800a6-71f1-4978-8e9b-c7581d86c5db",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:21751"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:23:22.626133008Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message": "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id": "442d22ca-cc4e-44b6-ab43-7b51e8d10253",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrincipal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:21751"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:23:23.620411842Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message": "Client connections exceed the limitation of 1 connections per second"
-  }
-}
-{
-  "id": "2b899421-6949-4522-b44b-56b2358dcf17",
-  "source": "krn://cluster=n4EWs04xSSOBKT5X5C0m3w",
-  "type": "SAFEGUARD",
-  "authenticationPrinci[2024-01-23 00:23:28,289] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```
+{"id":"ad5d2cbf-2bd1-4dce-8d29-1c42939922e1","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28491"},"specVersion":"0.1.0","time":"2024-04-09T22:57:08.780478796Z","eventData":{"method":"POST","path":"/admin/vclusters/v1/vcluster/teamA/username/sa","body":"{\"lifeTimeSeconds\": 7776000}"}}
+{"id":"7419d31b-b9ac-468b-bc30-b0d6d29837ce","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17069"},"specVersion":"0.1.0","time":"2024-04-09T22:57:09.742668879Z","eventData":"SUCCESS"}
+{"id":"4263b2d4-ad38-4d7e-a4c0-59d9f6521456","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32960"},"specVersion":"0.1.0","time":"2024-04-09T22:57:09.827216255Z","eventData":"SUCCESS"}
+{"id":"b9574b20-5776-4e71-a362-e18556218757","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17071"},"specVersion":"0.1.0","time":"2024-04-09T22:57:11.336087922Z","eventData":"SUCCESS"}
+{"id":"ca2f053b-c936-4a7f-92f2-4b21f62d2252","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32962"},"specVersion":"0.1.0","time":"2024-04-09T22:57:11.373917880Z","eventData":"SUCCESS"}
+{"id":"ab746ef4-9793-4b29-81df-0e7fae1538d3","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17073"},"specVersion":"0.1.0","time":"2024-04-09T22:57:12.764087214Z","eventData":"SUCCESS"}
+{"id":"60dcba90-1cf1-4018-a9a7-19b3eec5ed55","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32964"},"specVersion":"0.1.0","time":"2024-04-09T22:57:12.796650298Z","eventData":"SUCCESS"}
+{"id":"eb2d20fb-24de-44d4-bdf2-033ba9e8e281","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17075"},"specVersion":"0.1.0","time":"2024-04-09T22:57:14.123940465Z","eventData":"SUCCESS"}
+{"id":"21b4840a-af5d-4785-a79e-a4fddd4acd3b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32966"},"specVersion":"0.1.0","time":"2024-04-09T22:57:14.158265590Z","eventData":"SUCCESS"}
+{"id":"e88a3bcf-1bdb-4a79-aebd-7afc09064716","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17077"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.534253132Z","eventData":"SUCCESS"}
+{"id":"c0178ae2-dd59-45de-a835-74161eb10843","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32968"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.565131466Z","eventData":"SUCCESS"}
+{"id":"451b2171-737d-4506-a0f7-2c4ac6e78f53","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32969"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.693036716Z","eventData":"SUCCESS"}
+{"id":"34f347bf-e604-4f18-b2e0-ee2968086384","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17092"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.579152217Z","eventData":"SUCCESS"}
+{"id":"d02d0408-fac0-42eb-8be4-f0649aedffb2","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32983"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.597597925Z","eventData":"SUCCESS"}
+{"id":"08438b0d-c1f1-4fa4-afdc-1843f88fbcf8","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17094"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.624725050Z","eventData":"SUCCESS"}
+{"id":"cdc7a87b-9fe1-4016-8e46-7a45ccd66d46","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28530"},"specVersion":"0.1.0","time":"2024-04-09T22:57:18.119768675Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-create-topic","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"replicationFactor\" : {      \"min\" : 2,      \"max\" : 2    },    \"numPartition\" : {      \"min\" : 1,      \"max\" : 3    }  }}"}}
+{"id":"2cc00de7-bb9d-4c28-b305-135de9138061","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28531"},"specVersion":"0.1.0","time":"2024-04-09T22:57:18.318868092Z","eventData":{"method":"GET","path":"/admin/interceptors/v1/vcluster/teamA","body":null}}
+{"id":"63b9ef30-2fd7-4db1-9d16-7610cfdf9272","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17109"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.217374842Z","eventData":"SUCCESS"}
+{"id":"36de93e8-b1a6-47ff-bacf-d79a3b89b717","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33000"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.238897509Z","eventData":"SUCCESS"}
+{"id":"35607bf6-05ea-4f83-b87a-2e9130f21fcc","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33000"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.258906592Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2"}}
+{"id":"bc94cc84-51f9-4dca-b918-9d09fe18fffd","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17111"},"specVersion":"0.1.0","time":"2024-04-09T22:57:20.582032760Z","eventData":"SUCCESS"}
+{"id":"1f2a13e1-79d8-4741-a7cf-663b8c69a1a9","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33002"},"specVersion":"0.1.0","time":"2024-04-09T22:57:20.603914426Z","eventData":"SUCCESS"}
+{"id":"13aa671a-eba1-4822-8b4a-790b19e6f517","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28536"},"specVersion":"0.1.0","time":"2024-04-09T22:57:21.149915843Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-alter-topic","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"retentionMs\" : {      \"min\" : 86400000,      \"max\" : 432000000    }  }}"}}
+{"id":"0322d61d-f26b-4897-b190-ef31faeb144a","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17114"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.234666177Z","eventData":"SUCCESS"}
+{"id":"12a03f8c-eb46-4297-ac05-c0d43f7c6a45","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6971","remoteAddress":"/192.168.65.1:44385"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.258857260Z","eventData":"SUCCESS"}
+{"id":"ac9d937d-daa7-482a-95e8-7e21c55ff51e","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:44385"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.322798385Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Resource 'roads' with retention.ms is '5184000000', must not be greater than '432000000'"}}
+{"id":"1c5884ec-6ea6-4974-846e-0fc3a1881bb8","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17116"},"specVersion":"0.1.0","time":"2024-04-09T22:57:23.728982886Z","eventData":"SUCCESS"}
+{"id":"3854b5d0-bb85-4735-be81-0597237ad8b1","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33007"},"specVersion":"0.1.0","time":"2024-04-09T22:57:23.748231761Z","eventData":"SUCCESS"}
+{"id":"fee03330-e546-4297-bf83-8038a2f0ed55","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28541"},"specVersion":"0.1.0","time":"2024-04-09T22:57:24.302672303Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-produce","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"acks\" : {      \"value\" : [ -1 ],      \"action\" : \"BLOCK\"    },    \"compressions\" : {      \"value\" : [ \"NONE\", \"GZIP\" ],      \"action\" : \"BLOCK\"    }  }}"}}
+{"id":"930007bb-3325-45f7-875e-b374ebc54548","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17119"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.298030595Z","eventData":"SUCCESS"}
+{"id":"164bdf3d-d1b8-4849-9188-5ef823d8cd0b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33010"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.813463304Z","eventData":"SUCCESS"}
+{"id":"b18e0515-feb4-45d8-aadc-50bc76a75c5d","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33010"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.864088137Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'cars' with invalid value for 'acks': 1. Valid value is one of the values: -1. Topic 'cars' with invalid value for 'compressions': SNAPPY. Valid value is one of the values: [GZIP, NONE]"}}
+{"id":"2d45242b-ea94-43d1-8055-c4972f6b8481","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17121"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.192247179Z","eventData":"SUCCESS"}
+{"id":"c49ce88e-8f18-48c4-bf71-66f11607c03e","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33012"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.220203596Z","eventData":"SUCCESS"}
+{"id":"b7710805-24c4-4c2a-a4ab-53701928a435","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28558"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.680550388Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"maximumBytesPerSecond\" : 1  }}"}}
+{"id":"4659321f-3f7f-4564-a5aa-e8179a0682b7","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17148"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.620101472Z","eventData":"SUCCESS"}
+{"id":"78366d0c-a400-4365-9f7d-41e3c7030bb3","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33039"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.648120222Z","eventData":"SUCCESS"}
+{"id":"1cf909c0-2610-412c-b257-15a5af81b682","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33039"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.662161305Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin","message":"Client produced (108) bytes, which is more than 1 bytes per second, producer will be throttled by 44 milliseconds"}}
+{"id":"f310f6a4-54ab-46fd-b956-9177bdde8416","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28577"},"specVersion":"0.1.0","time":"2024-04-09T22:57:33.671817502Z","eventData":{"method":"DELETE","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate","body":null}}
+{"id":"17f183eb-56c6-4d0b-bc4f-e7b01f0d9ee1","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28578"},"specVersion":"0.1.0","time":"2024-04-09T22:57:33.726142043Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"groupId\" : {      \"value\" : \"my-group.*\",      \"action\" : \"BLOCK\"    }  }}"}}
+{"id":"c2092f02-6d9d-447d-912c-07a3d9fdd04d","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17156"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.717949919Z","eventData":"SUCCESS"}
+{"id":"8b2f1ed7-4d7b-426a-a105-d3961ae8c6a0","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6971","remoteAddress":"/192.168.65.1:44427"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.745343752Z","eventData":"SUCCESS"}
+{"id":"cac027b2-a847-48b2-be7a-0abc76d70e2a","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:44427"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.751896794Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin","message":"Request parameters do not satisfy the configured policy. GroupId 'group-not-within-policy' is invalid, naming convention must match with regular expression my-group.*"}}
+{"id":"13017735-b554-4672-820e-dd9d3712bb3b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17186"},"specVersion":"0.1.0","time":"2024-04-09T22:57:40.668242255Z","eventData":"SUCCESS"}
+{"id":"dd992af8-723d-42e2-817a-b415a1540cd0","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33077"},"specVersion":"0.1.0","time":"2024-04-09T22:57:40.696821713Z","eventData":"SUCCESS"}
+{"id":"02b0a54c-e3ab-4929-ab94-5c28f33b513d","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33078"},"specVersion":"0.1.0","time":"2024-04-09T22:57:40.753620297Z","eventData":"SUCCESS"}
+{"id":"36b877e3-44b7-4e03-9359-b8401a953f7a","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28636"},"specVersion":"0.1.0","time":"2024-04-09T22:57:51.477988135Z","eventData":{"method":"DELETE","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy","body":null}}
+{"id":"e6ad7376-82f6-4a66-b31c-79d444a0af04","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28637"},"specVersion":"0.1.0","time":"2024-04-09T22:57:51.520679010Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-limit-connection","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"maximumConnectionsPerSecond\" : 1,    \"action\" : \"BLOCK\"  }}"}}
+{"id":"99a89772-b93e-4350-8a10-f27efe8dc7f0","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17215"},"specVersion":"0.1.0","time":"2024-04-09T22:57:52.632705802Z","eventData":"SUCCESS"}
+{"id":"be62c161-ec67-407d-8f84-770c45b26ac2","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17216"},"specVersion":"0.1.0","time":"2024-04-09T22:57:52.662057302Z","eventData":"SUCCESS"}
+{"id":"6d1ea918-9336-45f7-b804-a284e1f6af74","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17216"},"specVersion":"0.1.0","time":"2024-04-09T22:57:53.147906178Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"59f69ea2-21e9-4977-babf-0736597bd9e2","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17217"},"specVersion":"0.1.0","time":"2024-04-09T22:57:53.172082553Z","eventData":"SUCCESS"}
+{"id":"fb93c0ca-9a0d-4ff0-84d2-55c2f8ed5581","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17217"},"specVersion":"0.1.0","time":"2024-04-09T22:57:53.966183386Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"f387ee8f-48ac-42c2-b731-79f729b07f14","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:57:54.088428886Z","eventData":"SUCCESS"}
+{"id":"c5a0c28e-7cd4-48a1-91d3-0db9852919ac","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17219"},"specVersion":"0.1.0","time":"2024-04-09T22:57:54.131941553Z","eventData":"SUCCESS"}
+{"id":"1f146ee8-f7ad-4417-a22d-11e736a0dd7e","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17219"},"specVersion":"0.1.0","time":"2024-04-09T22:57:55.035045178Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"34e21d73-d81f-4323-8567-cb879ef6a697","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17220"},"specVersion":"0.1.0","time":"2024-04-09T22:57:55.191588804Z","eventData":"SUCCESS"}
+{"id":"699f5c43-24f2-4cdc-92e0-6d344bf27759","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17220"},"specVersion":"0.1.0","time":"2024-04-09T22:57:55.281730804Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"866f66d8-bab2-4fd0-918e-c420414b2737","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17221"},"specVersion":"0.1.0","time":"2024-04-09T22:57:55.725690095Z","eventData":"SUCCESS"}
+{"id":"e7a9739e-735d-41cf-bdb1-d7a6090cda32","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:57:57.299099930Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"d09919b3-7e0f-46f8-85e0-14d5f13de7a1","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:57:59.436547625Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"0a221977-8b79-4597-86e4-a72dc7c7a914","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:57:59.998596417Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"352db6bd-3404-4c0e-9faf-4db49839f775","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:58:01.371221209Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"0db3dd4e-96d2-405a-922b-66eb32f8f898","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:58:02.376090668Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"5df7844c-3575-4182-b345-c0e49e721df7","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:58:05.622984419Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"d36c3263-c762-4da0-b12e-60fcad058c32","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17221"},"specVersion":"0.1.0","time":"2024-04-09T22:58:06.339291586Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"adceb663-6a62-4be1-9ded-922e5f27e403","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17221"},"specVersion":"0.1.0","time":"2024-04-09T22:58:06.339283545Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"077f1f0c-d54c-4371-8c9f-428d4ca54736","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17221"},"specVersion":"0.1.0","time":"2024-04-09T22:58:07.375596878Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+[2024-04-10 02:58:11,881] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
-Processed a total of 58 messages
-pal": "teamA",
-  "userName": "sa",
-  "connection": {
-    "localAddress": null,
-    "remoteAddress": "/192.168.65.1:21751"
-  },
-  "specVersion": "0.1.0",
-  "time": "2024-01-22T23:23:23.765914425Z",
-  "eventData": {
-    "level": "error",
-    "plugin": "io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin",
-    "message": "Client connections exceed the limitation of 1 connections per second"
-  }
-}
+Processed a total of 68 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/1Q5oODDmn3dqxGO5jiTIWKFvh.svg)](https://asciinema.org/a/1Q5oODDmn3dqxGO5jiTIWKFvh)
+
+</details>
+
+## Remove interceptor guard-limit-connection
 
 
-## Remove interceptor `guard-limit-connection`
+
+<details open>
+<summary>Command</summary>
 
 
 
 ```sh
 curl \
     --request DELETE "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-limit-connection" \
-    --header 'Content-Type: application/json'
+    --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Remove interceptor `guard-limit-connection`](images/step-33-REMOVE_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request DELETE "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-limit-connection" \
-    --header 'Content-Type: application/json'
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-    --user 'admin:conduktor' \
-    --silent | jq
-step-33-REMOVE_INTERCEPTORS.sh: line 4: --user: command not found
+```json
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/rtrzHuS3pnHgEvRCRrTmHoiYh.svg)](https://asciinema.org/a/rtrzHuS3pnHgEvRCRrTmHoiYh)
 
-## Adding interceptor `guard-agressive-auto-commit`
+</details>
+
+## Adding interceptor guard-agressive-auto-commit
 
 Let's block aggressive auto-commits strategies
-
 
 Creating the interceptor named `guard-agressive-auto-commit` of the plugin `io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin` using the following payload
 
@@ -2827,31 +2330,29 @@ Creating the interceptor named `guard-agressive-auto-commit` of the plugin `io.c
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-34-guard-agressive-auto-commit.json | jq
+cat step-33-guard-agressive-auto-commit.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-agressive-auto-commit" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-34-guard-agressive-auto-commit.json | jq
+    --data @step-33-guard-agressive-auto-commit.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `guard-agressive-auto-commit`](images/step-34-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-34-guard-agressive-auto-commit.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin",
   "priority": 100,
@@ -2860,13 +2361,6 @@ cat step-34-guard-agressive-auto-commit.json | jq
     "action": "BLOCK"
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/guard-agressive-auto-commit" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-34-guard-agressive-auto-commit.json | jq
 {
   "message": "guard-agressive-auto-commit is created"
 }
@@ -2874,12 +2368,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/RsHWMRFo9Q9326Vf1FbqZPjES.svg)](https://asciinema.org/a/RsHWMRFo9Q9326Vf1FbqZPjES)
+
+</details>
+
+## Consuming from cars
+
+Consuming from cars in cluster `teamA`
+
+<details open>
+<summary>Command</summary>
 
 
-## Consuming from `cars`
-
-Consuming from `cars` in cluster `teamA`
 
 ```sh
 kafka-console-consumer \
@@ -2888,91 +2391,91 @@ kafka-console-consumer \
     --topic cars \
     --from-beginning \
     --timeout-ms 10000 \
-    --group group-with-aggressive-autocommit \
- | jq
+    --group group-with-aggressive-autocommit | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Consuming from `cars`](images/step-35-CONSUME.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic cars \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --group group-with-aggressive-autocommit \
- | jq
-[2024-01-23 00:23:30,434] WARN [Consumer clientId=console-consumer, groupId=group-with-aggressive-autocommit] Received error POLICY_VIOLATION from node 2147483646 when making an ApiVersionsRequest with correlation id 4. Disconnecting. (org.apache.kafka.clients.NetworkClient)
-[2024-01-23 00:23:31,075] WARN [Consumer clientId=console-consumer, groupId=group-with-aggressive-autocommit] Received error POLICY_VIOLATION from node 2147483646 when making an ApiVersionsRequest with correlation id 10. Disconnecting. (org.apache.kafka.clients.NetworkClient)
-[2024-01-23 00:23:32,226] WARN [Consumer clientId=console-consumer, groupId=group-with-aggressive-autocommit] Received error POLICY_VIOLATION from node 2147483646 when making an ApiVersionsRequest with correlation id 15. Disconnecting. (org.apache.kafka.clients.NetworkClient)
-[2024-01-23 00:23:32,525] ERROR [Consumer clientId=console-consumer, groupId=group-with-aggressive-autocommit] JoinGroup failed due to unexpected error: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
-[2024-01-23 00:23:32,526] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
-org.apache.kafka.common.KafkaException: Unexpected error in join group response: Request parameters do not satisfy the configured policy.
-	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$JoinGroupResponseHandler.handle(AbstractCoordinator.java:711)
-	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$JoinGroupResponseHandler.handle(AbstractCoordinator.java:603)
-	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$CoordinatorResponseHandler.onSuccess(AbstractCoordinator.java:1270)
-	at org.apache.kafka.clients.consumer.internals.AbstractCoordinator$CoordinatorResponseHandler.onSuccess(AbstractCoordinator.java:1245)
-	at org.apache.kafka.clients.consumer.internals.RequestFuture$1.onSuccess(RequestFuture.java:206)
-	at org.apache.kafka.clients.consumer.internals.RequestFuture.fireSuccess(RequestFuture.java:169)
-	at org.apache.kafka.clients.consumer.internals.RequestFuture.complete(RequestFuture.java:129)
-	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient$RequestFutureCompletionHandler.fireCompletion(ConsumerNetworkClient.java:617)
-	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.firePendingCompletedRequests(ConsumerNetworkClient.java:427)
-	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.poll(ConsumerNetworkClient.java:312)
-	at org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.poll(ConsumerNetworkClient.java:251)
-	at org.apache.kafka.clients.consumer.KafkaConsumer.pollForFetches(KafkaConsumer.java:1255)
-	at org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1186)
-	at org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1159)
-	at kafka.tools.ConsoleConsumer$ConsumerWrapper.receive(ConsoleConsumer.scala:473)
-	at kafka.tools.ConsoleConsumer$.process(ConsoleConsumer.scala:103)
-	at kafka.tools.ConsoleConsumer$.run(ConsoleConsumer.scala:77)
-	at kafka.tools.ConsoleConsumer$.main(ConsoleConsumer.scala:54)
-	at kafka.tools.ConsoleConsumer.main(ConsoleConsumer.scala)
-Processed a total of 0 messages
+```json
+[2024-04-10 02:58:23,579] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+org.apache.kafka.common.errors.TimeoutException
+[2024-04-10 02:58:23,661] ERROR [Consumer clientId=console-consumer, groupId=group-with-aggressive-autocommit] Offset commit failed on partition cars-0 at offset 5: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2024-04-10 02:58:23,814] ERROR [Consumer clientId=console-consumer, groupId=group-with-aggressive-autocommit] Offset commit failed on partition cars-0 at offset 5: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2024-04-10 02:58:23,815] WARN [Consumer clientId=console-consumer, groupId=group-with-aggressive-autocommit] Asynchronous auto-commit of offsets {cars-0=OffsetAndMetadata{offset=5, leaderEpoch=0, metadata=''}} failed: Unexpected error in commit: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2024-04-10 02:58:23,815] WARN [Consumer clientId=console-consumer, groupId=group-with-aggressive-autocommit] Synchronous auto-commit of offsets {cars-0=OffsetAndMetadata{offset=5, leaderEpoch=0, metadata=''}} failed: Unexpected error in commit: Request parameters do not satisfy the configured policy. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+Processed a total of 5 messages
+{
+  "type": "Ferrari",
+  "color": "red",
+  "price": 10000
+}
+{
+  "type": "RollsRoyce",
+  "color": "black",
+  "price": 9000
+}
+{
+  "type": "Mercedes",
+  "color": "black",
+  "price": 6000
+}
+{
+  "type": "Fiat",
+  "color": "red",
+  "price": -1
+}
+{
+  "type": "Fiat",
+  "color": "red",
+  "price": -1
+}
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/U2kX9rRWFTAKmBgGsMnvnoRsU.svg)](https://asciinema.org/a/U2kX9rRWFTAKmBgGsMnvnoRsU)
+
+</details>
 
 ## Check in the audit log that connection was denied
 
 Check in the audit log that connection was denied in cluster `kafka1`
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
+    --topic _conduktor_gateway_auditlogs \
     --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin")'
+    --timeout-ms 3000 \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin")'
 ```
 
 
+returns 1 event
 ```json
 {
-  "id" : "393d0f9f-4762-42d5-a586-46db64f62166",
-  "source" : "krn://cluster=jK_eyzrFRC2mLccGTfdAuw",
+  "id" : "f491b864-7b6e-4077-a5f2-591206f23278",
+  "source" : "krn://cluster=aL7VOesuSJe5AwmMCmTBPw",
   "type" : "SAFEGUARD",
   "authenticationPrincipal" : "teamA",
   "userName" : "sa",
   "connection" : {
     "localAddress" : null,
-    "remoteAddress" : "/192.168.65.1:19565"
+    "remoteAddress" : "/192.168.65.1:16639"
   },
   "specVersion" : "0.1.0",
-  "time" : "2024-01-22T23:21:17.871299006Z",
+  "time" : "2024-04-09T22:56:11.774274380Z",
   "eventData" : {
     "level" : "error",
     "plugin" : "io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin",
@@ -2982,34 +2485,100 @@ kafka-console-consumer \
 ```
 
 
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Check in the audit log that connection was denied](images/step-36-AUDITLOG.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _auditLogs \
-    --from-beginning \
-    --timeout-ms 3000 \
- | jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin")'
-[2024-01-23 00:23:36,950] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```
+{"id":"ad5d2cbf-2bd1-4dce-8d29-1c42939922e1","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28491"},"specVersion":"0.1.0","time":"2024-04-09T22:57:08.780478796Z","eventData":{"method":"POST","path":"/admin/vclusters/v1/vcluster/teamA/username/sa","body":"{\"lifeTimeSeconds\": 7776000}"}}
+{"id":"7419d31b-b9ac-468b-bc30-b0d6d29837ce","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17069"},"specVersion":"0.1.0","time":"2024-04-09T22:57:09.742668879Z","eventData":"SUCCESS"}
+{"id":"4263b2d4-ad38-4d7e-a4c0-59d9f6521456","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32960"},"specVersion":"0.1.0","time":"2024-04-09T22:57:09.827216255Z","eventData":"SUCCESS"}
+{"id":"b9574b20-5776-4e71-a362-e18556218757","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17071"},"specVersion":"0.1.0","time":"2024-04-09T22:57:11.336087922Z","eventData":"SUCCESS"}
+{"id":"ca2f053b-c936-4a7f-92f2-4b21f62d2252","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32962"},"specVersion":"0.1.0","time":"2024-04-09T22:57:11.373917880Z","eventData":"SUCCESS"}
+{"id":"ab746ef4-9793-4b29-81df-0e7fae1538d3","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17073"},"specVersion":"0.1.0","time":"2024-04-09T22:57:12.764087214Z","eventData":"SUCCESS"}
+{"id":"60dcba90-1cf1-4018-a9a7-19b3eec5ed55","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32964"},"specVersion":"0.1.0","time":"2024-04-09T22:57:12.796650298Z","eventData":"SUCCESS"}
+{"id":"eb2d20fb-24de-44d4-bdf2-033ba9e8e281","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17075"},"specVersion":"0.1.0","time":"2024-04-09T22:57:14.123940465Z","eventData":"SUCCESS"}
+{"id":"21b4840a-af5d-4785-a79e-a4fddd4acd3b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32966"},"specVersion":"0.1.0","time":"2024-04-09T22:57:14.158265590Z","eventData":"SUCCESS"}
+{"id":"e88a3bcf-1bdb-4a79-aebd-7afc09064716","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17077"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.534253132Z","eventData":"SUCCESS"}
+{"id":"c0178ae2-dd59-45de-a835-74161eb10843","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32968"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.565131466Z","eventData":"SUCCESS"}
+{"id":"451b2171-737d-4506-a0f7-2c4ac6e78f53","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32969"},"specVersion":"0.1.0","time":"2024-04-09T22:57:15.693036716Z","eventData":"SUCCESS"}
+{"id":"34f347bf-e604-4f18-b2e0-ee2968086384","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17092"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.579152217Z","eventData":"SUCCESS"}
+{"id":"d02d0408-fac0-42eb-8be4-f0649aedffb2","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:32983"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.597597925Z","eventData":"SUCCESS"}
+{"id":"08438b0d-c1f1-4fa4-afdc-1843f88fbcf8","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17094"},"specVersion":"0.1.0","time":"2024-04-09T22:57:17.624725050Z","eventData":"SUCCESS"}
+{"id":"cdc7a87b-9fe1-4016-8e46-7a45ccd66d46","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28530"},"specVersion":"0.1.0","time":"2024-04-09T22:57:18.119768675Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-create-topic","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"replicationFactor\" : {      \"min\" : 2,      \"max\" : 2    },    \"numPartition\" : {      \"min\" : 1,      \"max\" : 3    }  }}"}}
+{"id":"2cc00de7-bb9d-4c28-b305-135de9138061","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28531"},"specVersion":"0.1.0","time":"2024-04-09T22:57:18.318868092Z","eventData":{"method":"GET","path":"/admin/interceptors/v1/vcluster/teamA","body":null}}
+{"id":"63b9ef30-2fd7-4db1-9d16-7610cfdf9272","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17109"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.217374842Z","eventData":"SUCCESS"}
+{"id":"36de93e8-b1a6-47ff-bacf-d79a3b89b717","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33000"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.238897509Z","eventData":"SUCCESS"}
+{"id":"35607bf6-05ea-4f83-b87a-2e9130f21fcc","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33000"},"specVersion":"0.1.0","time":"2024-04-09T22:57:19.258906592Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'roads' with number partitions is '100', must not be greater than 3. Topic 'roads' with replication factor is '1', must not be less than 2"}}
+{"id":"bc94cc84-51f9-4dca-b918-9d09fe18fffd","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17111"},"specVersion":"0.1.0","time":"2024-04-09T22:57:20.582032760Z","eventData":"SUCCESS"}
+{"id":"1f2a13e1-79d8-4741-a7cf-663b8c69a1a9","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33002"},"specVersion":"0.1.0","time":"2024-04-09T22:57:20.603914426Z","eventData":"SUCCESS"}
+{"id":"13aa671a-eba1-4822-8b4a-790b19e6f517","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28536"},"specVersion":"0.1.0","time":"2024-04-09T22:57:21.149915843Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-alter-topic","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"retentionMs\" : {      \"min\" : 86400000,      \"max\" : 432000000    }  }}"}}
+{"id":"0322d61d-f26b-4897-b190-ef31faeb144a","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17114"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.234666177Z","eventData":"SUCCESS"}
+{"id":"12a03f8c-eb46-4297-ac05-c0d43f7c6a45","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6971","remoteAddress":"/192.168.65.1:44385"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.258857260Z","eventData":"SUCCESS"}
+{"id":"ac9d937d-daa7-482a-95e8-7e21c55ff51e","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:44385"},"specVersion":"0.1.0","time":"2024-04-09T22:57:22.322798385Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.AlterTopicConfigPolicyPlugin","message":"Request parameters do not satisfy the configured policy. Resource 'roads' with retention.ms is '5184000000', must not be greater than '432000000'"}}
+{"id":"1c5884ec-6ea6-4974-846e-0fc3a1881bb8","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17116"},"specVersion":"0.1.0","time":"2024-04-09T22:57:23.728982886Z","eventData":"SUCCESS"}
+{"id":"3854b5d0-bb85-4735-be81-0597237ad8b1","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33007"},"specVersion":"0.1.0","time":"2024-04-09T22:57:23.748231761Z","eventData":"SUCCESS"}
+{"id":"fee03330-e546-4297-bf83-8038a2f0ed55","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28541"},"specVersion":"0.1.0","time":"2024-04-09T22:57:24.302672303Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-on-produce","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"acks\" : {      \"value\" : [ -1 ],      \"action\" : \"BLOCK\"    },    \"compressions\" : {      \"value\" : [ \"NONE\", \"GZIP\" ],      \"action\" : \"BLOCK\"    }  }}"}}
+{"id":"930007bb-3325-45f7-875e-b374ebc54548","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17119"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.298030595Z","eventData":"SUCCESS"}
+{"id":"164bdf3d-d1b8-4849-9188-5ef823d8cd0b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33010"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.813463304Z","eventData":"SUCCESS"}
+{"id":"b18e0515-feb4-45d8-aadc-50bc76a75c5d","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33010"},"specVersion":"0.1.0","time":"2024-04-09T22:57:25.864088137Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin","message":"Request parameters do not satisfy the configured policy. Topic 'cars' with invalid value for 'acks': 1. Valid value is one of the values: -1. Topic 'cars' with invalid value for 'compressions': SNAPPY. Valid value is one of the values: [GZIP, NONE]"}}
+{"id":"2d45242b-ea94-43d1-8055-c4972f6b8481","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17121"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.192247179Z","eventData":"SUCCESS"}
+{"id":"c49ce88e-8f18-48c4-bf71-66f11607c03e","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33012"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.220203596Z","eventData":"SUCCESS"}
+{"id":"b7710805-24c4-4c2a-a4ab-53701928a435","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28558"},"specVersion":"0.1.0","time":"2024-04-09T22:57:27.680550388Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"maximumBytesPerSecond\" : 1  }}"}}
+{"id":"4659321f-3f7f-4564-a5aa-e8179a0682b7","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17148"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.620101472Z","eventData":"SUCCESS"}
+{"id":"78366d0c-a400-4365-9f7d-41e3c7030bb3","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33039"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.648120222Z","eventData":"SUCCESS"}
+{"id":"1cf909c0-2610-412c-b257-15a5af81b682","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33039"},"specVersion":"0.1.0","time":"2024-04-09T22:57:28.662161305Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin","message":"Client produced (108) bytes, which is more than 1 bytes per second, producer will be throttled by 44 milliseconds"}}
+{"id":"f310f6a4-54ab-46fd-b956-9177bdde8416","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28577"},"specVersion":"0.1.0","time":"2024-04-09T22:57:33.671817502Z","eventData":{"method":"DELETE","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/produce-rate","body":null}}
+{"id":"17f183eb-56c6-4d0b-bc4f-e7b01f0d9ee1","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28578"},"specVersion":"0.1.0","time":"2024-04-09T22:57:33.726142043Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"groupId\" : {      \"value\" : \"my-group.*\",      \"action\" : \"BLOCK\"    }  }}"}}
+{"id":"c2092f02-6d9d-447d-912c-07a3d9fdd04d","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17156"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.717949919Z","eventData":"SUCCESS"}
+{"id":"8b2f1ed7-4d7b-426a-a105-d3961ae8c6a0","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6971","remoteAddress":"/192.168.65.1:44427"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.745343752Z","eventData":"SUCCESS"}
+{"id":"cac027b2-a847-48b2-be7a-0abc76d70e2a","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:44427"},"specVersion":"0.1.0","time":"2024-04-09T22:57:34.751896794Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin","message":"Request parameters do not satisfy the configured policy. GroupId 'group-not-within-policy' is invalid, naming convention must match with regular expression my-group.*"}}
+{"id":"13017735-b554-4672-820e-dd9d3712bb3b","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17186"},"specVersion":"0.1.0","time":"2024-04-09T22:57:40.668242255Z","eventData":"SUCCESS"}
+{"id":"dd992af8-723d-42e2-817a-b415a1540cd0","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33077"},"specVersion":"0.1.0","time":"2024-04-09T22:57:40.696821713Z","eventData":"SUCCESS"}
+{"id":"02b0a54c-e3ab-4929-ab94-5c28f33b513d","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33078"},"specVersion":"0.1.0","time":"2024-04-09T22:57:40.753620297Z","eventData":"SUCCESS"}
+{"id":"36b877e3-44b7-4e03-9359-b8401a953f7a","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28636"},"specVersion":"0.1.0","time":"2024-04-09T22:57:51.477988135Z","eventData":{"method":"DELETE","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/consumer-group-name-policy","body":null}}
+{"id":"e6ad7376-82f6-4a66-b31c-79d444a0af04","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28637"},"specVersion":"0.1.0","time":"2024-04-09T22:57:51.520679010Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-limit-connection","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"maximumConnectionsPerSecond\" : 1,    \"action\" : \"BLOCK\"  }}"}}
+{"id":"99a89772-b93e-4350-8a10-f27efe8dc7f0","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17215"},"specVersion":"0.1.0","time":"2024-04-09T22:57:52.632705802Z","eventData":"SUCCESS"}
+{"id":"be62c161-ec67-407d-8f84-770c45b26ac2","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17216"},"specVersion":"0.1.0","time":"2024-04-09T22:57:52.662057302Z","eventData":"SUCCESS"}
+{"id":"6d1ea918-9336-45f7-b804-a284e1f6af74","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17216"},"specVersion":"0.1.0","time":"2024-04-09T22:57:53.147906178Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"59f69ea2-21e9-4977-babf-0736597bd9e2","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17217"},"specVersion":"0.1.0","time":"2024-04-09T22:57:53.172082553Z","eventData":"SUCCESS"}
+{"id":"fb93c0ca-9a0d-4ff0-84d2-55c2f8ed5581","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17217"},"specVersion":"0.1.0","time":"2024-04-09T22:57:53.966183386Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"f387ee8f-48ac-42c2-b731-79f729b07f14","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:57:54.088428886Z","eventData":"SUCCESS"}
+{"id":"c5a0c28e-7cd4-48a1-91d3-0db9852919ac","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17219"},"specVersion":"0.1.0","time":"2024-04-09T22:57:54.131941553Z","eventData":"SUCCESS"}
+{"id":"1f146ee8-f7ad-4417-a22d-11e736a0dd7e","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17219"},"specVersion":"0.1.0","time":"2024-04-09T22:57:55.035045178Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"34e21d73-d81f-4323-8567-cb879ef6a697","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17220"},"specVersion":"0.1.0","time":"2024-04-09T22:57:55.191588804Z","eventData":"SUCCESS"}
+{"id":"699f5c43-24f2-4cdc-92e0-6d344bf27759","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17220"},"specVersion":"0.1.0","time":"2024-04-09T22:57:55.281730804Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"866f66d8-bab2-4fd0-918e-c420414b2737","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17221"},"specVersion":"0.1.0","time":"2024-04-09T22:57:55.725690095Z","eventData":"SUCCESS"}
+{"id":"e7a9739e-735d-41cf-bdb1-d7a6090cda32","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:57:57.299099930Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"d09919b3-7e0f-46f8-85e0-14d5f13de7a1","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:57:59.436547625Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"0a221977-8b79-4597-86e4-a72dc7c7a914","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:57:59.998596417Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"352db6bd-3404-4c0e-9faf-4db49839f775","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:58:01.371221209Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"0db3dd4e-96d2-405a-922b-66eb32f8f898","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:58:02.376090668Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"5df7844c-3575-4182-b345-c0e49e721df7","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:33108"},"specVersion":"0.1.0","time":"2024-04-09T22:58:05.622984419Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"d36c3263-c762-4da0-b12e-60fcad058c32","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17221"},"specVersion":"0.1.0","time":"2024-04-09T22:58:06.339291586Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"adceb663-6a62-4be1-9ded-922e5f27e403","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17221"},"specVersion":"0.1.0","time":"2024-04-09T22:58:06.339283545Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"077f1f0c-d54c-4371-8c9f-428d4ca54736","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17221"},"specVersion":"0.1.0","time":"2024-04-09T22:58:07.375596878Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin","message":"Client connections exceed the limitation of 1 connections per second"}}
+{"id":"42970e6c-fe67-4c2a-a710-dc97920488af","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28697"},"specVersion":"0.1.0","time":"2024-04-09T22:58:12.421261672Z","eventData":{"method":"DELETE","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-limit-connection","body":null}}
+{"id":"8ee44f83-3556-427e-9dab-05e82efed49d","source":"Optional.empty","type":"REST_API","authenticationPrincipal":"admin","userName":null,"connection":{"localAddress":"192.168.224.7:8888","remoteAddress":"192.168.65.1:28698"},"specVersion":"0.1.0","time":"2024-04-09T22:58:12.472074131Z","eventData":{"method":"POST","path":"/admin/interceptors/v1/vcluster/teamA/interceptor/guard-agressive-auto-commit","body":"{  \"pluginClass\" : \"io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin\",  \"priority\" : 100,  \"config\" : {    \"maximumCommitsPerMinute\" : 1,    \"action\" : \"BLOCK\"  }}"}}
+{"id":"139cca11-cab6-4955-8794-dc1b6e555959","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17276"},"specVersion":"0.1.0","time":"2024-04-09T22:58:13.449501673Z","eventData":"SUCCESS"}
+{"id":"211d12bd-9a3e-43d5-8008-61ce82c20910","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6969","remoteAddress":"/192.168.65.1:17277"},"specVersion":"0.1.0","time":"2024-04-09T22:58:13.475080340Z","eventData":"SUCCESS"}
+{"id":"7ed49d4f-4f32-4489-a89e-44916dc35a5a","source":null,"type":"AUTHENTICATION","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":"/192.168.224.7:6970","remoteAddress":"/192.168.65.1:33168"},"specVersion":"0.1.0","time":"2024-04-09T22:58:13.536606090Z","eventData":"SUCCESS"}
+{"id":"b0402da8-1564-48e1-b1d1-21f3cdbadcd1","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17277"},"specVersion":"0.1.0","time":"2024-04-09T22:58:23.599225053Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin","message":"Client calls join group (group-with-aggressive-autocommit) exceed the limitation of 1 commits per minute"}}
+{"id":"0effbe99-e1a3-404a-a41b-955c7aaa7ecf","source":"krn://cluster=OnTSUQoUS4-lkvgciS_aIA","type":"SAFEGUARD","authenticationPrincipal":"teamA","userName":"sa","connection":{"localAddress":null,"remoteAddress":"/192.168.65.1:17277"},"specVersion":"0.1.0","time":"2024-04-09T22:58:23.801088511Z","eventData":{"level":"error","plugin":"io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin","message":"Client calls join group (group-with-aggressive-autocommit) exceed the limitation of 1 commits per minute"}}
+[2024-04-10 02:58:31,285] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
-Processed a total of 69 messages
+Processed a total of 75 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/QOgKoSj1adkzjCSlUgGc94jw4.svg)](https://asciinema.org/a/QOgKoSj1adkzjCSlUgGc94jw4)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -3017,45 +2586,47 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-37-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
- Container gateway1  Stopping
- Container gateway2  Stopping
+```
+ Container kafka-client  Stopping
  Container schema-registry  Stopping
- Container schema-registry  Stopped
- Container schema-registry  Removing
- Container gateway1  Stopped
- Container gateway1  Removing
- Container gateway1  Removed
- Container schema-registry  Removed
+ Container gateway2  Stopping
+ Container gateway1  Stopping
  Container gateway2  Stopped
  Container gateway2  Removing
  Container gateway2  Removed
- Container kafka3  Stopping
- Container kafka1  Stopping
+ Container gateway1  Stopped
+ Container gateway1  Removing
+ Container gateway1  Removed
+ Container schema-registry  Stopped
+ Container schema-registry  Removing
+ Container schema-registry  Removed
  Container kafka2  Stopping
- Container kafka1  Stopped
- Container kafka1  Removing
- Container kafka1  Removed
+ Container kafka1  Stopping
+ Container kafka3  Stopping
  Container kafka2  Stopped
  Container kafka2  Removing
  Container kafka2  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
@@ -3069,8 +2640,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/odZyXj7hVsfSGfUNYEgoHn07f.svg)](https://asciinema.org/a/odZyXj7hVsfSGfUNYEgoHn07f)
+
+</details>
 
 # Conclusion
 

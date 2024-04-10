@@ -1,18 +1,4 @@
-echo '{"message": "hello world"}' | \
-  kafka-json-schema-console-producer \
-  --bootstrap-server localhost:6969 \
-  --topic with-schema \
-  --producer.config teamA-sa.properties \
-  --property value.schema='{
-  "title": "someSchema",
-  "type": "object",
-  "properties": {
-    "message": {
-      "type": "string"
-    }
-  }
-}'
-[2024-01-22 18:01:05,370] INFO KafkaJsonSchemaSerializerConfig values: 
+[2024-04-10 00:12:37,413] INFO KafkaJsonSchemaDeserializerConfig values: 
 	auto.register.schemas = true
 	basic.auth.credentials.source = URL
 	basic.auth.user.info = [hidden]
@@ -34,10 +20,8 @@ echo '{"message": "hello world"}' | \
 	id.compatibility.strict = true
 	json.fail.invalid.schema = true
 	json.fail.unknown.properties = true
-	json.indent.output = false
-	json.oneof.for.nullables = true
-	json.schema.spec.version = draft_7
-	json.write.dates.iso8601 = false
+	json.key.type = class java.lang.Object
+	json.value.type = class java.lang.Object
 	key.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
 	latest.cache.size = 1000
 	latest.cache.ttl.sec = -1
@@ -72,8 +56,52 @@ echo '{"message": "hello world"}' | \
 	schema.registry.ssl.truststore.password = null
 	schema.registry.ssl.truststore.type = JKS
 	schema.registry.url = [http://localhost:8081]
+	type.property = javaType
 	use.latest.version = false
 	use.latest.with.metadata = null
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
- (io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializerConfig:376)
+ (io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializerConfig:376)
+Processed a total of 1 messages
+[2024-04-10 00:12:38,379] ERROR Unknown error when running consumer:  (kafka.tools.ConsoleConsumer$:44)
+org.apache.kafka.common.errors.SerializationException: Error retrieving JSON schema for id 999
+	at io.confluent.kafka.serializers.AbstractKafkaSchemaSerDe.toKafkaException(AbstractKafkaSchemaSerDe.java:776)
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:238)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter$JsonSchemaMessageDeserializer.deserialize(JsonSchemaMessageFormatter.java:135)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter$JsonSchemaMessageDeserializer.deserialize(JsonSchemaMessageFormatter.java:101)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter.writeTo(JsonSchemaMessageFormatter.java:92)
+	at io.confluent.kafka.formatter.SchemaMessageFormatter.writeTo(SchemaMessageFormatter.java:266)
+	at kafka.tools.ConsoleConsumer$.process(ConsoleConsumer.scala:116)
+	at kafka.tools.ConsoleConsumer$.run(ConsoleConsumer.scala:76)
+	at kafka.tools.ConsoleConsumer$.main(ConsoleConsumer.scala:53)
+	at kafka.tools.ConsoleConsumer.main(ConsoleConsumer.scala)
+Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException: Schema 999 not found; error code: 40403
+	at io.confluent.kafka.schemaregistry.client.rest.RestService.sendHttpRequest(RestService.java:333)
+	at io.confluent.kafka.schemaregistry.client.rest.RestService.httpRequest(RestService.java:406)
+	at io.confluent.kafka.schemaregistry.client.rest.RestService.getId(RestService.java:882)
+	at io.confluent.kafka.schemaregistry.client.rest.RestService.getId(RestService.java:855)
+	at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.getSchemaByIdFromRegistry(CachedSchemaRegistryClient.java:332)
+	at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.getSchemaBySubjectAndId(CachedSchemaRegistryClient.java:463)
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:133)
+	... 8 more
+[2024-04-10 00:12:38,379] ERROR Unknown error when running consumer:  (kafka.tools.ConsoleConsumer$:44)
+org.apache.kafka.common.errors.SerializationException: Error retrieving JSON schema for id 999
+	at io.confluent.kafka.serializers.AbstractKafkaSchemaSerDe.toKafkaException(AbstractKafkaSchemaSerDe.java:776)
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:238)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter$JsonSchemaMessageDeserializer.deserialize(JsonSchemaMessageFormatter.java:135)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter$JsonSchemaMessageDeserializer.deserialize(JsonSchemaMessageFormatter.java:101)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter.writeTo(JsonSchemaMessageFormatter.java:92)
+	at io.confluent.kafka.formatter.SchemaMessageFormatter.writeTo(SchemaMessageFormatter.java:266)
+	at kafka.tools.ConsoleConsumer$.process(ConsoleConsumer.scala:116)
+	at kafka.tools.ConsoleConsumer$.run(ConsoleConsumer.scala:76)
+	at kafka.tools.ConsoleConsumer$.main(ConsoleConsumer.scala:53)
+	at kafka.tools.ConsoleConsumer.main(ConsoleConsumer.scala)
+Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException: Schema 999 not found; error code: 40403
+	at io.confluent.kafka.schemaregistry.client.rest.RestService.sendHttpRequest(RestService.java:333)
+	at io.confluent.kafka.schemaregistry.client.rest.RestService.httpRequest(RestService.java:406)
+	at io.confluent.kafka.schemaregistry.client.rest.RestService.getId(RestService.java:882)
+	at io.confluent.kafka.schemaregistry.client.rest.RestService.getId(RestService.java:855)
+	at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.getSchemaByIdFromRegistry(CachedSchemaRegistryClient.java:332)
+	at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.getSchemaBySubjectAndId(CachedSchemaRegistryClient.java:463)
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:133)
+	... 8 more

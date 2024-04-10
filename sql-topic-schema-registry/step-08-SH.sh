@@ -1,3 +1,4 @@
+#!/bin/bash
 schema='{
             "type": "record",
             "name": "car",

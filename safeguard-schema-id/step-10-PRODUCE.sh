@@ -1,3 +1,4 @@
+#!/bin/bash
 echo '{"msg":"hello world"}' | \
     kafka-console-producer \
         --bootstrap-server localhost:6969 \

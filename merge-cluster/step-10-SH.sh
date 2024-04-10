@@ -1,19 +1,10 @@
+#!/bin/bash
 curl \
   --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topicMappings/teamA/eu_cars \
+  --request POST localhost:8888/internal/alias-topic/teamA/us_cars \
+  --user 'admin:conduktor' \
   --header 'Content-Type: application/json' \
   --data-raw '{
-      "clusterId": "main",
-      "topicName": "cars",
-      "concentrated": false
-    }' | jq
-
-curl \
-  --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topics/teamA \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-      "name": "eu_cars"
+      "clusterId": "cluster1",
+      "physicalTopicName": "cars"
     }' | jq

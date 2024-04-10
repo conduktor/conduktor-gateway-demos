@@ -4,16 +4,20 @@
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/SzSwRRwtpow3aK5ER4yWvLi9a.svg)](https://asciinema.org/a/SzSwRRwtpow3aK5ER4yWvLi9a)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/sSFFqUx32D9aMrOyFCmLXFdzI.svg)](https://asciinema.org/a/sSFFqUx32D9aMrOyFCmLXFdzI)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -25,7 +29,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -143,7 +147,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -169,7 +173,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -195,25 +199,18 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null
-```
-
-</details>
-
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          52 seconds ago   Up 34 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          52 seconds ago   Up 34 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            52 seconds ago   Up 45 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            52 seconds ago   Up 45 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            52 seconds ago   Up 45 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   52 seconds ago   Up 34 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         52 seconds ago   Up 51 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
 ```
 
 </details>
@@ -225,106 +222,118 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network acls-gateway-security_default  Creating
  Network acls-gateway-security_default  Created
+ Container kafka-client  Creating
  Container zookeeper  Creating
  Container zookeeper  Created
- Container kafka1  Creating
  Container kafka3  Creating
+ Container kafka1  Creating
  Container kafka2  Creating
- Container kafka1  Created
+ Container kafka-client  Created
  Container kafka3  Created
+ Container kafka1  Created
  Container kafka2  Created
- Container gateway2  Creating
- Container schema-registry  Creating
  Container gateway1  Creating
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
+ Container schema-registry  Creating
+ Container gateway2  Creating
  Container gateway2  Created
  Container gateway1  Created
  Container schema-registry  Created
+ Container kafka-client  Starting
  Container zookeeper  Starting
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Waiting
+ Container kafka-client  Started
  Container zookeeper  Healthy
- Container kafka1  Starting
+ Container kafka3  Starting
  Container zookeeper  Healthy
  Container kafka2  Starting
  Container zookeeper  Healthy
- Container kafka3  Starting
+ Container kafka1  Starting
  Container kafka1  Started
  Container kafka2  Started
  Container kafka3  Started
- Container kafka3  Waiting
- Container kafka2  Waiting
- Container kafka3  Waiting
- Container kafka1  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
- Container kafka1  Healthy
- Container kafka1  Healthy
- Container kafka2  Healthy
- Container kafka1  Healthy
+ Container kafka3  Waiting
+ Container kafka1  Waiting
+ Container kafka2  Waiting
+ Container kafka3  Waiting
  Container kafka2  Healthy
  Container kafka2  Healthy
  Container kafka3  Healthy
- Container gateway2  Starting
+ Container kafka3  Healthy
+ Container kafka1  Healthy
  Container kafka3  Healthy
  Container gateway1  Starting
- Container kafka3  Healthy
+ Container kafka1  Healthy
+ Container kafka1  Healthy
+ Container gateway2  Starting
+ Container kafka2  Healthy
  Container schema-registry  Starting
- Container gateway2  Started
  Container schema-registry  Started
  Container gateway1  Started
- Container gateway2  Waiting
+ Container gateway2  Started
  Container zookeeper  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container schema-registry  Waiting
  Container gateway1  Waiting
- Container kafka3  Healthy
- Container kafka2  Healthy
+ Container gateway2  Waiting
+ Container kafka-client  Waiting
  Container zookeeper  Healthy
+ Container kafka2  Healthy
  Container kafka1  Healthy
- Container schema-registry  Healthy
- Container gateway2  Healthy
+ Container kafka3  Healthy
+ Container kafka-client  Healthy
  Container gateway1  Healthy
+ Container gateway2  Healthy
+ Container schema-registry  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/cgpYVOzektjv0KzDdXZlxmzyC.svg)](https://asciinema.org/a/cgpYVOzektjv0KzDdXZlxmzyC)
+
+</details>
+
+## Creating virtual cluster aclCluster
+
+Creating virtual cluster `aclCluster` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `aclCluster`
-
-Creating virtual cluster `aclCluster` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster aclCluster with service account admin
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/admin" \
     --header 'Content-Type: application/json' \
@@ -332,35 +341,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='admin' password='$token';
-""" > aclCluster-admin.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `aclCluster`](images/step-05-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/admin" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/admin"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -368,17 +349,45 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='admin' password='$token';
 """ > aclCluster-admin.properties
 
+# Review file
+cat aclCluster-admin.properties
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='admin' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwidmNsdXN0ZXIiOiJhY2xDbHVzdGVyIiwiZXhwIjoxNzIwNDY3NTYzfQ.qtShi9VGsTRk3a-j4ADVKzUwIw3FiMXO6XALZphFcYo';
+
+
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/80eQWNhwDGVviatZ1Mupji4GF.svg)](https://asciinema.org/a/80eQWNhwDGVviatZ1Mupji4GF)
+
+</details>
+
+## Creating virtual cluster aclCluster
+
+Creating virtual cluster `aclCluster` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `aclCluster`
-
-Creating virtual cluster `aclCluster` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster aclCluster with service account producer
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/producer" \
     --header 'Content-Type: application/json' \
@@ -386,35 +395,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='producer' password='$token';
-""" > aclCluster-producer.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `aclCluster`](images/step-06-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/producer" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/producer"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -422,17 +403,45 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='producer' password='$token';
 """ > aclCluster-producer.properties
 
+# Review file
+cat aclCluster-producer.properties
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='producer' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InByb2R1Y2VyIiwidmNsdXN0ZXIiOiJhY2xDbHVzdGVyIiwiZXhwIjoxNzIwNDY3NTYzfQ.Ar9xct4fMu38PBgkgB3iDLn7bR3_lNzS0dO_xG0NaZE';
+
+
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/Mld6WJT5RDYtU5MQj454M4bTM.svg)](https://asciinema.org/a/Mld6WJT5RDYtU5MQj454M4bTM)
+
+</details>
+
+## Creating virtual cluster aclCluster
+
+Creating virtual cluster `aclCluster` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `aclCluster`
-
-Creating virtual cluster `aclCluster` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster aclCluster with service account consumer
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/consumer" \
     --header 'Content-Type: application/json' \
@@ -440,35 +449,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='consumer' password='$token';
-""" > aclCluster-consumer.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `aclCluster`](images/step-07-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/consumer" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/aclCluster/username/consumer"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -476,16 +457,37 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='consumer' password='$token';
 """ > aclCluster-consumer.properties
 
+# Review file
+cat aclCluster-consumer.properties
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='consumer' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImNvbnN1bWVyIiwidmNsdXN0ZXIiOiJhY2xDbHVzdGVyIiwiZXhwIjoxNzIwNDY3NTYzfQ.LNlFVJ6V6Nt2T9Z7TM5yBqWNY-VboDzNKnNLXG3aVe0';
+
+
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/hWx75mV6o9NnYIMa3rwpkq7b3.svg)](https://asciinema.org/a/hWx75mV6o9NnYIMa3rwpkq7b3)
 
-## Adding interceptor `acl`
+</details>
+
+## Adding interceptor acl
 
 Add ACL interceptor
-
 
 Creating the interceptor named `acl` of the plugin `io.conduktor.gateway.interceptor.AclsInterceptorPlugin` using the following payload
 
@@ -499,6 +501,11 @@ Creating the interceptor named `acl` of the plugin `io.conduktor.gateway.interce
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 cat step-08-acl.json | jq
 
@@ -510,32 +517,18 @@ curl \
     --data @step-08-acl.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `acl`](images/step-08-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-08-acl.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.AclsInterceptorPlugin",
   "priority": 100,
   "config": {}
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/aclCluster/interceptor/acl" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-08-acl.json | jq
 {
   "message": "acl is created"
 }
@@ -543,13 +536,23 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/KUPP4eYMYDobT6NryvoJftnxX.svg)](https://asciinema.org/a/KUPP4eYMYDobT6NryvoJftnxX)
 
-## try to create a topic as a consumer
+</details>
 
-Creating topic `restricted-topic` on `aclCluster`
+## Try to create a topic as a consumer
+
+Creating on `aclCluster`:
+
 * Topic `restricted-topic` with partitions:1 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-topics \
@@ -571,41 +574,38 @@ kafka-topics \
 
 
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![try to create a topic as a consumer](images/step-09-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config aclCluster-consumer.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic restricted-topic
+```
 Error while executing topic command : Cluster not authorized
-[2024-01-22 17:16:03,385] ERROR org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster not authorized
- (kafka.admin.TopicCommand$)
+[2024-04-09 23:39:25,143] ERROR org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster not authorized
+ (org.apache.kafka.tools.TopicCommand)
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/pgRs9N4tU2P3f86KUxaA4lEEq.svg)](https://asciinema.org/a/pgRs9N4tU2P3f86KUxaA4lEEq)
 
-## Creating topic `restricted-topic` on `aclCluster`
+</details>
 
-Creating topic `restricted-topic` on `aclCluster`
+## Creating topic restricted-topic on aclCluster
+
+Creating on `aclCluster`:
+
 * Topic `restricted-topic` with partitions:1 and replication-factor:1
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-topics \
     --bootstrap-server localhost:6969 \
@@ -616,35 +616,31 @@ kafka-topics \
     --topic restricted-topic
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `restricted-topic` on `aclCluster`](images/step-10-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config aclCluster-admin.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic restricted-topic
+```
 Created topic restricted-topic.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/YOqjAzWCihTUyllRKzTZxOnpq.svg)](https://asciinema.org/a/YOqjAzWCihTUyllRKzTZxOnpq)
+
+</details>
+
+## List topics with aclCluster-sa does not throw error but gets no topic
 
 
-## List topics with consumer-sa not throw an error, but also no topic
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -655,65 +651,50 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![List topics with consumer-sa not throw an error, but also no topic](images/step-11-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config aclCluster-consumer.properties \
-    --list
-
+```
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/jsq9vnk866d8zGcbBwUDBsOYN.svg)](https://asciinema.org/a/jsq9vnk866d8zGcbBwUDBsOYN)
+
+</details>
 
 ## Let's give read-access to test-topic for consumer SA
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-acls \
-  --bootstrap-server localhost:6969 \
-  --command-config aclCluster-admin.properties \
-  --add \
-  --allow-principal User:consumer \
-  --operation read \
-  --topic restricted-topic
+    --bootstrap-server localhost:6969 \
+    --command-config aclCluster-admin.properties \
+    --add \
+    --allow-principal User:consumer \
+    --operation read \
+    --topic restricted-topic
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's give read-access to test-topic for consumer SA](images/step-12-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-acls \
-  --bootstrap-server localhost:6969 \
-  --command-config aclCluster-admin.properties \
-  --add \
-  --allow-principal User:consumer \
-  --operation read \
-  --topic restricted-topic
+```
 Adding ACLs for resource `ResourcePattern(resourceType=TOPIC, name=restricted-topic, patternType=LITERAL)`: 
  	(principal=User:consumer, host=*, operation=READ, permissionType=ALLOW) 
 
@@ -724,88 +705,100 @@ Current ACLs for resource `ResourcePattern(resourceType=TOPIC, name=restricted-t
 ```
 
 </details>
-      
-
-
-## Consuming from `_acls`
-
-Consuming from `_acls` in cluster `kafka1`
-
-```sh
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _acls \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-```
-
 <details>
-  <summary>Realtime command output</summary>
+<summary>Recording</summary>
 
-  ![Consuming from `_acls`](images/step-13-CONSUME.gif)
+[![asciicast](https://asciinema.org/a/rYHYWytZoYyHQIusD70TxJFDE.svg)](https://asciinema.org/a/rYHYWytZoYyHQIusD70TxJFDE)
 
 </details>
 
+## Consuming from _conduktor_gateway_acls
 
-<details>
-<summary>Command output</summary>
+Consuming from _conduktor_gateway_acls in cluster `kafka1`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
-
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _acls \
+    --topic _conduktor_gateway_acls \
     --from-beginning \
     --timeout-ms 10000 \
- | jq
-[2024-01-22 17:16:19,509] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+    --property print.key=true | jq
+```
+
+
+returns 1 event
+```json
+{
+  "key" : "{\"tenant\":\"aclCluster\",\"principal\":\"User:consumer\",\"host\":\"*\",\"resource\":{\"name\":\"restricted-topic\",\"resourceType\":\"TOPIC\",\"patternType\":\"LITERAL\"},\"operation\":\"READ\"}",
+  "value" : true
+}
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```json
+[2024-04-09 23:39:41,250] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
+{
+  "tenant": "aclCluster",
+  "principal": "User:consumer",
+  "host": "*",
+  "resource": {
+    "name": "restricted-topic",
+    "resourceType": "TOPIC",
+    "patternType": "LITERAL"
+  },
+  "operation": "READ"
+}
 true
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/w1p7zwBWMOqVjwIcgAuGaYUrT.svg)](https://asciinema.org/a/w1p7zwBWMOqVjwIcgAuGaYUrT)
+
+</details>
 
 ## Let's give read-access to fixed console-consumer for consumer SA
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-acls \
-  --bootstrap-server localhost:6969 \
-  --command-config aclCluster-admin.properties \
-  --add \
-  --allow-principal User:consumer \
-  --operation read \
-  --group console-consumer \
-  --resource-pattern-type prefixed
+    --bootstrap-server localhost:6969 \
+    --command-config aclCluster-admin.properties \
+    --add \
+    --allow-principal User:consumer \
+    --operation read \
+    --group console-consumer \
+    --resource-pattern-type prefixed
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's give read-access to fixed console-consumer for consumer SA](images/step-14-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-acls \
-  --bootstrap-server localhost:6969 \
-  --command-config aclCluster-admin.properties \
-  --add \
-  --allow-principal User:consumer \
-  --operation read \
-  --group console-consumer \
-  --resource-pattern-type prefixed
+```
 Adding ACLs for resource `ResourcePattern(resourceType=GROUP, name=console-consumer, patternType=PREFIXED)`: 
  	(principal=User:consumer, host=*, operation=READ, permissionType=ALLOW) 
 
@@ -816,10 +809,19 @@ Current ACLs for resource `ResourcePattern(resourceType=GROUP, name=console-cons
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/VXD53Mn71PDK1K131lyJ1e9YA.svg)](https://asciinema.org/a/VXD53Mn71PDK1K131lyJ1e9YA)
+
+</details>
+
+## Listing topics in aclCluster
 
 
-## Listing topics in `aclCluster`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -830,65 +832,51 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `aclCluster`](images/step-15-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config aclCluster-consumer.properties \
-    --list
+```
 restricted-topic
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/ta3udYPm7GeSR2hokYwgyUw7B.svg)](https://asciinema.org/a/ta3udYPm7GeSR2hokYwgyUw7B)
+
+</details>
 
 ## Give read/write access to test-topic to producer SA
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-acls \
-  --bootstrap-server localhost:6969 \
-  --command-config aclCluster-admin.properties \
-  --add \
-  --allow-principal User:producer \
-  --operation write \
-  --topic restricted-topic 
+    --bootstrap-server localhost:6969 \
+    --command-config aclCluster-admin.properties \
+    --add \
+    --allow-principal User:producer \
+    --operation write \
+    --topic restricted-topic 
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Give read/write access to test-topic to producer SA](images/step-16-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-acls \
-  --bootstrap-server localhost:6969 \
-  --command-config aclCluster-admin.properties \
-  --add \
-  --allow-principal User:producer \
-  --operation write \
-  --topic restricted-topic 
+```
 Adding ACLs for resource `ResourcePattern(resourceType=TOPIC, name=restricted-topic, patternType=LITERAL)`: 
  	(principal=User:producer, host=*, operation=WRITE, permissionType=ALLOW) 
 
@@ -900,10 +888,19 @@ Current ACLs for resource `ResourcePattern(resourceType=TOPIC, name=restricted-t
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/AYB67mxXkUTnSP0ytSzs60tbS.svg)](https://asciinema.org/a/AYB67mxXkUTnSP0ytSzs60tbS)
+
+</details>
+
+## Listing topics in aclCluster
 
 
-## Listing topics in `aclCluster`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -914,35 +911,43 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `aclCluster`](images/step-17-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config aclCluster-producer.properties \
-    --list
+```
 restricted-topic
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/j3NoVCvQ2CGTZJCPgM3NSGWJ2.svg)](https://asciinema.org/a/j3NoVCvQ2CGTZJCPgM3NSGWJ2)
+
+</details>
 
 ## Let's write into test-topic (producer)
 
 Producing 1 message in `restricted-topic` in cluster `aclCluster`
 
+<details open>
+<summary>Command</summary>
+
+
+
+Sending 1 event
+```json
+{
+  "msg" : "test message"
+}
+```
+with
+
+
 ```sh
 echo '{"msg":"test message"}' | \
     kafka-console-producer \
@@ -951,79 +956,91 @@ echo '{"msg":"test message"}' | \
         --topic restricted-topic
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's write into test-topic (producer)](images/step-18-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"msg":"test message"}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config aclCluster-producer.properties \
-        --topic restricted-topic
+```
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/EnFfFlohZRd8XKM03ZV5RPZGw.svg)](https://asciinema.org/a/EnFfFlohZRd8XKM03ZV5RPZGw)
+
+</details>
 
 ## Let's consume from test-topic (consumer)
 
 Let's consume from test-topic (consumer) in cluster `aclCluster`
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-console-consumer \
     --bootstrap-server localhost:6969 \
     --consumer.config aclCluster-consumer.properties \
     --topic restricted-topic \
     --from-beginning \
-    --timeout-ms 10000 \
-    --property print.headers=true 
+    --timeout-ms 10000 | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's consume from test-topic (consumer)](images/step-19-CONSUME.gif)
+returns 1 event
+```json
+{
+  "msg" : "test message"
+}
+```
+
+
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config aclCluster-consumer.properties \
-    --topic restricted-topic \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --property print.headers=true 
-NO_HEADERS	{"msg":"test message"}
-[2024-01-22 17:16:38,442] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```json
+[2024-04-09 23:40:01,295] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
+{
+  "msg": "test message"
+}
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/v5DwERvznbyyWR8wFYUdHuHXd.svg)](https://asciinema.org/a/v5DwERvznbyyWR8wFYUdHuHXd)
+
+</details>
 
 ## Consumer-sa cannot write into the test-topic
 
 Producing 1 message in `restricted-topic` in cluster `aclCluster`
+
+<details open>
+<summary>Command</summary>
+
+
+
+Sending 1 event
+```json
+{
+  "msg" : "I would be surprised if it would work!"
+}
+```
+with
+
 
 ```sh
 echo '{"msg":"I would be surprised if it would work!"}' | \
@@ -1043,34 +1060,27 @@ echo '{"msg":"I would be surprised if it would work!"}' | \
 
 
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Consumer-sa cannot write into the test-topic](images/step-20-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"msg":"I would be surprised if it would work!"}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config aclCluster-consumer.properties \
-        --topic restricted-topic
-[2024-01-22 17:16:40,230] ERROR [Producer clientId=console-producer] Aborting producer batches due to fatal error (org.apache.kafka.clients.producer.internals.Sender)
+```
+[2024-04-09 23:40:04,313] ERROR [Producer clientId=console-producer] Aborting producer batches due to fatal error (org.apache.kafka.clients.producer.internals.Sender)
 org.apache.kafka.common.errors.TransactionalIdAuthorizationException: Transactional Id authorization failed.
-[2024-01-22 17:16:40,231] ERROR Error when sending message to topic restricted-topic with key: null, value: 48 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+[2024-04-09 23:40:04,314] ERROR Error when sending message to topic restricted-topic with key: null, value: 48 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
 org.apache.kafka.common.errors.TransactionalIdAuthorizationException: Transactional Id authorization failed.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/zlrmQeZDKRmEgibakI9lb6fZC.svg)](https://asciinema.org/a/zlrmQeZDKRmEgibakI9lb6fZC)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -1078,48 +1088,50 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-21-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
- Container gateway1  Stopping
+```
+ Container kafka-client  Stopping
  Container schema-registry  Stopping
  Container gateway2  Stopping
- Container gateway2  Stopped
- Container gateway2  Removing
- Container gateway2  Removed
+ Container gateway1  Stopping
  Container gateway1  Stopped
  Container gateway1  Removing
  Container gateway1  Removed
+ Container gateway2  Stopped
+ Container gateway2  Removing
+ Container gateway2  Removed
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
- Container kafka3  Stopping
- Container kafka1  Stopping
  Container kafka2  Stopping
- Container kafka1  Stopped
- Container kafka1  Removing
- Container kafka1  Removed
+ Container kafka1  Stopping
+ Container kafka3  Stopping
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
  Container kafka2  Stopped
  Container kafka2  Removing
  Container kafka2  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -1130,6 +1142,10 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/FJUbmVPZ619mKTib5N0h4Riff.svg)](https://asciinema.org/a/FJUbmVPZ619mKTib5N0h4Riff)
+
+</details>
 

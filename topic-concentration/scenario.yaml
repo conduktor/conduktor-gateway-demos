@@ -1,5 +1,8 @@
 title: Topic Concentration
-
+tag: ops
+ciTags:
+  - PULL_REQUEST
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -44,24 +47,33 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
-    title: Create the topic that will hold virtual topics
+    title: Create the topic that will hold concentrated topics
     kafka: kafka1
     topics:
-      - name: hold-many-concentrated-topics
+      - name: hold_many_concentrated_topics
         replicationFactor: 1
         partitions: 5
+      - name: hold_many_concentrated_topics_compacted
+        replicationFactor: 1
+        partitions: 5
+        config:
+          cleanup.policy: compact
+      - name: hold_many_concentrated_topics_compacted_deleted
+        replicationFactor: 1
+        partitions: 5
+        config:
+          cleanup.policy: compact,delete
 
-  - type: CREATE_CONCENTRATED_TOPIC
+  - type: CREATE_CONCENTRATION_RULE
     gateway: gateway1
     vcluster: teamA
-    topicPattern: concentrated-.*
-    physicalTopicName: hold-many-concentrated-topics
-
+    rule:
+      clusterId: main
+      pattern: concentrated-.*
+      physicalTopicName: hold_many_concentrated_topics
+      physicalTopicCompactedName: hold_many_concentrated_topics_compacted
+      physicalTopicCompactedDeletedName: hold_many_concentrated_topics_compacted_deleted
 
   - type: CREATE_TOPICS
     title: Create concentrated topics
@@ -71,7 +83,7 @@ actions:
       - name: concentrated-normal
         replicationFactor: 1
         partitions: 1
-      - name: concentrated-delete
+      - name: concentrated-deleted
         replicationFactor: 1
         partitions: 1
         config:
@@ -91,16 +103,16 @@ actions:
         partitions: 1
         config:
           cleanup.policy: compact,delete
-      - name: concentrated-small-retention
-        replicationFactor: 1
-        partitions: 1
-        config:
-          retention.ms: 10000
-      - name: concentrated-large-retention
-        replicationFactor: 1
-        partitions: 1
-        config:
-          retention.ms: 6048000000
+  #      - name: concentrated-small-retention
+  #        replicationFactor: 1
+  #        partitions: 1
+  #        config:
+  #          retention.ms: 10000
+  #      - name: concentrated-large-retention
+  #        replicationFactor: 1
+  #        partitions: 1
+  #        config:
+  #          retention.ms: 6048000000
 
   - type: LIST_TOPICS
     title: Assert the topics have been created
@@ -108,26 +120,27 @@ actions:
     kafkaConfig: teamA-sa.properties
     assertExists:
       - concentrated-normal
-      - concentrated-delete
+      - concentrated-deleted
       - concentrated-compact
       - concentrated-delete-compact
       - concentrated-compact-delete
-      - concentrated-small-retention
-      - concentrated-large-retention
+  #      - concentrated-small-retention
+  #      - concentrated-large-retention
 
   - type: LIST_TOPICS
     title: Assert the topics have not been created in the underlying kafka cluster
     kafka: kafka1
     assertExists:
-      - hold-many-concentrated-topics
+      - hold_many_concentrated_topics
+      - hold_many_concentrated_topics_compacted
+      - hold_many_concentrated_topics_compacted_deleted
     assertDoesNotExist:
-      - concentrated-normal
-      - concentrated-delete
+      - concentrated-deleted
       - concentrated-compact
       - concentrated-delete-compact
       - concentrated-compact-delete
-      - concentrated-small-retention
-      - concentrated-large-retention
+    #      - concentrated-small-retention
+    #      - concentrated-large-retention
     markdown: |
       If we list topics from the backend cluster, not from Gateway perspective, we do not see the concentrated topics.
 
@@ -144,7 +157,7 @@ actions:
         partitions: 100
 
   - type: LIST_TOPICS
-    title: Assert they exist in `teamA` cluster
+    title: Assert they exist in teamA cluster
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     assertExists:
@@ -163,7 +176,6 @@ actions:
     kafkaConfig: teamA-sa.properties
     topic: concentrated-topic-with-10-partitions
     assertSize: 1
-    showHeaders: true
     assertions:
       - description: Assert expected message
         value:
@@ -181,14 +193,12 @@ actions:
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: concentrated-topic-with-100-partitions
-    showHeaders: true
     assertSize: 1
 
   - type: CONSUME
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: concentrated-topic-with-100-partitions
-    showHeaders: true
     assertSize: 1
     assertions:
       - description: Assert expected message

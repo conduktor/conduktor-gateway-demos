@@ -1,3 +1,4 @@
+#!/bin/bash
 requiredMemory=$(( 2 * $(cat large-message.bin | wc -c | awk '{print $1}')))
 
 kafka-producer-perf-test \

@@ -1,4 +1,7 @@
 title: Schema Payload Validation for Json Schema
+tag: data-quality
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -31,6 +34,12 @@ actions:
       - **Number**: `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`
       - **String**: `minLength`, `maxLength`, `pattern`, `format`
       - **Collections**: `maxItems`, `minItems`
+      
+      This interceptor also supports validating payload against specific custom constraints `expression`,
+      which uses a simple language familiar with devs is [CEL (Common Expression Language)](https://github.com/google/cel-spec)
+      
+      This interceptor also supports validating payload against specific custom `metadata.rules` object in the schema
+      using CEL, too.
 
   - type: ASCIINEMA
 
@@ -43,10 +52,6 @@ actions:
   - type: CREATE_VIRTUAL_CLUSTER
     gateway: gateway1
     name: teamA
-
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
 
   - type: CREATE_TOPICS
     kafka: teamA
@@ -64,11 +69,11 @@ actions:
     title: Let's register it to the Schema Registry
     showOutput: true
     script: |
-        curl -s \
-          http://localhost:8081/subjects/topic-json-schema/versions \
-          -X POST \
-          -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-          --data "{\"schemaType\": \"JSON\", \"schema\": $(cat user-schema-with-validation-rules.json | jq tostring)}"
+      curl -s \
+        http://localhost:8081/subjects/topic-json-schema/versions \
+        -X POST \
+        -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+        --data "{\"schemaType\": \"JSON\", \"schema\": $(cat user-schema-with-validation-rules.json | jq tostring)}"
     assertOutputContains:
       - '{"id":1}'
 
@@ -102,12 +107,12 @@ actions:
     kafkaConfig: teamA-sa.properties
     showOutput: true
     script: |
-      MAGIC_BYTE="\x00"
-      SCHEMA_ID="\x00\x00\x00\x01"
+      MAGIC_BYTE="\000"
+      SCHEMA_ID="\000\000\000\001"
       JSON_PAYLOAD=$(cat invalid-payload.json | jq -c)
       printf "${MAGIC_BYTE}${SCHEMA_ID}${JSON_PAYLOAD}" | \
         kcat \
-          -b  localhost:6969 \
+          -b localhost:6969 \
           -X security.protocol=SASL_PLAINTEXT \
           -X sasl.mechanism=PLAIN \
           -X sasl.username=sa \
@@ -167,12 +172,12 @@ actions:
     kafkaConfig: teamA-sa.properties
     showOutput: true
     script: |
-      MAGIC_BYTE="\x00"
-      SCHEMA_ID="\x00\x00\x00\x01"
+      MAGIC_BYTE="\000"
+      SCHEMA_ID="\000\000\000\001"
       JSON_PAYLOAD=$(cat invalid-payload.json | jq -c)
       printf "${MAGIC_BYTE}${SCHEMA_ID}${JSON_PAYLOAD}" | \
         kcat \
-          -b  localhost:6969 \
+          -b localhost:6969 \
           -X security.protocol=SASL_PLAINTEXT \
           -X sasl.mechanism=PLAIN \
           -X sasl.username=sa \
@@ -187,7 +192,7 @@ actions:
   - type: AUDITLOG
     title: Check in the audit log that message was denied
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
     assertions:
       - description: Confirm SchemaPayloadValidationPolicyPlugin audit has blocked commit
         value:
@@ -209,6 +214,7 @@ actions:
               --property value.schema.id=1
     assertOutputDoesNotContain:
       - "org.apache.kafka.common.errors.SerializationException: Error serializing JSON message"
+      - "org.apache.kafka.common.errors.PolicyViolationException"
 
   - type: SH
     title: And consume it back

@@ -4,6 +4,7 @@
   "config" : {
     "topic" : "customers-shredding",
     "kmsConfig" : {
+      "keyTtlMs" : 200,
       "vault" : {
         "uri" : "http://vault:8200",
         "token" : "vault-plaintext-root-token",

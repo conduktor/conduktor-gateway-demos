@@ -1,4 +1,7 @@
 title: Encryption using Vault and secret management
+tag: encryption
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -105,18 +108,12 @@ actions:
           {
             "fieldName": "password",
             "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
-            "algorithm": {
-              "type": "AES_GCM",
-              "kms": "VAULT"
-            }
+            "algorithm": "AES_GCM"
           },
           {
             "fieldName": "visa",
             "keySecretId": "vault-kms://vault:8200/transit/keys/secret-for-{{record.value.name}}",
-            "algorithm": {
-              "type": "AES_GCM",
-              "kms": "VAULT"
-            }
+            "algorithm": "AES_GCM"
           }
         ]
       }
@@ -130,34 +127,34 @@ actions:
       - crypto-shredding-encrypt
 
   - type: PRODUCE
-    title: Let's produce sample data for `tom` and `florent`
+    title: Let's produce sample data for tom and laura
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     messages:
-      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
       - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
 
   - type: CONSUME
-    title: Let's consume the message, and confirm `tom` and `florent` are encrypted
+    title: Let's consume the message, and confirm tom and laura are encrypted
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
     assertions:
-      - description: Confirm password is encrypted for `tom`
+      - description: Confirm password is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: 'motorhead'
-      - description: Confirm visa is encrypted for `tom`
+      - description: Confirm visa is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: '#abc123'
-      - description: Confirm password is encrypted for `florent`
+      - description: Confirm password is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: 'kitesurf'
-      - description: Confirm visa is encrypted for `florent`
+      - description: Confirm visa is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: '#888999XZ'
@@ -193,25 +190,25 @@ actions:
       - crypto-shredding-decrypt
 
   - type: CONSUME
-    title: Confirm message from `tom` and `florent` are encrypted
+    title: Confirm message from tom and laura are encrypted
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
     assertions:
-      - description: Confirm password is decrypted for `tom`
+      - description: Confirm password is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: 'motorhead'
-      - description: Confirm visa is decrypted for `tom`
+      - description: Confirm visa is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: '#abc123'
-      - description: Confirm password is decrypted for `florent`
+      - description: Confirm password is decrypted for laura
         value:
           operator: containsIgnoreCase
           expected: 'kitesurf'
-      - description: Confirm visa is decrypted for `florent`
+      - description: Confirm visa is decrypted for laura
         value:
           operator: containsIgnoreCase
           expected: '#888999XZ'

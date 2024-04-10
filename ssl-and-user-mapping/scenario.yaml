@@ -1,5 +1,8 @@
-title: SSL and Multitenancy
-
+title: mTLS and User Mapping
+tag: security
+ciTags:
+  - PULL_REQUEST
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -56,7 +59,7 @@ services:
 actions:
 
   - type: INTRODUCTION
-    title: SSL
+    title: mTLS, when SASL_SSL is not enough
     markdown: |
       When passwords are not enough, you can rely on TLS client certificate
       But certificates do not host vcluster information, so let's map manually CN to vclusters.
@@ -64,9 +67,10 @@ actions:
   - type: ASCIINEMA
 
   - type: FILE
-    filename: docker-compose.yaml
+    filename: docker-compose.yaml 
 
   - type: SH
+    title: Generate self-signed ssl certificates
     showOutput: true
     script: |
       
@@ -146,3 +150,6 @@ actions:
     kafka: kafka1
     assertExists:
       - foo
+
+  - type: DOCKER
+    command: docker compose down --volumes

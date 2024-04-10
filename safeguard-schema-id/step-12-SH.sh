@@ -1,3 +1,4 @@
+#!/bin/bash
 echo '{
     "name": "conduktor",
     "username": "test@conduktor.io",
