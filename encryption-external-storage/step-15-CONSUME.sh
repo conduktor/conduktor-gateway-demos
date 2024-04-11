@@ -1,7 +1,7 @@
+#!/bin/bash
 kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic customers \
+    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
+    --topic teamAcustomers \
     --from-beginning \
     --timeout-ms 10000 \
-    --property print.headers=true 
+    --property print.headers=true | jq

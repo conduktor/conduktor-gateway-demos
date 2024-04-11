@@ -1,3 +1,4 @@
+#!/bin/bash
 docker compose exec cli-aws \
   aws \
     --profile minio \

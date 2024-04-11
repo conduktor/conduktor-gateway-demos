@@ -1,20 +1,24 @@
-# SSL
+# mTLS, when SASL_SSL is not enough
 
 When passwords are not enough, you can rely on TLS client certificate
 But certificates do not host vcluster information, so let's map manually CN to vclusters.
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/hA7SQYteKFDmubJH7eqSlgcg0.svg)](https://asciinema.org/a/hA7SQYteKFDmubJH7eqSlgcg0)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/xeisG3XK2U9ljtoeUjR3OMZuN.svg)](https://asciinema.org/a/xeisG3XK2U9ljtoeUjR3OMZuN)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -26,7 +30,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -144,7 +148,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -183,7 +187,7 @@ services:
       target: /config
       read_only: true
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -222,28 +226,28 @@ services:
       source: .
       target: /config
       read_only: true
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null
 ```
 
 </details>
 
- <details>
-  <summary>docker compose ps</summary>
+## Generate self-signed ssl certificates
 
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            23 seconds ago   Up 16 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            23 seconds ago   Up 16 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            23 seconds ago   Up 16 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   23 seconds ago   Up 10 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         23 seconds ago   Up 22 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
 
-```
 
-</details>
-
-## 
+<details>
+<summary>Command</summary>
 
 
 
@@ -300,80 +304,28 @@ ssl.keystore.password=123456
 """ > client.config
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![](images/step-04-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-
-rm -f *jks *key *p12 *crt
-
-openssl req \
-  -x509 \
-  -newkey rsa:4096 \
-  -sha256 \
-  -days 3560 \
-  -nodes \
-  -keyout san.key \
-  -out san.crt \
-  -subj '/CN=username' \
-  -extensions san \
-  -config openssl.config
-.....+..+.+.........+++++++++++++++++++++++++++++++++++++++++++++*.+.......+...+.....+.+.........+......+......+...+..+.......+.....+......+....+...+........+......+....+.........+..+....+......+++++++++++++++++++++++++++++++++++++++++++++*..................+.+........................+...............+........+..........+...+........+......+...+.+......+.....................+...+.....+.........+.+.................+....+........+.+......+...+..+.+........+............+.........+...+...+...+.+.....+................+.........+...+..+...+......+.+.........+..+....+........+......+.......+...+......+...+.....+.......+......+............+...+.....+.......+......+..+...+.......+.....+....+...+.....+......+.........+..........+...........+....+..+.............+..+.+...+.........+......+......+...........+....+.....+.+...+...........+.....................+...+.......+........+............+....+..................+.....+......+....+..+.........+.+.....+.........+......+...+.......+...+........+..........+..............+.............+......+....................+......+......+...+.+......+..............................+.....+....+.........+............+........+.......+...+.....+.......+.........+......+..+................+.....+.........+...+............+...+..........+.....+....+.........+......+...........+...............+..........+............+.....+............+......+.......+...+........+.+.....+..........+......+........+....+........+........................+...+.......+...+............+..............+......+.+...+...........+...+......................+...+..+....+.....+................+...+..+....+............+..+......+.......+..+.+......+..............................+...+......+............+..+.....................+..........+...........+...+............+..........+...+........+...+....+...+.....+...+.........+....................................+...............+...................+..+..........+.....+.+.....+.......+...+..+...+....+.........+..+.............+.....+.+........+......+.......+..+..........+...........+.+.....+.........+...................+.....+......+.+...+...+..+...+..........+...+......+........+...+.........+...............+......+...+....+..+.+.........+.........+.....+.........+.+.........+......+...........+....+..............+.......+......+........+.......+............+......+.....+...............+......+...+.+......+......+..+......+....+...+...............+...+.........+..+......+.......+..+.........+.........+......+...............+......+....+...........+......+...+....+......+.........+......+..+....+........+...+...+.+...........+............+......+......+....+......+.....+...............+....+.....+....+..+....+.................+...............+.......+...........+......+...+......+....+.....+......+.+...........+..........+...+......+...+..................+...+.........+.....+.+.....+............+...+.+.....................+.....+.......+..+......+.......+........+...+.+.......................+......+.+.....+.+........+....+........+..........+.....+...+.......+...+......+...+..................+...+..+.......+....................+..........+..................+.....+...+.....................+....+.........+...+............+..+.........+.......+..+.......+......+..+............................+...+...........+...+......+....+...............+..+...+...............+...+..................+....+...+...+.....+....+.....+............+.............+......+............+..+.......+.....+.+.....+....+++++
-...+++++++++++++++++++++++++++++++++++++++++++++*......+.........+.......+........+......+....+........+.......+..+...+.......+.....+....+.....+.+...+........+.......+..+.........+++++++++++++++++++++++++++++++++++++++++++++*.....+......+................+.....+....+.....+.........+..........+........+...+.........+...+++++
+```
+......+...+......+.....+.......+.........+...+..+...+.+.....+.+........+++++++++++++++++++++++++++++++++++++++++++++*..+.+...........+.........+...+......+++++++++++++++++++++++++++++++++++++++++++++*.......+.....+.............+............+..+...+.........+....+..............+...+....+++++
+..........+...+..........+..+......+.......+...+..+...+................+...+..+.+...+.....+......+...+..........+...........+.......+...+..+............+.+.....+.+.........+.........+..+++++++++++++++++++++++++++++++++++++++++++++*.....+.........+++++++++++++++++++++++++++++++++++++++++++++*..+...........+..........+...+..+....+.....+.+...............+.........+......+...........+...+......+.+........+......+.+............+.....+.+.........+........+...+.+...+......+.....+....+.....+.............+...+......+...+..+.+..+..................+...................+...+..+..........+...+.....+......+......+.+..+...............+.+..+...+......+......+...+..........+++++
 -----
-
-  openssl pkcs12 \
-    -export \
-    -in san.crt \
-    -inkey san.key \
-    -name brokers \
-    -out san.p12 \
-    -password "pass:123456"
-
-  keytool \
-    -noprompt \
-    -alias brokers \
-    -importkeystore \
-    -deststorepass 123456 \
-    -destkeystore keystore.jks \
-    -srckeystore san.p12 \
-    -srcstoretype PKCS12 \
-    -srcstorepass 123456
-Import du fichier de clés san.p12 vers keystore.jks...
-
-  keytool \
-    -noprompt \
-    -import \
-    -alias brokers \
-    -file san.crt \
-    -keypass 123456 \
-    -destkeystore truststore.jks \
-    -storepass 123456
-Certificat ajouté au fichier de clés
-
-echo """
-bootstrap.servers=localhost:6969
-security.protocol=SSL
-ssl.truststore.location=$PWD/truststore.jks
-ssl.truststore.password=123456
-ssl.keystore.location=$PWD/keystore.jks
-ssl.keystore.password=123456
-""" > client.config
+Importing keystore san.p12 to keystore.jks...
+Certificate was added to keystore
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/Hf4okruxLTYdpZrsCaSZqnvLo.svg)](https://asciinema.org/a/Hf4okruxLTYdpZrsCaSZqnvLo)
+
+</details>
 
 ## Starting the docker environment
 
@@ -382,41 +334,43 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-05-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
+ Network ssl-and-user-mapping_default  Creating
+ Network ssl-and-user-mapping_default  Created
  Container zookeeper  Creating
+ Container kafka-client  Creating
+ Container kafka-client  Created
  Container zookeeper  Created
  Container kafka2  Creating
- Container kafka3  Creating
  Container kafka1  Creating
- Container kafka2  Created
+ Container kafka3  Creating
  Container kafka1  Created
+ Container kafka2  Created
  Container kafka3  Created
  Container gateway2  Creating
- Container schema-registry  Creating
  Container gateway1  Creating
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
+ Container schema-registry  Creating
  Container gateway2  Created
  Container gateway1  Created
  Container schema-registry  Created
  Container zookeeper  Starting
+ Container kafka-client  Starting
+ Container kafka-client  Started
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
@@ -427,58 +381,69 @@ docker compose up --detach --wait
  Container kafka2  Starting
  Container zookeeper  Healthy
  Container kafka3  Starting
- Container kafka1  Started
  Container kafka3  Started
  Container kafka2  Started
+ Container kafka1  Started
+ Container kafka2  Waiting
+ Container kafka3  Waiting
+ Container kafka1  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
- Container kafka2  Waiting
- Container kafka3  Waiting
- Container kafka1  Waiting
+ Container kafka3  Healthy
+ Container kafka3  Healthy
  Container kafka1  Healthy
+ Container kafka1  Healthy
+ Container kafka2  Healthy
  Container kafka2  Healthy
  Container kafka3  Healthy
- Container kafka2  Healthy
- Container kafka1  Healthy
- Container kafka1  Healthy
  Container gateway1  Starting
- Container kafka3  Healthy
- Container gateway2  Starting
- Container kafka3  Healthy
  Container kafka2  Healthy
+ Container gateway2  Starting
+ Container kafka1  Healthy
  Container schema-registry  Starting
+ Container gateway1  Started
  Container gateway2  Started
  Container schema-registry  Started
- Container gateway1  Started
- Container gateway1  Waiting
- Container gateway2  Waiting
  Container zookeeper  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container schema-registry  Waiting
+ Container gateway1  Waiting
+ Container gateway2  Waiting
+ Container kafka-client  Waiting
+ Container kafka-client  Healthy
+ Container kafka2  Healthy
  Container kafka1  Healthy
  Container kafka3  Healthy
  Container zookeeper  Healthy
- Container kafka2  Healthy
  Container schema-registry  Healthy
- Container gateway2  Healthy
  Container gateway1  Healthy
+ Container gateway2  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/YP59HpHrqHzd2EWMdpm1bIStB.svg)](https://asciinema.org/a/YP59HpHrqHzd2EWMdpm1bIStB)
+
+</details>
 
 ## Adding user mapping for CN=username
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 cat step-06-user-mapping.json | jq
 
@@ -490,30 +455,16 @@ curl \
     --data "@step-06-user-mapping.json" | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding user mapping for CN=username](images/step-06-ADD_USER_MAPPING.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-06-user-mapping.json | jq
+```json
 {
   "username": "CN=username"
 }
-
-curl \
-    --request POST 'http://localhost:8888/admin/userMappings/v1' \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data "@step-06-user-mapping.json" | jq
 {
   "message": "User mapping is created"
 }
@@ -521,13 +472,23 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/DCMfXCgsH6FRZiL7Vi1O1r45k.svg)](https://asciinema.org/a/DCMfXCgsH6FRZiL7Vi1O1r45k)
 
-## Creating topic `foo` on `gateway1`
+</details>
 
-Creating topic `foo` on `gateway1`
+## Creating topic foo on gateway1
+
+Creating on `gateway1`:
+
 * Topic `foo` with partitions:10 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-topics \
@@ -539,35 +500,31 @@ kafka-topics \
     --topic foo
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `foo` on `gateway1`](images/step-07-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config client.config \
-    --replication-factor 1 \
-    --partitions 10 \
-    --create --if-not-exists \
-    --topic foo
+```
 Created topic foo.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/0opAiXmUqJEdWt3iYMuk1CF5q.svg)](https://asciinema.org/a/0opAiXmUqJEdWt3iYMuk1CF5q)
+
+</details>
+
+## Listing topics in gateway1
 
 
-## Listing topics in `gateway1`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -578,44 +535,42 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `gateway1`](images/step-08-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config client.config \
-    --list
+```
 __consumer_offsets
-_acls
-_auditLogs
-_consumerGroupSubscriptionBackingTopic
-_encryptionConfig
-_interceptorConfigs
-_license
-_offsetStore
+_conduktor_gateway_acls
+_conduktor_gateway_auditlogs
+_conduktor_gateway_consumer_offsets
+_conduktor_gateway_consumer_subscriptions
+_conduktor_gateway_encryption_configs
+_conduktor_gateway_interceptor_configs
+_conduktor_gateway_license
+_conduktor_gateway_topicmappings
+_conduktor_gateway_usermappings
 _schemas
-_topicMappings
-_topicRegistry
-_userMapping
 foo
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/uovwFGgeUTvVttenK3IMMNJdQ.svg)](https://asciinema.org/a/uovwFGgeUTvVttenK3IMMNJdQ)
+
+</details>
+
+## Listing topics in kafka1
 
 
-## Listing topics in `kafka1`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -625,39 +580,100 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `kafka1`](images/step-09-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --list
+```
 __consumer_offsets
-_acls
-_auditLogs
-_consumerGroupSubscriptionBackingTopic
-_encryptionConfig
-_interceptorConfigs
-_license
-_offsetStore
+_conduktor_gateway_acls
+_conduktor_gateway_auditlogs
+_conduktor_gateway_consumer_offsets
+_conduktor_gateway_consumer_subscriptions
+_conduktor_gateway_encryption_configs
+_conduktor_gateway_interceptor_configs
+_conduktor_gateway_license
+_conduktor_gateway_topicmappings
+_conduktor_gateway_usermappings
 _schemas
-_topicMappings
-_topicRegistry
-_userMapping
 foo
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/3LDqXVBCWtJsltuD5nMkHkK2W.svg)](https://asciinema.org/a/3LDqXVBCWtJsltuD5nMkHkK2W)
+
+</details>
+
+## Tearing down the docker environment
+
+Remove all your docker processes and associated volumes
+
+* `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
+
+<details open>
+<summary>Command</summary>
+
+
+
+```sh
+docker compose down --volumes
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+ Container kafka-client  Stopping
+ Container gateway1  Stopping
+ Container gateway2  Stopping
+ Container schema-registry  Stopping
+ Container gateway1  Stopped
+ Container gateway1  Removing
+ Container gateway1  Removed
+ Container gateway2  Stopped
+ Container gateway2  Removing
+ Container gateway2  Removed
+ Container schema-registry  Stopped
+ Container schema-registry  Removing
+ Container schema-registry  Removed
+ Container kafka3  Stopping
+ Container kafka2  Stopping
+ Container kafka1  Stopping
+ Container kafka3  Stopped
+ Container kafka3  Removing
+ Container kafka3  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka2  Stopped
+ Container kafka2  Removing
+ Container kafka2  Removed
+ Container zookeeper  Stopping
+ Container zookeeper  Stopped
+ Container zookeeper  Removing
+ Container zookeeper  Removed
+ Network ssl-and-user-mapping_default  Removing
+ Network ssl-and-user-mapping_default  Removed
+
+```
+
+</details>
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/S4eimNkAnt9N4t5bZMAGcPSFi.svg)](https://asciinema.org/a/S4eimNkAnt9N4t5bZMAGcPSFi)
+
+</details>
 

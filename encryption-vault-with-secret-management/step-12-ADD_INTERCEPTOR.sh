@@ -1,3 +1,4 @@
+#!/bin/bash
 cat step-12-crypto-shredding-decrypt.json | jq
 
 curl \

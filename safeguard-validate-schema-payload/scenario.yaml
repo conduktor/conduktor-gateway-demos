@@ -1,4 +1,7 @@
 title: Schema Producer Interceptor
+tag: data-quality
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -31,6 +34,12 @@ actions:
       - **Number**: `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`
       - **String**: `minLength`, `maxLength`, `pattern`, `format`
       - **Collections**: `maxItems`, `minItems`
+      
+      This interceptor also supports validating payload against specific custom constraints `expression`,
+      which uses a simple language familiar with devs is [CEL (Common Expression Language)](https://github.com/google/cel-spec)
+  
+      This interceptor also supports validating payload against specific custom `metadata.rules` object in the schema
+      using CEL, too.
 
   - type: ASCIINEMA
 
@@ -43,10 +52,6 @@ actions:
   - type: CREATE_VIRTUAL_CLUSTER
     gateway: gateway1
     name: teamA
-
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
 
   - type: CREATE_TOPICS
     kafka: teamA
@@ -166,12 +171,12 @@ actions:
               --property value.schema.id=2
     assertOutputContains:
       - "org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy."
-      - "Topic 'topic-avro' has invalid avro schema payload: name is too short (2 < 3), street is too long (11 > 10), hobbies has too few items (2 < 3), age is greater than 10, age is greater than 10"
+      - "Topic 'topic-avro' has invalid avro schema payload: hobbies must have 3 items, age must be greater than or equal to 18, email should end with 'yahoo.com', name is too short (2 < 3), name does not match expression 'size(name) >= 3 && size(name) <= 50', email does not match expression 'email.contains('foo')', street is too long (11 > 10), street does not match expression 'size(street) >= 5 && size(street) <= 10', address does not match expression 'size(address.street) >= 5 && address.street.contains('paris') || address.city == 'paris'', hobbies has too few items (2 < 3), hobbies does not match expression 'size(hobbies) >= 3', name does not match expression 'size(name) < 3', age is greater than 10, name does not match expression 'size(name) < 3', age is greater than 10"
 
   - type: AUDITLOG
     title: Check in the audit log that message was denied
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
     assertions:
       - description: Confirm SchemaPayloadValidationPolicyPlugin audit has blocked commit
         value:
@@ -193,12 +198,12 @@ actions:
               --property value.schema.id=3
     assertOutputContains:
       - "org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy."
-      - "Topic 'topic-protobuf' has invalid protobuf schema payload: Student.name is too short (2 < 3), Student.Address.street is too long (11 > 10), Student.Friend.age is greater than 10, Student.Friend.age is greater than 10"
+      - "Topic 'topic-protobuf' has invalid protobuf schema payload: name length must greater than 2, age must be greater than or equal to 18, Student.name is too short (2 < 3), Student.name does not match expression 'size(name) >= 3 && size(name) <= 50', Student.email does not match expression 'email.contains('foo')', Student.Address.street is too long (11 > 10), Student.Address.street does not match expression 'size(street) >= 5 && size(street) <= 10', Student.address does not match expression 'size(address.street) >= 5 && address.street.contains('paris') || address.city == 'paris'', Student.Friend.age is greater than 10, Student.Friend.age does not match expression 'age >= 2 && age <= 10', Student.Friend.age is greater than 10, Student.Friend.age does not match expression 'age >= 2 && age <= 10'"
 
   - type: AUDITLOG
     title: Check in the audit log that message was denied
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.SchemaPayloadValidationPolicyPlugin")'
     assertions:
       - description: Confirm SchemaPayloadValidationPolicyPlugin audit has blocked commit
         value:

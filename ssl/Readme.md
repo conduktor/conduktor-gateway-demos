@@ -1,20 +1,24 @@
-# SSL
+# mTLS
 
 When passwords are not enough, you can rely on TLS client certificate
 But certificates do not host vcluster information, so let's map manually CN to vclusters.
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/8ER9fNfsPBZxkWuezuKHrvszq.svg)](https://asciinema.org/a/8ER9fNfsPBZxkWuezuKHrvszq)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/yFHeXWcvh5deXmPV1rDgS9ZXX.svg)](https://asciinema.org/a/yFHeXWcvh5deXmPV1rDgS9ZXX)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -26,7 +30,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -144,7 +148,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -183,7 +187,7 @@ services:
       target: /config
       read_only: true
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -222,34 +226,36 @@ services:
       source: .
       target: /config
       read_only: true
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null
 ```
 
 </details>
 
- <details>
-  <summary>docker compose ps</summary>
+## Generate self-signed ssl certificates
 
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            23 seconds ago   Up 16 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            23 seconds ago   Up 16 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            23 seconds ago   Up 16 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   23 seconds ago   Up 11 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         23 seconds ago   Up 22 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
 
-```
 
-</details>
-
-## 
+<details>
+<summary>Command</summary>
 
 
 
 ```sh
 
-rm *jks *key *p12 *crt
+pwd > /tmp/ici
+pwd 
+rm -f *jks *key *p12 *crt
 
 openssl req \
   -x509 \
@@ -263,32 +269,32 @@ openssl req \
   -extensions san \
   -config openssl.config
 
-  openssl pkcs12 \
-    -export \
-    -in san.crt \
-    -inkey san.key \
-    -name brokers \
-    -out san.p12 \
-    -password "pass:123456"
+openssl pkcs12 \
+  -export \
+  -in san.crt \
+  -inkey san.key \
+  -name brokers \
+  -out san.p12 \
+  -password "pass:123456"
 
-  keytool \
-    -noprompt \
-    -alias brokers \
-    -importkeystore \
-    -deststorepass 123456 \
-    -destkeystore keystore.jks \
-    -srckeystore san.p12 \
-    -srcstoretype PKCS12 \
-    -srcstorepass 123456
+keytool \
+  -noprompt \
+  -alias brokers \
+  -importkeystore \
+  -deststorepass 123456 \
+  -destkeystore keystore.jks \
+  -srckeystore san.p12 \
+  -srcstoretype PKCS12 \
+  -srcstorepass 123456
 
-  keytool \
-    -noprompt \
-    -import \
-    -alias brokers \
-    -file san.crt \
-    -keypass 123456 \
-    -destkeystore truststore.jks \
-    -storepass 123456
+keytool \
+  -noprompt \
+  -import \
+  -alias brokers \
+  -file san.crt \
+  -keypass 123456 \
+  -destkeystore truststore.jks \
+  -storepass 123456
 
 echo """
 bootstrap.servers=localhost:6969
@@ -297,83 +303,32 @@ ssl.truststore.location=$PWD/truststore.jks
 ssl.truststore.password=123456
 ssl.keystore.location=$PWD/keystore.jks
 ssl.keystore.password=123456
-""" > client.config
+""" > client.config      
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![](images/step-04-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-
-rm *jks *key *p12 *crt
-
-openssl req \
-  -x509 \
-  -newkey rsa:4096 \
-  -sha256 \
-  -days 3560 \
-  -nodes \
-  -keyout san.key \
-  -out san.crt \
-  -subj '/CN=username' \
-  -extensions san \
-  -config openssl.config
-.+...........+++++++++++++++++++++++++++++++++++++++++++++*........+......+...+.....+....+......+..+....+...+.....+...+.......+...........+.+...+..+..........+.....+......+....+...+...+.....+++++++++++++++++++++++++++++++++++++++++++++*...+.......+......+..........................+...+..........+...+.........+...+.................+...+...............+......+.......+...+...........+......+.......+..+....+......+...+..................+..............+...+...+.........+.+..............+....+.........+......+..+.........+.........+.+...+.....+...+....+........+.......+.........+...........+.........+......+......+.........+.+...+......+...+.....+......+.......+...+......+.....+..........+...............+........+......+....+..+.............+...+..+.+......+...+.....+...+.......+........+...+...............+......+....+...........+...+...+.............+..+..........+..+...+....+...........+....+..............+...............+.+......+........+......+...+.......+...+...........+.......+..............+...................+..+.........+.+..+...............+.......+...+.....+......+..........+.....+....+....................+.+............+..+.+..+..........+...+...........+....+.........+..+...+......+......+................+..+.......+........+.+..+....+..............+....+..+..........+......+..+..........+........+...+....+...+..............+.............+..+.............+.....+............+.+...............+............+...+.........+...+........+..........+..+.......+.....+...+...............+.+..+............+............+...............+.+........+......+..................+.+..+....+.....................+..+......+....+..+...+.+...........+...+......+.+...+..+......+...+.+.........+.....+.........+..................+....+......+...+............+..+......+.+...........+....+........+...+.............+..+.......+..+.........................+...+...+.........+...............+........+.............+.....+..........+...+..............+.+.........+..+....+.....+..........+............+...+.....+.........+...+...+.+...........+.........+......+...+....+...+...+...........+...+.......+...........+.......+..+.+...............+........+.........+......+..........+............+.....+.......+......+......+......+.....+...+....+............+........+......+....+..+.........+.....................+.+............+..................+...............+.................+.+.................+.......+...+++++
-.+...+....+..+.+..+.+..+++++++++++++++++++++++++++++++++++++++++++++*...........+++++++++++++++++++++++++++++++++++++++++++++*........+.....+......+....+.....................+.........+.....+...............+...+....+........+.............+.................+................+.....+....+..+...+...+......................+...+.........+......+........+......+.+..+...+............+.............+.....+..........+.....+.......+.....+...............+.+......+...+..+.+........+.+...........+..........+........+.+...+...+++++
+```
+/Users/framiere/conduktor/conduktor-proxy/functional-testing/target/2024.04.10-01:54:14/ssl
+..+...........+....+...+..+......+...+....+...........+......+...+.+...........+.........+.........+...+.......+..+.+........+.+......+.........+.....+.+.....+.............+.........+..+.+...+..+....+.....+...+.......+...+++++++++++++++++++++++++++++++++++++++++++++*..+.........+..+...+......+...+.............+.....+...+++++++++++++++++++++++++++++++++++++++++++++*....+......+..............+.............+..+......+.........+..................+.......+...............+...+...+..+...+...................+.....+.........+....+.....+............+.+...+.....+.........+...+............+.+.....+.........+.+..+....+.........+.....+................+...........+...+....+..+......+.......+.....................+.....+....+...+...+.........+..+...+.+.....+......+..........+......+..+...+....+...........+.........+.+.....+....+...+...............+.....+............+.....................+............+............+.+........+............+............+...+..........+........+.........+................+..+...+.+......+..+...+...............+.........+....+..+.............+..............+.+..+...+..........+.....+............+......................+...+...+..+.............+......+...+....................+.......+...+..................+....................+....+...+..+.+..............+.+..+.+...........+.........+.......+.....+..................+...............+...................+...+...............+...+..............+...+....+...........+.............+...........+.+...+.....+.+.....+.+.....+....+....................+...+.......+...........+.......+...........+.+........+.............+..+......+......+...................+.....+.......+.....+.......+......+............+.....+...+.+.....+....+..........................+...+..................+..........+.........+..............+.+.........+.........+..+.+...........................+++++
+...+...+.....+....+..+.............+...........+......+.+..+.+..+....+........+.+++++++++++++++++++++++++++++++++++++++++++++*.....+.....+.........+....+..+...+.......+...+..+.+...+..+.........+...+.+..+.........+++++++++++++++++++++++++++++++++++++++++++++*.......+.......+........+.+..+....+......+.........+...+......+.....+......+.............+...........+....+...........+....+..+.........+......+.+....................+....+.....+.+.....+.......+.....+.......+..............+.+........+...+..........+..............+.+..+...+.......+...+.........+.........+............+..+................+..+.............+..............+......+.........+......+......+...+.....................+............+......................+........+...+.+........+.+...........+.+...+...........+......+....+.........+.........+..+.+.....+.......+...........+....+.....+.+.....+......+...+.......+.........+..+...+....+...+...............+............+...+..............+...+......+.+...+.....+...+.........+....+...............+..+...+....+...............+...............+...........................+...+........+....+.....+.+...+..............+.+..+...+.......+..+............................+...+...........+...+.+......+...+.................+...+............+...+...+............+......+.......+...+.....+......+.+.................+..........+.....+.+.........+...........+.........+............+......+.........+......+..........+.....+.........+......+...+.........+.+.....+.+.....................+...+..+..........+............+..+....+.....+.........+...+.........+...+...+...........................+.+..............+.......+...+..+...+..........+...+...+.....+....+..+.+..............+..........+....................+...................+.....+.+......+.........+...+........+.......+......+......+........+...............+......+.......+..+.+..............+...+.........+.........+.+......+...+..+...................+.....+...+.+.....+.+.........+............+........+..........+.........+..+......+.........................+.....+.........+......+...+.......+.........+.....+...............+.+........+.....................+.............+...+..................+.........+.....+...+....+...............+...........+....+...+..+.+............+........+............+.+..+.......+..+....+.........+...+...+...........+....+............+.....+...+....+.....+......+......+.+.....+...+....+..+...+..........+......+......+...+.....+.......+......+.......................+.........+.............+...+..+.............+......+.....+....+.....+....+......+.....+.+.....+.+...+...........+..................+......+.......+.....+.........+.+.................+.+.....+....+.....+.............+..+.......+.........+.....................+.....+....+...........+.+..+..........+........+...+...............+....+..+...+.....................+.......+..................+.........+..+.+..+.......+...........+..........+...+......+........+.............+..+.......+......+..+..................+++++
 -----
-
-  openssl pkcs12 \
-    -export \
-    -in san.crt \
-    -inkey san.key \
-    -name brokers \
-    -out san.p12 \
-    -password "pass:123456"
-
-  keytool \
-    -noprompt \
-    -alias brokers \
-    -importkeystore \
-    -deststorepass 123456 \
-    -destkeystore keystore.jks \
-    -srckeystore san.p12 \
-    -srcstoretype PKCS12 \
-    -srcstorepass 123456
-Import du fichier de clés san.p12 vers keystore.jks...
-
-  keytool \
-    -noprompt \
-    -import \
-    -alias brokers \
-    -file san.crt \
-    -keypass 123456 \
-    -destkeystore truststore.jks \
-    -storepass 123456
-Certificat ajouté au fichier de clés
-
-echo """
-bootstrap.servers=localhost:6969
-security.protocol=SSL
-ssl.truststore.location=$PWD/truststore.jks
-ssl.truststore.password=123456
-ssl.keystore.location=$PWD/keystore.jks
-ssl.keystore.password=123456
-""" > client.config
+Importing keystore san.p12 to keystore.jks...
+Certificate was added to keystore
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/Ip7Vbq8nfcpZOjSOBw30IXZjg.svg)](https://asciinema.org/a/Ip7Vbq8nfcpZOjSOBw30IXZjg)
+
+</details>
 
 ## Starting the docker environment
 
@@ -382,89 +337,93 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-05-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
+ Network ssl_default  Creating
+ Network ssl_default  Created
  Container zookeeper  Creating
+ Container kafka-client  Creating
+ Container kafka-client  Created
  Container zookeeper  Created
+ Container kafka3  Creating
  Container kafka2  Creating
  Container kafka1  Creating
- Container kafka3  Creating
  Container kafka2  Created
  Container kafka1  Created
  Container kafka3  Created
  Container gateway2  Creating
  Container schema-registry  Creating
  Container gateway1  Creating
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
  Container gateway1  Created
  Container gateway2  Created
  Container schema-registry  Created
+ Container kafka-client  Starting
  Container zookeeper  Starting
+ Container kafka-client  Started
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Healthy
+ Container kafka1  Starting
+ Container zookeeper  Healthy
  Container kafka3  Starting
  Container zookeeper  Healthy
  Container kafka2  Starting
- Container zookeeper  Healthy
- Container kafka1  Starting
- Container kafka2  Started
- Container kafka1  Started
  Container kafka3  Started
+ Container kafka1  Started
+ Container kafka2  Started
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
- Container kafka1  Waiting
- Container kafka2  Waiting
- Container kafka3  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
+ Container kafka2  Waiting
+ Container kafka3  Waiting
+ Container kafka1  Waiting
+ Container kafka1  Healthy
  Container kafka2  Healthy
+ Container kafka3  Healthy
  Container kafka2  Healthy
- Container kafka3  Healthy
- Container kafka1  Healthy
- Container kafka3  Healthy
- Container kafka3  Healthy
- Container kafka1  Healthy
- Container kafka1  Healthy
  Container schema-registry  Starting
- Container gateway1  Starting
  Container kafka2  Healthy
+ Container kafka3  Healthy
+ Container kafka3  Healthy
+ Container kafka1  Healthy
  Container gateway2  Starting
- Container schema-registry  Started
+ Container kafka1  Healthy
+ Container gateway1  Starting
  Container gateway1  Started
  Container gateway2  Started
+ Container schema-registry  Started
+ Container gateway2  Waiting
+ Container kafka-client  Waiting
+ Container zookeeper  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container schema-registry  Waiting
  Container gateway1  Waiting
- Container gateway2  Waiting
- Container zookeeper  Waiting
- Container zookeeper  Healthy
- Container kafka1  Healthy
- Container kafka2  Healthy
  Container kafka3  Healthy
+ Container zookeeper  Healthy
+ Container kafka2  Healthy
+ Container kafka1  Healthy
+ Container kafka-client  Healthy
  Container schema-registry  Healthy
  Container gateway2  Healthy
  Container gateway1  Healthy
@@ -472,13 +431,23 @@ docker compose up --detach --wait
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/lHsSD2CGx04eYZOq73luygoso.svg)](https://asciinema.org/a/lHsSD2CGx04eYZOq73luygoso)
 
-## Creating topic `foo` on `gateway1`
+</details>
 
-Creating topic `foo` on `gateway1`
+## Creating topic foo on gateway1
+
+Creating on `gateway1`:
+
 * Topic `foo` with partitions:10 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-topics \
@@ -490,35 +459,31 @@ kafka-topics \
     --topic foo
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `foo` on `gateway1`](images/step-06-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config client.config \
-    --replication-factor 1 \
-    --partitions 10 \
-    --create --if-not-exists \
-    --topic foo
+```
 Created topic foo.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/sKLNbeVzbdHwge9IUE5hx0mfE.svg)](https://asciinema.org/a/sKLNbeVzbdHwge9IUE5hx0mfE)
+
+</details>
+
+## Listing topics in gateway1
 
 
-## Listing topics in `gateway1`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -529,44 +494,42 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `gateway1`](images/step-07-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config client.config \
-    --list
+```
 __consumer_offsets
-_acls
-_auditLogs
-_consumerGroupSubscriptionBackingTopic
-_encryptionConfig
-_interceptorConfigs
-_license
-_offsetStore
+_conduktor_gateway_acls
+_conduktor_gateway_auditlogs
+_conduktor_gateway_consumer_offsets
+_conduktor_gateway_consumer_subscriptions
+_conduktor_gateway_encryption_configs
+_conduktor_gateway_interceptor_configs
+_conduktor_gateway_license
+_conduktor_gateway_topicmappings
+_conduktor_gateway_usermappings
 _schemas
-_topicMappings
-_topicRegistry
-_userMapping
 foo
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/cWHagCWR7GpLF14W39Lj44kRi.svg)](https://asciinema.org/a/cWHagCWR7GpLF14W39Lj44kRi)
+
+</details>
+
+## Listing topics in kafka1
 
 
-## Listing topics in `kafka1`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -576,39 +539,100 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `kafka1`](images/step-08-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --list
+```
 __consumer_offsets
-_acls
-_auditLogs
-_consumerGroupSubscriptionBackingTopic
-_encryptionConfig
-_interceptorConfigs
-_license
-_offsetStore
+_conduktor_gateway_acls
+_conduktor_gateway_auditlogs
+_conduktor_gateway_consumer_offsets
+_conduktor_gateway_consumer_subscriptions
+_conduktor_gateway_encryption_configs
+_conduktor_gateway_interceptor_configs
+_conduktor_gateway_license
+_conduktor_gateway_topicmappings
+_conduktor_gateway_usermappings
 _schemas
-_topicMappings
-_topicRegistry
-_userMapping
 foo
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/iMyIkaCSswvfQKQ1pARXZiriT.svg)](https://asciinema.org/a/iMyIkaCSswvfQKQ1pARXZiriT)
+
+</details>
+
+## Tearing down the docker environment
+
+Remove all your docker processes and associated volumes
+
+* `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
+
+<details open>
+<summary>Command</summary>
+
+
+
+```sh
+docker compose down --volumes
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+ Container kafka-client  Stopping
+ Container gateway2  Stopping
+ Container schema-registry  Stopping
+ Container gateway1  Stopping
+ Container gateway2  Stopped
+ Container gateway2  Removing
+ Container gateway2  Removed
+ Container gateway1  Stopped
+ Container gateway1  Removing
+ Container gateway1  Removed
+ Container schema-registry  Stopped
+ Container schema-registry  Removing
+ Container schema-registry  Removed
+ Container kafka1  Stopping
+ Container kafka2  Stopping
+ Container kafka3  Stopping
+ Container kafka2  Stopped
+ Container kafka2  Removing
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka2  Removed
+ Container kafka1  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka3  Stopped
+ Container kafka3  Removing
+ Container kafka3  Removed
+ Container zookeeper  Stopping
+ Container zookeeper  Stopped
+ Container zookeeper  Removing
+ Container zookeeper  Removed
+ Network ssl_default  Removing
+ Network ssl_default  Removed
+
+```
+
+</details>
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/Z5TscTpZ5tQFNSHt6GOKGSAgw.svg)](https://asciinema.org/a/Z5TscTpZ5tQFNSHt6GOKGSAgw)
+
+</details>
 

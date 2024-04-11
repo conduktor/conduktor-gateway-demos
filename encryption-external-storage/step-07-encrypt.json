@@ -1,0 +1,16 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.EncryptPlugin",
+  "priority" : 100,
+  "config" : {
+    "externalStorage" : true,
+    "fields" : [ {
+      "fieldName" : "password",
+      "keySecretId" : "password-secret",
+      "algorithm" : "AES_GCM"
+    }, {
+      "fieldName" : "visa",
+      "keySecretId" : "visa-secret",
+      "algorithm" : "AES_GCM"
+    } ]
+  }
+}

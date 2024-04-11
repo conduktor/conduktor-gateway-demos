@@ -1,4 +1,8 @@
 title: Audit
+tag: security
+ciTags:
+  - PULL_REQUEST
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -34,10 +38,6 @@ actions:
   - type: CREATE_VIRTUAL_CLUSTER
     gateway: gateway1
     name: teamA
-
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
 
   - type: ADD_INTERCEPTOR
     markdown: |
@@ -81,7 +81,7 @@ actions:
         partitions: 1
 
   - type: PRODUCE
-    title: Produce sample data to our `cars` topic without the right policies
+    title: Produce sample data to our cars topic without the right policies
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: cars
@@ -96,9 +96,12 @@ actions:
   - type: AUDITLOG
     title: Check in the audit log that produce was denied
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin")'
     assertions:
       - description: Confirm ProducePolicyPlugin audit entry
         value:
           operator: containsIgnoreCase
           expected: "Topic 'cars' with invalid value for 'acks': 1. Valid value is one of the values: -1. Topic 'cars' with invalid value for 'compressions': SNAPPY. Valid value is one of the values: [GZIP, NONE]"
+
+  - type: DOCKER
+    command: docker compose down --volumes

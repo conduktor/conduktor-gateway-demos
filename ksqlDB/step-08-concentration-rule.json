@@ -1,0 +1,5 @@
+{
+  "clusterId" : "main",
+  "physicalTopicName" : "concentrated",
+  "pattern" : "concentrated-.*"
+}

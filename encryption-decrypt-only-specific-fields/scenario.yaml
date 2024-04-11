@@ -1,4 +1,7 @@
-title: Field level Encryption, but decrypt only a set of fields
+title: Encryption, but decrypt only a set of fields
+tag: encryption
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -36,10 +39,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -61,17 +60,11 @@ actions:
         "fields": [ {
           "fieldName": "password",
           "keySecretId": "password-secret",
-          "algorithm": {
-            "type": "AES_GCM",
-            "kms": "IN_MEMORY"
-          }
+          "algorithm": "AES_GCM"
         },{
           "fieldName": "visa",
           "keySecretId": "visa-secret",
-          "algorithm": {
-            "type": "AES_GCM",
-            "kms": "IN_MEMORY"
-          }
+          "algorithm": "AES_GCM"
         } ]
       }
 
@@ -89,37 +82,37 @@ actions:
     topic: customers
     messages:
       - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
-      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
     markdown: |
       We are using regular kafka tools
 
   - type: CONSUME
-    title: Let's consume the message, and confirm `tom` and `florent` data is encrypted
+    title: Let's consume the message, and confirm tom and laura data is encrypted
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
     assertions:
-      - description: Confirm password is encrypted for `tom`
+      - description: Confirm password is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: 'motorhead'
-      - description: Confirm visa is encrypted for `tom`
+      - description: Confirm visa is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: '#abc123'
-      - description: Confirm password is encrypted for `florent`
+      - description: Confirm password is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: 'kitesurf'
-      - description: Confirm visa is encrypted for `florent`
+      - description: Confirm visa is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: '#888999XZ'
 
   - type: ADD_INTERCEPTOR
     markdown: |
-      Let's add the decrypt interceptor to decipher messages, but decrypt only a `visa'
+      Let's add the decrypt interceptor to decipher messages, but decrypt only a visa
     gateway: gateway1
     vcluster: teamA
     name: decrypt
@@ -150,26 +143,25 @@ actions:
       - decrypt
 
   - type: CONSUME
-    title: Confirm message from `tom` and `florent` are partially decrypted
+    title: Confirm message from tom and laura are partially decrypted
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
-    showHeaders: true
     assertions:
-      - description: Confirm password is encrypted for `tom`
+      - description: Confirm password is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: 'motorhead'
-      - description: Confirm visa is decrypted for `tom`
+      - description: Confirm visa is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: '#abc123'
-      - description: Confirm password is encrypted for `florent`
+      - description: Confirm password is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: 'kitesurf'
-      - description: Confirm visa is decrypted for `florent`
+      - description: Confirm visa is decrypted for laura
         value:
           operator: containsIgnoreCase
           expected: '#888999XZ'

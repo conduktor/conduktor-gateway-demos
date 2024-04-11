@@ -1,3 +1,4 @@
+#!/bin/bash
 
 rm -f *jks *key *p12 *crt
 

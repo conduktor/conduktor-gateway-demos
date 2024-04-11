@@ -1,4 +1,7 @@
 title: Header Injection
+tag: ops
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -39,10 +42,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -69,16 +68,16 @@ actions:
       Let's create the interceptor to inject various headers
 
   - type: PRODUCE
-    title: Send tom and florent into `users`
+    title: Send tom and laura into users
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: users
     messages:
       - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
-      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
 
   - type: CONSUME
-    title: Verify tom and florent have the corresponding headers
+    title: Verify tom and laura have the corresponding headers
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: users
@@ -94,10 +93,10 @@ actions:
           "X-MY-KEY":
             operator: containsIgnoreCase
             expected: 'my own value'
-      - description: Confirm florent has headers
+      - description: Confirm laura has headers
         value:
           operator: containsIgnoreCase
-          expected: 'florent'
+          expected: 'laura'
         headers:
           "X-MY-KEY":
             operator: containsIgnoreCase
@@ -118,7 +117,7 @@ actions:
 
 
   - type: CONSUME
-    title: Verify tom and florent have the corresponding headers
+    title: Verify tom and laura have the corresponding headers
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: users
@@ -126,17 +125,17 @@ actions:
     maxMessages: 2
     assertSize: 2
     assertions:
-      - description: Confirm `tom` has not the header `X-MY-KEY`
+      - description: Confirm tom has not the header X-MY-KEY
         value:
           operator: containsIgnoreCase
           expected: 'tom'
         headerKeys:
           - operator: doesNotContainIgnoringCase
             expected: 'my own value'
-      - description: Confirm `florent` has not the header `X-MY-KEY`
+      - description: Confirm laura has not the header X-MY-KEY
         value:
           operator: containsIgnoreCase
-          expected: 'florent'
+          expected: 'laura'
         headerKeys:
           - operator: doesNotContainIgnoringCase
             expected: 'my own value'
@@ -150,7 +149,7 @@ actions:
       Let's delete the interceptor `remove-headers` so we can access all our headers again
 
   - type: CONSUME
-    title: Verify `tom` and `florent` have `X-MY-KEY` back
+    title: Verify tom and laura have X-MY-KEY back
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: users
@@ -166,10 +165,10 @@ actions:
           "X-MY-KEY":
             operator: containsIgnoreCase
             expected: 'my own value'
-      - description: Confirm florent has headers
+      - description: Confirm laura has headers
         value:
           operator: containsIgnoreCase
-          expected: 'florent'
+          expected: 'laura'
         headers:
           "X-MY-KEY":
             operator: containsIgnoreCase

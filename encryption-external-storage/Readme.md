@@ -1,19 +1,23 @@
-# Full payload Field level encryption with external storage
+# Field level encryption with external storage
 
 Let's demonstrate field level encryption
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/iZOA4FAof22n041qGNT6fWDeJ.svg)](https://asciinema.org/a/iZOA4FAof22n041qGNT6fWDeJ)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/jtdEt2cPtf7kCcb71v8RMA8mA.svg)](https://asciinema.org/a/jtdEt2cPtf7kCcb71v8RMA8mA)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -25,7 +29,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -143,7 +147,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -169,7 +173,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -195,25 +199,18 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null
-```
-
-</details>
-
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            33 seconds ago   Up 26 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            33 seconds ago   Up 27 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            33 seconds ago   Up 26 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         33 seconds ago   Up 32 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
 ```
 
 </details>
@@ -225,80 +222,80 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network encryption-external-storage_default  Creating
  Network encryption-external-storage_default  Created
  Container zookeeper  Creating
+ Container kafka-client  Creating
+ Container kafka-client  Created
  Container zookeeper  Created
  Container kafka1  Creating
- Container kafka3  Creating
  Container kafka2  Creating
- Container kafka1  Created
+ Container kafka3  Creating
  Container kafka2  Created
+ Container kafka1  Created
  Container kafka3  Created
- Container schema-registry  Creating
- Container gateway1  Creating
  Container gateway2  Creating
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- Container gateway1  Created
+ Container gateway1  Creating
+ Container schema-registry  Creating
  Container gateway2  Created
  Container schema-registry  Created
+ Container gateway1  Created
+ Container kafka-client  Starting
  Container zookeeper  Starting
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
+ Container kafka-client  Started
  Container zookeeper  Waiting
- Container zookeeper  Healthy
- Container kafka2  Starting
  Container zookeeper  Healthy
  Container kafka1  Starting
  Container zookeeper  Healthy
  Container kafka3  Starting
+ Container zookeeper  Healthy
+ Container kafka2  Starting
  Container kafka3  Started
  Container kafka1  Started
  Container kafka2  Started
+ Container kafka2  Waiting
+ Container kafka3  Waiting
+ Container kafka1  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
- Container kafka3  Waiting
- Container kafka1  Waiting
- Container kafka2  Waiting
- Container kafka1  Healthy
- Container kafka1  Healthy
- Container kafka2  Healthy
- Container kafka3  Healthy
- Container kafka3  Healthy
- Container gateway2  Starting
  Container kafka1  Healthy
  Container kafka2  Healthy
+ Container kafka1  Healthy
+ Container kafka3  Healthy
  Container kafka3  Healthy
  Container gateway1  Starting
+ Container kafka1  Healthy
+ Container kafka2  Healthy
+ Container gateway2  Starting
+ Container kafka3  Healthy
  Container kafka2  Healthy
  Container schema-registry  Starting
- Container schema-registry  Started
  Container gateway1  Started
  Container gateway2  Started
+ Container schema-registry  Started
  Container zookeeper  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
@@ -306,25 +303,37 @@ docker compose up --detach --wait
  Container schema-registry  Waiting
  Container gateway1  Waiting
  Container gateway2  Waiting
- Container kafka1  Healthy
+ Container kafka-client  Waiting
  Container kafka2  Healthy
- Container zookeeper  Healthy
  Container kafka3  Healthy
- Container schema-registry  Healthy
- Container gateway1  Healthy
+ Container kafka-client  Healthy
+ Container kafka1  Healthy
+ Container zookeeper  Healthy
  Container gateway2  Healthy
+ Container gateway1  Healthy
+ Container schema-registry  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/WpN8shzvZKGEo0Z8wKHV59VHg.svg)](https://asciinema.org/a/WpN8shzvZKGEo0Z8wKHV59VHg)
+
+</details>
+
+## Creating virtual cluster teamA
+
+Creating virtual cluster `teamA` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `teamA`
-
-Creating virtual cluster `teamA` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster teamA with service account sa
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
     --header 'Content-Type: application/json' \
@@ -332,35 +341,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
-""" > teamA-sa.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `teamA`](images/step-05-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -368,38 +349,45 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
 """ > teamA-sa.properties
 
-```
-
-</details>
-      
-
-
-### Review the kafka properties to connect to `teamA`
-
-Review the kafka properties to connect to `teamA`
-
-```sh
+# Review file
 cat teamA-sa.properties
 ```
 
-<details on>
-  <summary>File content</summary>
 
-```properties
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxMzcyMjE5Mn0.6NVmJ4rb2UMmjnfIl6q3DpB9A74EqjZQssnhQ8O4R00';
-bootstrap.servers=localhost:6969
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ3Mjg1OH0.OSxHT_oIwnzrKknxh5bvBg_WQrDkvocl_MNvCPSBPTI';
+
+
 ```
 
 </details>
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/UHgf0kyFnQOV47GELLTWVKSKF.svg)](https://asciinema.org/a/UHgf0kyFnQOV47GELLTWVKSKF)
 
-## Creating topic `customers` on `teamA`
+</details>
 
-Creating topic `customers` on `teamA`
+## Creating topic customers on teamA
+
+Creating on `teamA`:
+
 * Topic `customers` with partitions:1 and replication-factor:1
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-topics \
     --bootstrap-server localhost:6969 \
@@ -410,38 +398,28 @@ kafka-topics \
     --topic customers
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `customers` on `teamA`](images/step-07-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic customers
+```
 Created topic customers.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/STXCbn7kpDn1UKbvZ5dfgFvGQ.svg)](https://asciinema.org/a/STXCbn7kpDn1UKbvZ5dfgFvGQ)
 
-## Adding interceptor `encrypt`
+</details>
+
+## Adding interceptor encrypt
 
 We want to encrypt only two fields, with an in memory KMS.
-
 
 Creating the interceptor named `encrypt` of the plugin `io.conduktor.gateway.interceptor.EncryptPlugin` using the following payload
 
@@ -454,17 +432,11 @@ Creating the interceptor named `encrypt` of the plugin `io.conduktor.gateway.int
     "fields" : [ {
       "fieldName" : "password",
       "keySecretId" : "password-secret",
-      "algorithm" : {
-        "type" : "AES_GCM",
-        "kms" : "IN_MEMORY"
-      }
+      "algorithm" : "AES_GCM"
     }, {
       "fieldName" : "visa",
       "keySecretId" : "visa-secret",
-      "algorithm" : {
-        "type" : "AES_GCM",
-        "kms" : "IN_MEMORY"
-      }
+      "algorithm" : "AES_GCM"
     } ]
   }
 }
@@ -472,31 +444,29 @@ Creating the interceptor named `encrypt` of the plugin `io.conduktor.gateway.int
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-08-encrypt.json | jq
+cat step-07-encrypt.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/encrypt" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-08-encrypt.json | jq
+    --data @step-07-encrypt.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `encrypt`](images/step-08-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-08-encrypt.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
   "priority": 100,
@@ -506,29 +476,16 @@ cat step-08-encrypt.json | jq
       {
         "fieldName": "password",
         "keySecretId": "password-secret",
-        "algorithm": {
-          "type": "AES_GCM",
-          "kms": "IN_MEMORY"
-        }
+        "algorithm": "AES_GCM"
       },
       {
         "fieldName": "visa",
         "keySecretId": "visa-secret",
-        "algorithm": {
-          "type": "AES_GCM",
-          "kms": "IN_MEMORY"
-        }
+        "algorithm": "AES_GCM"
       }
     ]
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/encrypt" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-08-encrypt.json | jq
 {
   "message": "encrypt is created"
 }
@@ -536,12 +493,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/TFgA6qCcwcaPEFM7oJz3xdGB4.svg)](https://asciinema.org/a/TFgA6qCcwcaPEFM7oJz3xdGB4)
 
-## Listing interceptors for `teamA`
+</details>
+
+## Listing interceptors for teamA
 
 Listing interceptors on `gateway1` for virtual cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 curl \
@@ -551,30 +517,18 @@ curl \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing interceptors for `teamA`](images/step-09-LIST_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request GET 'http://localhost:8888/admin/interceptors/v1/vcluster/teamA' \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent | jq
+```json
 {
   "interceptors": [
     {
       "name": "encrypt",
       "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
-      "apiKey": null,
       "priority": 100,
       "timeoutMs": 9223372036854775807,
       "config": {
@@ -583,18 +537,12 @@ curl \
           {
             "fieldName": "password",
             "keySecretId": "password-secret",
-            "algorithm": {
-              "type": "AES_GCM",
-              "kms": "IN_MEMORY"
-            }
+            "algorithm": "AES_GCM"
           },
           {
             "fieldName": "visa",
             "keySecretId": "visa-secret",
-            "algorithm": {
-              "type": "AES_GCM",
-              "kms": "IN_MEMORY"
-            }
+            "algorithm": "AES_GCM"
           }
         ]
       }
@@ -605,73 +553,99 @@ curl \
 ```
 
 </details>
-      
-
-
-## Let's verify there's a single entry in `_encryptionConfig`
-
-Let's verify there's a single entry in `_encryptionConfig` in cluster `kafka1`
-
-```sh
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _encryptionConfig \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-```
-
 <details>
-  <summary>Realtime command output</summary>
+<summary>Recording</summary>
 
-  ![Let's verify there's a single entry in `_encryptionConfig`](images/step-10-CONSUME.gif)
+[![asciicast](https://asciinema.org/a/MGNlS0lH3MyGsIYs09xjUyQPg.svg)](https://asciinema.org/a/MGNlS0lH3MyGsIYs09xjUyQPg)
 
 </details>
 
+## Let's verify there's a single entry in _conduktor_gateway_encryption_configs
 
-<details>
-<summary>Command output</summary>
+Let's verify there's a single entry in _conduktor_gateway_encryption_configs in cluster `kafka1`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
-
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic _encryptionConfig \
+    --topic _conduktor_gateway_encryption_configs \
     --from-beginning \
-    --timeout-ms 10000 \
- | jq
-[2024-01-22 18:57:54,790] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+    --timeout-ms 10000 | jq
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```json
+[2024-04-10 01:07:51,490] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
-[
-  {
-    "keySecretId": "password-secret",
-    "algorithm": {
-      "type": "AES_GCM",
-      "kms": "IN_MEMORY"
-    },
-    "fieldName": "password"
+{
+  "@type": "recordEncryptionConfigs",
+  "recordValue": {
+    "fields": [
+      {
+        "keySecretId": "password-secret",
+        "fieldName": "password",
+        "algorithm": "AES128_GCM"
+      },
+      {
+        "keySecretId": "visa-secret",
+        "fieldName": "visa",
+        "algorithm": "AES128_GCM"
+      }
+    ]
   },
-  {
-    "keySecretId": "visa-secret",
-    "algorithm": {
-      "type": "AES_GCM",
-      "kms": "IN_MEMORY"
-    },
-    "fieldName": "visa"
-  }
-]
+  "recordKey": null,
+  "recordHeader": null
+}
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/TFMVg2M9J8CWYLMbIgpKc22MF.svg)](https://asciinema.org/a/TFMVg2M9J8CWYLMbIgpKc22MF)
+
+</details>
 
 ## Let's send unencrypted json
 
 We are using regular kafka tools
 
+<details>
+<summary>Command</summary>
+
+
+
+Sending 2 events
+```json
+{
+  "name" : "tom",
+  "username" : "tom@conduktor.io",
+  "password" : "motorhead",
+  "visa" : "#abc123",
+  "address" : "Chancery lane, London"
+}
+{
+  "name" : "laura",
+  "username" : "laura@conduktor.io",
+  "password" : "kitesurf",
+  "visa" : "#888999XZ;",
+  "address" : "Dubai, UAE"
+}
+```
+with
+
+
 ```sh
 echo '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}' | \
     kafka-console-producer \
@@ -679,47 +653,39 @@ echo '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":
         --producer.config teamA-sa.properties \
         --topic customers
 
-echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}' | \
+echo '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}' | \
     kafka-console-producer \
         --bootstrap-server localhost:6969 \
         --producer.config teamA-sa.properties \
         --topic customers
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's send unencrypted json](images/step-11-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic customers
-
-echo '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic customers
+```
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/fsaeJzT78r6fjkWk044GR2nSr.svg)](https://asciinema.org/a/fsaeJzT78r6fjkWk044GR2nSr)
+
+</details>
+
+## Let's consume the message, and confirm tom and laura data is encrypted
+
+Let's consume the message, and confirm tom and laura data is encrypted in cluster `teamA`
+
+<details open>
+<summary>Command</summary>
 
 
-## Let's consume the message, and confirm `tom` and `florent` data is encrypted
-
-Let's consume the message, and confirm `tom` and `florent` data is encrypted in cluster `teamA`
 
 ```sh
 kafka-console-consumer \
@@ -727,58 +693,66 @@ kafka-console-consumer \
     --consumer.config teamA-sa.properties \
     --topic customers \
     --from-beginning \
-    --timeout-ms 10000 \
- | jq
+    --timeout-ms 10000 | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's consume the message, and confirm `tom` and `florent` data is encrypted](images/step-12-CONSUME.gif)
+returns 2 events
+```json
+{
+  "name" : "tom",
+  "username" : "tom@conduktor.io",
+  "password" : "AAAABQAAAAEAAAAzAfS3nK2aGOfbEJpooqCTL6Zprw2wTeXksvh1R3o9LsZHzZO/CqioTFJYLGUlktO1QNMbQrE1MpKk3nEEx2DqZdusXE4/XBwkbBIoivHgehezjgZDmxpPPhDTnT7uj6g=",
+  "visa" : "AAAABQAAAAEAAAAzAYZJ4Vw4uv8YZDB/wSr2DHpsZq1hz4rFJM1CaAT16FjOmTZuQun6EFhQO5vF0ydSgpgg13m6IxGWkGUG0pB/A4gsE297Tkeb5AODDC5uPDwLC+I5jaPUzKUonk0N",
+  "address" : "Chancery lane, London"
+}
+{
+  "name" : "laura",
+  "username" : "laura@conduktor.io",
+  "password" : "AAAABQAAAAEAAAAzAfS3nK2aGOfbEJpooqCTL6Zprw2wTeXksvh1R3o9LsZHzZO/CqioTFJYLGUlktO1QNMbrfY6Cd8FJyigMnSU7+YJ+Xgnl7rZSNxxlCF8Xc19+wGdOCZ4/9HrDxVSRg==",
+  "visa" : "AAAABQAAAAEAAAAzAYZJ4Vw4uv8YZDB/wSr2DHpsZq1hz4rFJM1CaAT16FjOmTZuQun6EFhQO5vF0ydSgpggR1H9B15FzEqk+nT24qfLNaZgLCJ6RaTn87IRBDp95trLyhjUA6HV7qshRJTx",
+  "address" : "Dubai, UAE"
+}
+```
+
+
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic customers \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-[2024-01-22 18:58:10,210] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```json
+[2024-04-10 01:08:06,535] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 {
   "name": "tom",
   "username": "tom@conduktor.io",
-  "password": "AAAABQG4GC0DER/V6ayb0lD6yvJHcy7LxWTV2OKRmz7LAjDaEeJccwYzfcrwldGp3u/9scA=",
-  "visa": "AAAABQG58l2Fkec5o6dH4QdcmnrDLU2HLkXsdHrSaTWIBRJ03L80URxzJZN1HlAQI889",
+  "password": "AAAABQAAAAEAAAAzAZLGzFHor7AVNUVjpJahZjR6NxZQolpqpMAI+eXz0uzAe3v3O7i6m2/KDtVosEl5+YiRKJTfv+UKRpFI85Wg5rODJiUGJZent1UC2KkR+nY0brW6ANa45v33AlPPSgA=",
+  "visa": "AAAABQAAAAEAAAAzAR/tWnFCFNrFNQgIzBU7OWoeH7NOfR8Pxa/D6EoQaHUePJ3lPILKZrUXQdWcVP8Xm7jTph+YL45wQl3V7LieaOJD8KYUM08msnq+pa2Tb37zv8cUJHjKKoErQmia",
   "address": "Chancery lane, London"
 }
 {
-  "name": "florent",
-  "username": "florent@conduktor.io",
-  "password": "AAAABQG4GC0Do+gvVRgulCjfX5Adltb5+tI9TAjqtfOJfpZZUQ7Y9K6qIyeGK1hSNPkLWA==",
-  "visa": "AAAABQG58l2FjXqVKtdnzlDzxsStpoeedL0eNJOYMVz3f9zAZ+BRKbzUZ+LeQGCHyxVEpb3f",
+  "name": "laura",
+  "username": "laura@conduktor.io",
+  "password": "AAAABQAAAAEAAAAzAZLGzFHor7AVNUVjpJahZjR6NxZQolpqpMAI+eXz0uzAe3v3O7i6m2/KDtVosEl5+YiRIDqUbzENnuS/rRDS9adnFidDZTmlmK2zjdxU/zFx+ydujigfX8SpgfFldg==",
+  "visa": "AAAABQAAAAEAAAAzAR/tWnFCFNrFNQgIzBU7OWoeH7NOfR8Pxa/D6EoQaHUePJ3lPILKZrUXQdWcVP8Xm7jTk+KtEs6Nm3kIaIkGzBAic6eA7bRfeMSA/X18Iz0vN3+hdttNc/W4gh5XytDL",
   "address": "Dubai, UAE"
 }
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/0CKlq6ss9qYLIkdXr8ak8SWfy.svg)](https://asciinema.org/a/0CKlq6ss9qYLIkdXr8ak8SWfy)
 
-## Adding interceptor `decrypt`
+</details>
+
+## Adding interceptor decrypt
 
 Let's add the decrypt interceptor to decipher messages
-
 
 Creating the interceptor named `decrypt` of the plugin `io.conduktor.gateway.interceptor.DecryptPlugin` using the following payload
 
@@ -801,31 +775,29 @@ Creating the interceptor named `decrypt` of the plugin `io.conduktor.gateway.int
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
-cat step-13-decrypt.json | jq
+cat step-12-decrypt.json | jq
 
 curl \
     --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/decrypt" \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data @step-13-decrypt.json | jq
+    --data @step-12-decrypt.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `decrypt`](images/step-13-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-13-decrypt.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
   "priority": 100,
@@ -840,13 +812,6 @@ cat step-13-decrypt.json | jq
     }
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/decrypt" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-13-decrypt.json | jq
 {
   "message": "decrypt is created"
 }
@@ -854,12 +819,21 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/Nvj7I8302MAJRgeDXQpBhQZlG.svg)](https://asciinema.org/a/Nvj7I8302MAJRgeDXQpBhQZlG)
 
-## Listing interceptors for `teamA`
+</details>
+
+## Listing interceptors for teamA
 
 Listing interceptors on `gateway1` for virtual cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 curl \
@@ -869,30 +843,39 @@ curl \
     --silent | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing interceptors for `teamA`](images/step-14-LIST_INTERCEPTORS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-    --request GET 'http://localhost:8888/admin/interceptors/v1/vcluster/teamA' \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent | jq
+```json
 {
   "interceptors": [
     {
+      "name": "encrypt",
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
+      "priority": 100,
+      "timeoutMs": 9223372036854775807,
+      "config": {
+        "externalStorage": true,
+        "fields": [
+          {
+            "fieldName": "password",
+            "keySecretId": "password-secret",
+            "algorithm": "AES_GCM"
+          },
+          {
+            "fieldName": "visa",
+            "keySecretId": "visa-secret",
+            "algorithm": "AES_GCM"
+          }
+        ]
+      }
+    },
+    {
       "name": "decrypt",
       "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
-      "apiKey": null,
       "priority": 100,
       "timeoutMs": 9223372036854775807,
       "config": {
@@ -905,34 +888,6 @@ curl \
           }
         }
       }
-    },
-    {
-      "name": "encrypt",
-      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin",
-      "apiKey": null,
-      "priority": 100,
-      "timeoutMs": 9223372036854775807,
-      "config": {
-        "externalStorage": true,
-        "fields": [
-          {
-            "fieldName": "password",
-            "keySecretId": "password-secret",
-            "algorithm": {
-              "type": "AES_GCM",
-              "kms": "IN_MEMORY"
-            }
-          },
-          {
-            "fieldName": "visa",
-            "keySecretId": "visa-secret",
-            "algorithm": {
-              "type": "AES_GCM",
-              "kms": "IN_MEMORY"
-            }
-          }
-        ]
-      }
     }
   ]
 }
@@ -940,98 +895,124 @@ curl \
 ```
 
 </details>
-      
-
-
-## Confirm message from `tom` and `florent` are decrypted
-
-Confirm message from `tom` and `florent` are decrypted in cluster `teamA`
-
-```sh
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic customers \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --property print.headers=true 
-```
-
 <details>
-  <summary>Realtime command output</summary>
+<summary>Recording</summary>
 
-  ![Confirm message from `tom` and `florent` are decrypted](images/step-15-CONSUME.gif)
+[![asciicast](https://asciinema.org/a/8QJjfapSFwl0OacP9tjpVT7oP.svg)](https://asciinema.org/a/8QJjfapSFwl0OacP9tjpVT7oP)
 
 </details>
 
+## Confirm message from tom and laura are decrypted
 
-<details>
-<summary>Command output</summary>
+Confirm message from tom and laura are decrypted in cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
-
 kafka-console-consumer \
     --bootstrap-server localhost:6969 \
     --consumer.config teamA-sa.properties \
     --topic customers \
     --from-beginning \
-    --timeout-ms 10000 \
-    --property print.headers=true 
-NO_HEADERS	{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}
-NO_HEADERS	{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}
-[2024-01-22 18:58:22,380] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+    --timeout-ms 10000 | jq
+```
+
+
+returns 2 events
+```json
+{
+  "name" : "tom",
+  "username" : "tom@conduktor.io",
+  "password" : "motorhead",
+  "visa" : "#abc123",
+  "address" : "Chancery lane, London"
+}
+{
+  "name" : "laura",
+  "username" : "laura@conduktor.io",
+  "password" : "kitesurf",
+  "visa" : "#888999XZ;",
+  "address" : "Dubai, UAE"
+}
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```json
+[2024-04-10 01:08:18,572] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
+{
+  "name": "tom",
+  "username": "tom@conduktor.io",
+  "password": "motorhead",
+  "visa": "#abc123",
+  "address": "Chancery lane, London"
+}
+{
+  "name": "laura",
+  "username": "laura@conduktor.io",
+  "password": "kitesurf",
+  "visa": "#888999XZ;",
+  "address": "Dubai, UAE"
+}
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/uSgNJsr7u2QsPCSIaty8ARwtL.svg)](https://asciinema.org/a/uSgNJsr7u2QsPCSIaty8ARwtL)
+
+</details>
 
 ## Read the underlying kafka data to reveal the magic
 
 Read the underlying kafka data to reveal the magic in cluster `kafka1`
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
     --topic teamAcustomers \
     --from-beginning \
     --timeout-ms 10000 \
-    --property print.headers=true 
+    --property print.headers=true | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Read the underlying kafka data to reveal the magic](images/step-16-CONSUME.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic teamAcustomers \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --property print.headers=true 
-gateway_encrypted:
-gateway_encrypted:
-[2024-01-22 18:58:34,124] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```json
+jq: parse error: Invalid numeric literal at line 1, column 18
+[2024-04-10 01:08:30,312] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 2 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/eFEba9egD4ImH2XCS3uppglea.svg)](https://asciinema.org/a/eFEba9egD4ImH2XCS3uppglea)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -1039,32 +1020,31 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-17-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
- Container gateway2  Stopping
+```
  Container gateway1  Stopping
  Container schema-registry  Stopping
+ Container kafka-client  Stopping
+ Container gateway2  Stopping
  Container gateway1  Stopped
  Container gateway1  Removing
+ Container gateway1  Removed
  Container gateway2  Stopped
  Container gateway2  Removing
- Container gateway1  Removed
  Container gateway2  Removed
  Container schema-registry  Stopped
  Container schema-registry  Removing
@@ -1072,15 +1052,18 @@ docker compose down --volumes
  Container kafka1  Stopping
  Container kafka2  Stopping
  Container kafka3  Stopping
- Container kafka2  Stopped
- Container kafka2  Removing
- Container kafka2  Removed
- Container kafka1  Stopped
- Container kafka1  Removing
- Container kafka1  Removed
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka2  Stopped
+ Container kafka2  Removing
+ Container kafka2  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -1091,8 +1074,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/H8pjgUCnD9P2HNuvqDrOGfxvG.svg)](https://asciinema.org/a/H8pjgUCnD9P2HNuvqDrOGfxvG)
+
+</details>
 
 # Conclusion
 

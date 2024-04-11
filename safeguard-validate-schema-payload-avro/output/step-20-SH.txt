@@ -1,14 +1,6 @@
-cat valid-payload.json | jq -c | \
-    kafka-avro-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic topic-avro \
-        --property schema.registry.url=http://localhost:8081 \
-        --property value.schema.id=2
-[2024-01-23 00:53:19,147] INFO KafkaAvroSerializerConfig values: 
+[2024-04-10 03:29:05,388] INFO KafkaAvroDeserializerConfig values: 
 	auto.register.schemas = true
 	avro.reflection.allow.null = false
-	avro.remove.java.properties = false
 	avro.use.logical.type.converters = false
 	basic.auth.credentials.source = URL
 	basic.auth.user.info = [hidden]
@@ -62,8 +54,18 @@ cat valid-payload.json | jq -c | \
 	schema.registry.ssl.truststore.password = null
 	schema.registry.ssl.truststore.type = JKS
 	schema.registry.url = [http://localhost:8081]
+	specific.avro.key.type = null
+	specific.avro.reader = false
+	specific.avro.value.type = null
 	use.latest.version = false
 	use.latest.with.metadata = null
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
- (io.confluent.kafka.serializers.KafkaAvroSerializerConfig:376)
+ (io.confluent.kafka.serializers.KafkaAvroDeserializerConfig:376)
+{"name":"D","age":17,"email":"bad email","address":{"street":"a way too lond adress that will not fit in your database","city":""},"hobbies":["reading"],"friends":[{"name":"Tommy","age":17},{"name":"Emma Watson","age":18}]}
+{"name":"Doe","age":18,"email":"foo.doe@example.com","address":{"street":"123 Main paris","city":"Anytown paris"},"hobbies":["reading","cycling"],"friends":[{"name":"Tom","age":9},{"name":"Emma","age":10}]}
+[2024-04-10 03:29:09,046] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
+org.apache.kafka.common.errors.TimeoutException
+[2024-04-10 03:29:09,046] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 2 messages

@@ -4,16 +4,20 @@ Conduktor Gateway's merge cluster brings all your Kafka clusters together into a
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/wpPq6peWQWowZnuVdaoslbj4v.svg)](https://asciinema.org/a/wpPq6peWQWowZnuVdaoslbj4v)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/dD2ehBQ49glqbkUw4FrPaVaro.svg)](https://asciinema.org/a/dD2ehBQ49glqbkUw4FrPaVaro)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -29,7 +33,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -147,7 +151,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -183,7 +187,7 @@ services:
       target: /config
       read_only: true
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -218,6 +222,16 @@ services:
     - type: bind
       source: .
       target: /config
+      read_only: true
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
       read_only: true
   zookeeper_s1:
     image: confluentinc/cp-zookeeper:latest
@@ -310,28 +324,7 @@ networks:
 
 </details>
 
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          38 seconds ago   Up 21 seconds (healthy)   0.0.0.0:6969-6974->6969-6974/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          38 seconds ago   Up 21 seconds (healthy)   0.0.0.0:7969-7974->7969-7974/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            38 seconds ago   Up 31 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            38 seconds ago   Up 31 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            38 seconds ago   Up 31 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-s1_kafka1         confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   s1_kafka1         38 seconds ago   Up 31 seconds (healthy)   9092/tcp, 0.0.0.0:29092->29092/tcp
-s1_kafka2         confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   s1_kafka2         38 seconds ago   Up 31 seconds (healthy)   9092/tcp, 0.0.0.0:29093->29093/tcp
-s1_kafka3         confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   s1_kafka3         38 seconds ago   Up 31 seconds (healthy)   9092/tcp, 0.0.0.0:29094->29094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   38 seconds ago   Up 21 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         38 seconds ago   Up 37 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-zookeeper_s1      confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper_s1      38 seconds ago   Up 37 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp, 0.0.0.0:12801->12801/tcp
-
-```
-
-</details>
-
-### Review the Gateway configuration
+## Review the Gateway configuration
 
 Review the Gateway configuration
 
@@ -339,8 +332,8 @@ Review the Gateway configuration
 cat clusters.yaml
 ```
 
-<details on>
-  <summary>File content</summary>
+<details open>
+<summary>File content</summary>
 
 ```yaml
 config:
@@ -354,7 +347,6 @@ config:
 
 </details>
 
-
 ## Starting the docker environment
 
 Start all your docker processes, wait for them to be up and ready, then run in background
@@ -362,120 +354,122 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-05-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network merge-cluster_default  Creating
  Network merge-cluster_default  Created
+ Container kafka-client  Creating
  Container zookeeper  Creating
  Container zookeeper_s1  Creating
+ Container kafka-client  Created
  Container zookeeper_s1  Created
- Container s1_kafka1  Creating
  Container s1_kafka3  Creating
+ Container s1_kafka1  Creating
  Container s1_kafka2  Creating
  Container zookeeper  Created
+ Container kafka3  Creating
  Container kafka1  Creating
  Container kafka2  Creating
- Container kafka3  Creating
- Container kafka3  Created
- Container s1_kafka1  Created
- Container kafka2  Created
  Container kafka1  Created
+ Container kafka2  Created
+ Container s1_kafka2  Created
+ Container kafka3  Created
  Container schema-registry  Creating
  Container gateway1  Creating
  Container gateway2  Creating
- Container s1_kafka2  Created
+ Container s1_kafka1  Created
  Container s1_kafka3  Created
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- Container gateway2  Created
  Container gateway1  Created
+ Container gateway2  Created
  Container schema-registry  Created
- Container zookeeper_s1  Starting
  Container zookeeper  Starting
- Container zookeeper_s1  Started
- Container zookeeper_s1  Waiting
+ Container kafka-client  Starting
+ Container zookeeper_s1  Starting
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Waiting
+ Container zookeeper_s1  Started
  Container zookeeper_s1  Waiting
  Container zookeeper_s1  Waiting
- Container zookeeper_s1  Healthy
- Container s1_kafka3  Starting
- Container zookeeper_s1  Healthy
- Container s1_kafka2  Starting
- Container zookeeper  Healthy
- Container kafka2  Starting
+ Container zookeeper_s1  Waiting
+ Container kafka-client  Started
  Container zookeeper  Healthy
  Container kafka1  Starting
  Container zookeeper  Healthy
  Container kafka3  Starting
+ Container zookeeper  Healthy
+ Container kafka2  Starting
+ Container zookeeper_s1  Healthy
+ Container s1_kafka3  Starting
  Container zookeeper_s1  Healthy
  Container s1_kafka1  Starting
+ Container zookeeper_s1  Healthy
+ Container s1_kafka2  Starting
  Container s1_kafka3  Started
- Container kafka2  Started
- Container s1_kafka2  Started
  Container kafka1  Started
  Container s1_kafka1  Started
+ Container kafka2  Started
+ Container s1_kafka2  Started
  Container kafka3  Started
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
- Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
+ Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka2  Healthy
+ Container kafka1  Healthy
+ Container kafka1  Healthy
+ Container kafka3  Healthy
+ Container kafka3  Healthy
+ Container kafka1  Healthy
+ Container kafka3  Healthy
  Container kafka2  Healthy
- Container kafka2  Healthy
- Container kafka1  Healthy
- Container kafka1  Healthy
- Container kafka1  Healthy
- Container kafka3  Healthy
- Container gateway1  Starting
- Container kafka3  Healthy
- Container schema-registry  Starting
- Container kafka3  Healthy
  Container gateway2  Starting
+ Container kafka2  Healthy
+ Container schema-registry  Starting
+ Container gateway1  Starting
  Container schema-registry  Started
  Container gateway2  Started
  Container gateway1  Started
- Container schema-registry  Waiting
- Container zookeeper  Waiting
- Container gateway1  Waiting
- Container zookeeper_s1  Waiting
  Container s1_kafka1  Waiting
  Container kafka3  Waiting
- Container kafka1  Waiting
- Container gateway2  Waiting
- Container s1_kafka3  Waiting
  Container kafka2  Waiting
+ Container gateway2  Waiting
+ Container schema-registry  Waiting
+ Container s1_kafka3  Waiting
+ Container gateway1  Waiting
+ Container zookeeper  Waiting
+ Container kafka1  Waiting
+ Container kafka-client  Waiting
+ Container zookeeper_s1  Waiting
  Container s1_kafka2  Waiting
- Container s1_kafka2  Healthy
  Container kafka2  Healthy
- Container s1_kafka3  Healthy
- Container s1_kafka1  Healthy
  Container kafka3  Healthy
- Container zookeeper  Healthy
+ Container s1_kafka3  Healthy
+ Container kafka-client  Healthy
+ Container s1_kafka1  Healthy
  Container kafka1  Healthy
+ Container s1_kafka2  Healthy
+ Container zookeeper  Healthy
  Container zookeeper_s1  Healthy
  Container schema-registry  Healthy
  Container gateway1  Healthy
@@ -484,14 +478,24 @@ docker compose up --detach --wait
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/M8TQEDbqRo8be53BkFofIKN7j.svg)](https://asciinema.org/a/M8TQEDbqRo8be53BkFofIKN7j)
+
+</details>
+
+## Creating virtual cluster teamA
+
+Creating virtual cluster `teamA` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `teamA`
-
-Creating virtual cluster `teamA` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster teamA with service account sa
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
     --header 'Content-Type: application/json' \
@@ -499,35 +503,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
-""" > teamA-sa.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `teamA`](images/step-06-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -535,37 +511,44 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
 """ > teamA-sa.properties
 
-```
-
-</details>
-      
-
-
-### Review the kafka properties to connect to `teamA`
-
-Review the kafka properties to connect to `teamA`
-
-```sh
+# Review file
 cat teamA-sa.properties
 ```
 
-<details on>
-  <summary>File content</summary>
 
-```properties
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxMzc0MDI1MX0.YQUIMIf1Fv9JwSpvZn33qhPwHbrwc1VgD13WN6HCAi0';
-bootstrap.servers=localhost:6969
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ3ODAxOH0.9PI2ih0677PHNdxUo38pvMXjDnZFzOu2AfUhDDGWL6E';
+
+
 ```
 
 </details>
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/btweO5Z1SsPpotppWjmKu9fYU.svg)](https://asciinema.org/a/btweO5Z1SsPpotppWjmKu9fYU)
+
+</details>
 
 ## Create the topic 'cars' in main cluster
 
-Creating topic `cars` on `kafka1`
+Creating on `kafka1`:
+
 * Topic `cars` with partitions:1 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-topics \
@@ -576,37 +559,35 @@ kafka-topics \
     --topic cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Create the topic 'cars' in main cluster](images/step-08-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic cars
+```
 Created topic cars.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/p7Iprv8v2a2EjRBGYar7dTtP3.svg)](https://asciinema.org/a/p7Iprv8v2a2EjRBGYar7dTtP3)
+
+</details>
 
 ## Create the topic 'cars' in cluster1
 
-Creating topic `cars` on `s1_kafka1`
+Creating on `s1_kafka1`:
+
 * Topic `cars` with partitions:1 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-topics \
@@ -617,94 +598,53 @@ kafka-topics \
     --topic cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Create the topic 'cars' in cluster1](images/step-09-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:29092,localhost:29093,localhost:29094 \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic cars
+```
 Created topic cars.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/b355gnM4djlzyZEYZAN7mrjAK.svg)](https://asciinema.org/a/b355gnM4djlzyZEYZAN7mrjAK)
+
+</details>
 
 ## Let's route the topic 'eu_cars', as seen by the client application, on to the 'cars' topic on the main (default) cluster
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 curl \
   --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topicMappings/teamA/eu_cars \
+  --request POST localhost:8888/internal/alias-topic/teamA/eu_cars \
+  --user 'admin:conduktor' \
   --header 'Content-Type: application/json' \
   --data-raw '{
       "clusterId": "main",
-      "topicName": "cars",
-      "concentrated": false
-    }' | jq
-
-curl \
-  --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topics/teamA \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-      "name": "eu_cars"
+      "physicalTopicName": "cars"
     }' | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's route the topic 'eu_cars', as seen by the client application, on to the 'cars' topic on the main (default) cluster](images/step-10-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-  --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topicMappings/teamA/eu_cars \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-      "clusterId": "main",
-      "topicName": "cars",
-      "concentrated": false
-    }' | jq
-{
-  "message": "cars is created"
-}
-
-curl \
-  --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topics/teamA \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-      "name": "eu_cars"
-    }' | jq
+```json
 {
   "message": "eu_cars is created"
 }
@@ -712,70 +652,41 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/KHMms2MHvCeNr8iiF5gXUBwW7.svg)](https://asciinema.org/a/KHMms2MHvCeNr8iiF5gXUBwW7)
+
+</details>
 
 ## Let's route the topic 'us_cars', as seen by the client application, on to the 'cars' topic on the second cluster (cluster1)
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 curl \
   --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topicMappings/teamA/us_cars \
+  --request POST localhost:8888/internal/alias-topic/teamA/us_cars \
+  --user 'admin:conduktor' \
   --header 'Content-Type: application/json' \
   --data-raw '{
       "clusterId": "cluster1",
-      "topicName": "cars",
-      "concentrated": false
-    }' | jq
-
-curl \
-  --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topics/teamA \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-      "name": "us_cars"
+      "physicalTopicName": "cars"
     }' | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's route the topic 'us_cars', as seen by the client application, on to the 'cars' topic on the second cluster (cluster1)](images/step-11-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-curl \
-  --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topicMappings/teamA/us_cars \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-      "clusterId": "cluster1",
-      "topicName": "cars",
-      "concentrated": false
-    }' | jq
-{
-  "message": "cars is created"
-}
-
-curl \
-  --silent \
-  --user admin:conduktor \
-  --request POST localhost:8888/topics/teamA \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-      "name": "us_cars"
-    }' | jq
+```json
 {
   "message": "us_cars is created"
 }
@@ -783,13 +694,31 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/eTichWoS5UYbVol2aj3Xssokj.svg)](https://asciinema.org/a/eTichWoS5UYbVol2aj3Xssokj)
+
+</details>
 
 ## Send into topic 'eu_cars'
 
 Producing 1 message in `eu_cars` in cluster `teamA`
 
+<details open>
+<summary>Command</summary>
+
+
+
+Sending 1 event
+```json
+{
+  "name" : "eu_cars_record"
+}
+```
+with
+
+
 ```sh
 echo '{"name":"eu_cars_record"}' | \
     kafka-console-producer \
@@ -798,35 +727,42 @@ echo '{"name":"eu_cars_record"}' | \
         --topic eu_cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Send into topic 'eu_cars'](images/step-12-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"name":"eu_cars_record"}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic eu_cars
+```
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/8rXuLzaOOm0DbLOgOCsUuR1LQ.svg)](https://asciinema.org/a/8rXuLzaOOm0DbLOgOCsUuR1LQ)
+
+</details>
 
 ## Send into topic 'us_cars'
 
 Producing 1 message in `us_cars` in cluster `teamA`
 
+<details open>
+<summary>Command</summary>
+
+
+
+Sending 1 event
+```json
+{
+  "name" : "us_cars_record"
+}
+```
+with
+
+
 ```sh
 echo '{"name":"us_cars_record"}' | \
     kafka-console-producer \
@@ -835,34 +771,32 @@ echo '{"name":"us_cars_record"}' | \
         --topic us_cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Send into topic 'us_cars'](images/step-13-PRODUCE.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-echo '{"name":"us_cars_record"}' | \
-    kafka-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic us_cars
+```
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/wYcXEaRTyVLCR3BztVjE2B3aa.svg)](https://asciinema.org/a/wYcXEaRTyVLCR3BztVjE2B3aa)
+
+</details>
+
+## Consuming from eu_cars
+
+Consuming from eu_cars in cluster `teamA`
+
+<details open>
+<summary>Command</summary>
 
 
-## Consuming from `eu_cars`
-
-Consuming from `eu_cars` in cluster `teamA`
 
 ```sh
 kafka-console-consumer \
@@ -870,31 +804,25 @@ kafka-console-consumer \
     --consumer.config teamA-sa.properties \
     --topic eu_cars \
     --from-beginning \
-    --timeout-ms 10000 \
- | jq
+    --timeout-ms 10000 | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Consuming from `eu_cars`](images/step-14-CONSUME.gif)
+returns 1 event
+```json
+{
+  "name" : "eu_cars_record"
+}
+```
+
+
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic eu_cars \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-[2024-01-22 23:59:05,991] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```json
+[2024-04-10 02:33:55,388] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
 {
@@ -904,44 +832,47 @@ Processed a total of 1 messages
 ```
 
 </details>
-      
-
-
-## Consuming from `us_cars`
-
-Consuming from `us_cars` in cluster `teamA`
-
-```sh
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config teamA-sa.properties \
-    --topic us_cars \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-```
-
 <details>
-  <summary>Realtime command output</summary>
+<summary>Recording</summary>
 
-  ![Consuming from `us_cars`](images/step-15-CONSUME.gif)
+[![asciicast](https://asciinema.org/a/HpjAKdXvsFHWVKV0EmLofgrI5.svg)](https://asciinema.org/a/HpjAKdXvsFHWVKV0EmLofgrI5)
 
 </details>
 
+## Consuming from us_cars
 
-<details>
-<summary>Command output</summary>
+Consuming from us_cars in cluster `teamA`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
-
 kafka-console-consumer \
     --bootstrap-server localhost:6969 \
     --consumer.config teamA-sa.properties \
     --topic us_cars \
     --from-beginning \
-    --timeout-ms 10000 \
- | jq
-[2024-01-22 23:59:17,957] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+    --timeout-ms 10000 | jq
+```
+
+
+returns 1 event
+```json
+{
+  "name" : "us_cars_record"
+}
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```json
+[2024-04-10 02:34:07,406] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
 {
@@ -951,42 +882,46 @@ Processed a total of 1 messages
 ```
 
 </details>
-      
-
-
-## Verify `eu_cars_record` is not in main kafka
-
-Verify `eu_cars_record` is not in main kafka in cluster `kafka1`
-
-```sh
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic cars \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-```
-
 <details>
-  <summary>Realtime command output</summary>
+<summary>Recording</summary>
 
-  ![Verify `eu_cars_record` is not in main kafka](images/step-16-CONSUME.gif)
+[![asciicast](https://asciinema.org/a/YVJRBp2dNec26vmgkvWN2lZrH.svg)](https://asciinema.org/a/YVJRBp2dNec26vmgkvWN2lZrH)
 
 </details>
 
+## Verify eu_cars_record is not in main kafka
 
-<details>
-<summary>Command output</summary>
+Verify eu_cars_record is not in main kafka in cluster `kafka1`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
-
 kafka-console-consumer \
     --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
     --topic cars \
     --from-beginning \
-    --timeout-ms 10000 \
- | jq
-[2024-01-22 23:59:29,738] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+    --timeout-ms 10000 | jq
+```
+
+
+returns 1 event
+```json
+{
+  "name" : "eu_cars_record"
+}
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```json
+[2024-04-10 02:34:19,181] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
 {
@@ -996,42 +931,46 @@ Processed a total of 1 messages
 ```
 
 </details>
-      
-
-
-## Verify `us_cars_record` is not in cluster1 kafka
-
-Verify `us_cars_record` is not in cluster1 kafka in cluster `s1_kafka1`
-
-```sh
-kafka-console-consumer \
-    --bootstrap-server localhost:29092,localhost:29093,localhost:29094 \
-    --topic cars \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-```
-
 <details>
-  <summary>Realtime command output</summary>
+<summary>Recording</summary>
 
-  ![Verify `us_cars_record` is not in cluster1 kafka](images/step-17-CONSUME.gif)
+[![asciicast](https://asciinema.org/a/YnqeKV3uLmJtaOR2mqXlaNCIS.svg)](https://asciinema.org/a/YnqeKV3uLmJtaOR2mqXlaNCIS)
 
 </details>
 
+## Verify us_cars_record is not in cluster1 kafka
 
-<details>
-<summary>Command output</summary>
+Verify us_cars_record is not in cluster1 kafka in cluster `s1_kafka1`
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
-
 kafka-console-consumer \
     --bootstrap-server localhost:29092,localhost:29093,localhost:29094 \
     --topic cars \
     --from-beginning \
-    --timeout-ms 10000 \
- | jq
-[2024-01-22 23:59:42,375] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+    --timeout-ms 10000 | jq
+```
+
+
+returns 1 event
+```json
+{
+  "name" : "us_cars_record"
+}
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```json
+[2024-04-10 02:34:32,741] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
 {
@@ -1041,8 +980,12 @@ Processed a total of 1 messages
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/Jxe4OxSC4VowLbqPQyOABabp0.svg)](https://asciinema.org/a/Jxe4OxSC4VowLbqPQyOABabp0)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -1050,36 +993,35 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-18-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
- Container gateway1  Stopping
- Container schema-registry  Stopping
- Container s1_kafka1  Stopping
+```
  Container s1_kafka3  Stopping
- Container s1_kafka2  Stopping
+ Container kafka-client  Stopping
  Container gateway2  Stopping
- Container gateway1  Stopped
- Container gateway1  Removing
- Container gateway1  Removed
+ Container s1_kafka1  Stopping
+ Container gateway1  Stopping
+ Container s1_kafka2  Stopping
+ Container schema-registry  Stopping
  Container gateway2  Stopped
  Container gateway2  Removing
  Container gateway2  Removed
+ Container gateway1  Stopped
+ Container gateway1  Removing
+ Container gateway1  Removed
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
@@ -1089,15 +1031,18 @@ docker compose down --volumes
  Container s1_kafka1  Stopped
  Container s1_kafka1  Removing
  Container s1_kafka1  Removed
- Container s1_kafka3  Stopped
- Container s1_kafka3  Removing
- Container s1_kafka3  Removed
  Container kafka2  Stopped
  Container kafka2  Removing
  Container kafka2  Removed
- Container kafka3  Stopped
- Container kafka3  Removing
- Container kafka3  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
+ Container s1_kafka3  Stopped
+ Container s1_kafka3  Removing
+ Container s1_kafka3  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
  Container s1_kafka2  Stopped
  Container s1_kafka2  Removing
  Container s1_kafka2  Removed
@@ -1105,9 +1050,9 @@ docker compose down --volumes
  Container zookeeper_s1  Stopped
  Container zookeeper_s1  Removing
  Container zookeeper_s1  Removed
- Container kafka1  Stopped
- Container kafka1  Removing
- Container kafka1  Removed
+ Container kafka3  Stopped
+ Container kafka3  Removing
+ Container kafka3  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -1118,8 +1063,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/LsU085QMYYGN3rwiXHc52PCU7.svg)](https://asciinema.org/a/LsU085QMYYGN3rwiXHc52PCU7)
+
+</details>
 
 # Conclusion
 

@@ -1,4 +1,7 @@
-title: Cluster Switching
+title: Cluster Switching / Failover
+tag: ops
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     environment:
@@ -208,10 +211,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -221,26 +220,25 @@ actions:
         partitions: 1
 
   - type: PRODUCE
-    title: Send `tom` and `florent` into topic `users`
+    title: Send tom and laura into topic users
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: users
     messages:
       - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
-      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ","address":"Dubai, UAE"}'
 
   - type: LIST_TOPICS
     kafka: kafka1
     assertExists:
-      - _acls
-      - _auditLogs
-      - _consumerGroupSubscriptionBackingTopic
-      - _interceptorConfigs
-      - _license
-      - _offsetStore
+      - _conduktor_private_auditlogs
+      - _conduktor_private_acls
+      - _conduktor_private_license
+      - _conduktor_private_interceptor_configs
+      - _conduktor_private_consumer_subscriptions
+      - _conduktor_private_consumer_offsets
+      - _conduktor_private_topicmappings
       - _schemas
-      - _topicMappings
-      - _topicRegistry
       - teamAusers
 
   - type: CONSUME
@@ -250,7 +248,7 @@ actions:
     topic: _topicMappings
 
   - type: CONSUME
-    title: Wait for mirror maker to do its job on `users` topics
+    title: Wait for mirror maker to do its job on users topics
     kafka: failover-kafka1
     maxMessages: 1
     topic: teamAusers
@@ -259,15 +257,14 @@ actions:
     title: Assert mirror maker did its job
     kafka: failover-kafka1
     assertExists:
-      - _acls
-      - _auditLogs
-      - _consumerGroupSubscriptionBackingTopic
-      - _interceptorConfigs
-      - _license
-      - _offsetStore
+      - _conduktor_private_auditlogs
+      - _conduktor_private_acls
+      - _conduktor_private_license
+      - _conduktor_private_interceptor_configs
+      - _conduktor_private_consumer_subscriptions
+      - _conduktor_private_consumer_offsets
+      - _conduktor_private_topicmappings
       - _schemas
-      - _topicMappings
-      - _topicRegistry
       - teamAusers
 
   - type: FAILOVER
@@ -281,15 +278,15 @@ actions:
     to: failover
 
   - type: PRODUCE
-    title: Produce `thibault` into `users`, it should hit only `failover-kafka`
+    title: Produce alice into users, it should hit only failover-kafka
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: users
     messages:
-      - value: '{"name":"thibaut","username":"thibaut@conduktor.io","password":"youpi","visa":"#812SSS","address":"Les ifs"}'
+      - value: '{"name":"alice","username":"alice@conduktor.io","password":"youpi","visa":"#812SSS","address":"Les ifs"}'
 
   - type: CONSUME
-    title: Verify we can read `florent` (via mirror maker), `tom` (via mirror maker) and `thibault` (via cluster switching)
+    title: Verify we can read laura (via mirror maker), tom (via mirror maker) and alice (via cluster switching)
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: users
@@ -299,21 +296,21 @@ actions:
       - description: Confirm producer after switch is readable
         value:
           operator: containsIgnoreCase
-          expected: 'thibaut'
+          expected: 'alice'
 
   - type: CONSUME
-    title: Verify `thibaut` is not in main kafka
+    title: Verify alice is not in main kafka
     kafka: kafka1
     topic: teamAusers
     assertSize: 2
     assertions:
-      - description: Thibaut should be only in failover kafka
+      - description: alice should be only in failover kafka
         value:
           operator: doesNotContainIgnoringCase
-          expected: 'thibaut'
+          expected: 'alice'
 
   - type: CONSUME
-    title: Verify `thibaut` is in failover
+    title: Verify alice is in failover
     kafka: failover-kafka1
     topic: teamAusers
     maxMessages: 3
@@ -321,7 +318,7 @@ actions:
       - description: Confirm producer after switch is written in failover kafka
         value:
           operator: containsIgnoreCase
-          expected: 'thibaut'
+          expected: 'alice'
 
   - type: DOCKER
     command: docker compose down --volumes

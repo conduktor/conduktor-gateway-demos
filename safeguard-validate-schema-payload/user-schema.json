@@ -5,16 +5,19 @@
     "name": {
       "type": "string",
       "minLength": 3,
-      "maxLength": 50
+      "maxLength": 50,
+      "expression": "size(name) >= 3"
     },
     "age": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 120
+      "maximum": 120,
+      "expression": "age >= 0 && age <= 120"
     },
     "email": {
       "type": "string",
-      "format": "email"
+      "format": "email",
+      "expression": "email.contains('foo')"
     },
     "address": {
       "type": "object",
@@ -22,21 +25,48 @@
         "street": {
           "type": "string",
           "minLength": 5,
-          "maxLength": 10
+          "maxLength": 10,
+          "expression": "size(street) >= 5 && size(street) <= 10"
         },
         "city": {
           "type": "string",
           "minLength": 2,
           "maxLength": 50
         }
-      }
+      },
+      "expression": "size(address.street) > 1 && address.street.contains('paris') || address.city == 'paris'"
     },
     "hobbies": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "minItems": 3
+      "minItems": 3,
+      "expression": "size(hobbies) >= 3"
     }
+  },
+  "metadata": {
+    "rules": [
+      {
+        "name": "check hobbies size and name",
+        "expression": "size(message.hobbies) == 3 && size(message.name) > 3",
+        "message": "hobbies must have 3 items"
+      },
+      {
+        "name": "checkAge",
+        "expression": "message.age >= 18",
+        "message": "age must be greater than or equal to 18"
+      },
+      {
+        "name": "check email",
+        "expression": "message.email.endsWith('yahoo.com')",
+        "message": "email should end with 'yahoo.com'"
+      },
+      {
+        "name": "check street",
+        "expression": "size(message.address.street) >= 3",
+        "message": "address.street length must be greater than equal to 3"
+      }
+    ]
   }
 }

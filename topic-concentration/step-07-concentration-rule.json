@@ -1,0 +1,7 @@
+{
+  "clusterId" : "main",
+  "physicalTopicName" : "hold_many_concentrated_topics",
+  "physicalTopicCompactedName" : "hold_many_concentrated_topics_compacted",
+  "physicalTopicCompactedDeletedName" : "hold_many_concentrated_topics_compacted_deleted",
+  "pattern" : "concentrated-.*"
+}

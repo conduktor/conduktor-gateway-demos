@@ -1,5 +1,7 @@
-title: SSL and Multitenancy
-
+title: mTLS
+tag: security
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -56,7 +58,7 @@ services:
 actions:
 
   - type: INTRODUCTION
-    title: SSL
+    title: mTLS
     markdown: |
       When passwords are not enough, you can rely on TLS client certificate
       But certificates do not host vcluster information, so let's map manually CN to vclusters.
@@ -67,10 +69,13 @@ actions:
     filename: docker-compose.yaml
 
   - type: SH
+    title: Generate self-signed ssl certificates
     showOutput: true
     script: |
       
-      rm *jks *key *p12 *crt
+      pwd > /tmp/ici
+      pwd 
+      rm -f *jks *key *p12 *crt
       
       openssl req \
         -x509 \
@@ -84,32 +89,32 @@ actions:
         -extensions san \
         -config openssl.config
       
-        openssl pkcs12 \
-          -export \
-          -in san.crt \
-          -inkey san.key \
-          -name brokers \
-          -out san.p12 \
-          -password "pass:123456"
-      
-        keytool \
-          -noprompt \
-          -alias brokers \
-          -importkeystore \
-          -deststorepass 123456 \
-          -destkeystore keystore.jks \
-          -srckeystore san.p12 \
-          -srcstoretype PKCS12 \
-          -srcstorepass 123456
-      
-        keytool \
-          -noprompt \
-          -import \
-          -alias brokers \
-          -file san.crt \
-          -keypass 123456 \
-          -destkeystore truststore.jks \
-          -storepass 123456
+      openssl pkcs12 \
+        -export \
+        -in san.crt \
+        -inkey san.key \
+        -name brokers \
+        -out san.p12 \
+        -password "pass:123456"
+    
+      keytool \
+        -noprompt \
+        -alias brokers \
+        -importkeystore \
+        -deststorepass 123456 \
+        -destkeystore keystore.jks \
+        -srckeystore san.p12 \
+        -srcstoretype PKCS12 \
+        -srcstorepass 123456
+    
+      keytool \
+        -noprompt \
+        -import \
+        -alias brokers \
+        -file san.crt \
+        -keypass 123456 \
+        -destkeystore truststore.jks \
+        -storepass 123456
       
       echo """
       bootstrap.servers=localhost:6969
@@ -118,7 +123,7 @@ actions:
       ssl.truststore.password=123456
       ssl.keystore.location=$PWD/keystore.jks
       ssl.keystore.password=123456
-      """ > client.config
+      """ > client.config      
 
   - type: DOCKER
     command: docker compose up --detach --wait
@@ -141,3 +146,6 @@ actions:
     kafka: kafka1
     assertExists:
       - foo
+
+  - type: DOCKER
+    command: docker compose down --volumes

@@ -1,4 +1,8 @@
 title: Oauth
+tag: security
+ciTags:
+  - PULL_REQUEST
+  - NON_REGRESSION
 services:
   kafka1:
     properties:

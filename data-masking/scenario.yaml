@@ -1,4 +1,7 @@
 title: Data Masking
+tag: security
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -35,10 +38,6 @@ actions:
   - type: CREATE_VIRTUAL_CLUSTER
     gateway: gateway1
     name: teamA
-
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
 
   - type: CREATE_TOPICS
     kafka: teamA
@@ -99,25 +98,25 @@ actions:
     topic: customers
     messages:
       - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
-      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
     markdown: |
       We are using regular kafka tools
 
   - type: CONSUME
-    title: Let's consume the message, and confirm `tom` and `florent` fields are masked
+    title: Let's consume the message, and confirm tom and laura fields are masked
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
     assertions:
-      - description: Confirm `tom`'s `password` and `visa` are masked
+      - description: Confirm tom's password and visa are masked
         value:
           operator: contains
           expected: '{"name":"tom","username":"tom@conduktor.io","password":"********","visa":"#abXXXX","address":"Chancery lane, London"}'
-      - description: Confirm `florent`'s `password` and `visa` are masked
+      - description: Confirm laura's password and visa are masked
         value:
           operator: contains
-          expected: '{"name":"florent","username":"florent@conduktor.io","password":"********","visa":"#88899XXXX","address":"Dubai, UAE"}'
+          expected: '{"name":"laura","username":"laura@conduktor.io","password":"********","visa":"#88899XXXX","address":"Dubai, UAE"}'
 
   - type: REMOVE_INTERCEPTORS
     gateway: gateway1
@@ -126,20 +125,20 @@ actions:
       - data-masking
 
   - type: CONSUME
-    title: Let's consume the message, and confirm `tom` and `florent` fields no more masked
+    title: Let's consume the message, and confirm tom and laura fields no more masked
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
     assertions:
-      - description: Confirm `tom`'s `password` and `visa` are no more masked
+      - description: Confirm tom's password and visa are no more masked
         value:
           operator: contains
           expected: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
-      - description: Confirm `florent`'s `password` and `visa` no more masked
+      - description: Confirm laura's password and visa no more masked
         value:
           operator: contains
-          expected: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+          expected: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
 
   - type: DOCKER
     command: docker compose down --volumes

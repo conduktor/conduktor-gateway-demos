@@ -1,14 +1,113 @@
-MAGIC_BYTE="\x00"
-SCHEMA_ID="\x00\x00\x00\x01"
-JSON_PAYLOAD=$(cat invalid-payload.json | jq -c)
-cat invalid-payload.json | jq -c
-printf "${MAGIC_BYTE}${SCHEMA_ID}${JSON_PAYLOAD}" | \
-  kcat \
-    -b  localhost:6969 \
-    -X security.protocol=SASL_PLAINTEXT \
-    -X sasl.mechanism=PLAIN \
-    -X sasl.username=sa \
-    -X sasl.password=$(cat teamA-sa.properties | awk -F"'" '/password=/{print $4}') \
-    -P \
-    -t topic-json-schema
-cat teamA-sa.properties | awk -F"'" '/password=/{print $4}'
+[2024-04-10 03:52:36,140] INFO KafkaJsonSchemaDeserializerConfig values: 
+	auto.register.schemas = true
+	basic.auth.credentials.source = URL
+	basic.auth.user.info = [hidden]
+	bearer.auth.cache.expiry.buffer.seconds = 300
+	bearer.auth.client.id = null
+	bearer.auth.client.secret = null
+	bearer.auth.credentials.source = STATIC_TOKEN
+	bearer.auth.custom.provider.class = null
+	bearer.auth.identity.pool.id = null
+	bearer.auth.issuer.endpoint.url = null
+	bearer.auth.logical.cluster = null
+	bearer.auth.scope = null
+	bearer.auth.scope.claim.name = scope
+	bearer.auth.sub.claim.name = sub
+	bearer.auth.token = [hidden]
+	context.name.strategy = class io.confluent.kafka.serializers.context.NullContextNameStrategy
+	http.connect.timeout.ms = 60000
+	http.read.timeout.ms = 60000
+	id.compatibility.strict = true
+	json.fail.invalid.schema = true
+	json.fail.unknown.properties = true
+	json.key.type = class java.lang.Object
+	json.value.type = class java.lang.Object
+	key.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
+	latest.cache.size = 1000
+	latest.cache.ttl.sec = -1
+	latest.compatibility.strict = true
+	max.schemas.per.subject = 1000
+	normalize.schemas = false
+	proxy.host = 
+	proxy.port = -1
+	rule.actions = []
+	rule.executors = []
+	rule.service.loader.enable = true
+	schema.format = null
+	schema.reflection = false
+	schema.registry.basic.auth.user.info = [hidden]
+	schema.registry.ssl.cipher.suites = null
+	schema.registry.ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	schema.registry.ssl.endpoint.identification.algorithm = https
+	schema.registry.ssl.engine.factory.class = null
+	schema.registry.ssl.key.password = null
+	schema.registry.ssl.keymanager.algorithm = SunX509
+	schema.registry.ssl.keystore.certificate.chain = null
+	schema.registry.ssl.keystore.key = null
+	schema.registry.ssl.keystore.location = null
+	schema.registry.ssl.keystore.password = null
+	schema.registry.ssl.keystore.type = JKS
+	schema.registry.ssl.protocol = TLSv1.3
+	schema.registry.ssl.provider = null
+	schema.registry.ssl.secure.random.implementation = null
+	schema.registry.ssl.trustmanager.algorithm = PKIX
+	schema.registry.ssl.truststore.certificates = null
+	schema.registry.ssl.truststore.location = null
+	schema.registry.ssl.truststore.password = null
+	schema.registry.ssl.truststore.type = JKS
+	schema.registry.url = [http://localhost:8081]
+	type.property = javaType
+	use.latest.version = false
+	use.latest.with.metadata = null
+	use.schema.id = -1
+	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
+ (io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializerConfig:376)
+[2024-04-10 03:52:36,838] ERROR Error processing message, skipping this message:  (kafka.tools.ConsoleConsumer$:44)
+org.apache.kafka.common.errors.SerializationException: Error deserializing JSON message for id 1
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:236)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter$JsonSchemaMessageDeserializer.deserialize(JsonSchemaMessageFormatter.java:135)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter$JsonSchemaMessageDeserializer.deserialize(JsonSchemaMessageFormatter.java:101)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter.writeTo(JsonSchemaMessageFormatter.java:92)
+	at io.confluent.kafka.formatter.SchemaMessageFormatter.writeTo(SchemaMessageFormatter.java:266)
+	at kafka.tools.ConsoleConsumer$.process(ConsoleConsumer.scala:116)
+	at kafka.tools.ConsoleConsumer$.run(ConsoleConsumer.scala:76)
+	at kafka.tools.ConsoleConsumer$.main(ConsoleConsumer.scala:53)
+	at kafka.tools.ConsoleConsumer.main(ConsoleConsumer.scala)
+Caused by: org.apache.kafka.common.errors.SerializationException: JSON {"name":"D","age":17,"email":"bad email","address":{"street":"a way too lond adress that will not fit in your database","city":""},"hobbies":["reading"],"friends":[{"name":"Tom","age":17},{"name":"Emma","age":18}]} does not match schema {"$schema":"http://json-schema.org/draft-07/schema#","type":"object","properties":{"name":{"type":"string","minLength":3,"maxLength":50,"expression":"size(name) >= 3"},"age":{"type":"integer","minimum":0,"maximum":120,"expression":"age >= 0 && age <= 120"},"email":{"type":"string","format":"email","expression":"email.contains('foo')"},"address":{"type":"object","properties":{"street":{"type":"string","minLength":5,"maxLength":15,"expression":"size(street) >= 5 && size(street) <= 15"},"city":{"type":"string","minLength":2,"maxLength":50}},"expression":"size(address.street) > 1 && address.street.contains('paris') || address.city == 'paris'"},"hobbies":{"type":"array","items":{"type":"string"},"minItems":2,"expression":"size(hobbies) >= 2"}},"metadata":{"rules":[{"name":"check hobbies size","expression":"size(message.hobbies) == 2","message":"hobbies must have 2 items"},{"name":"checkAge","expression":"message.age >= 18","message":"age must be greater than or equal to 18"},{"name":"check email","expression":"message.email.endsWith('example.com')","message":"email should end with 'example.com'"},{"name":"check street","expression":"size(message.address.street) >= 3","message":"address.street length must be greater than equal to 3"}]}}
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:183)
+	... 8 more
+Caused by: org.everit.json.schema.ValidationException: #: 5 schema violations found
+	at org.everit.json.schema.ValidationException.copy(ValidationException.java:486)
+	at org.everit.json.schema.DefaultValidator.performValidation(Validator.java:76)
+	at org.everit.json.schema.Schema.validate(Schema.java:152)
+	at io.confluent.kafka.schemaregistry.json.JsonSchema.validate(JsonSchema.java:441)
+	at io.confluent.kafka.schemaregistry.json.JsonSchema.validate(JsonSchema.java:409)
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:178)
+	... 8 more
+[2024-04-10 03:52:36,838] ERROR Error processing message, skipping this message:  (kafka.tools.ConsoleConsumer$:44)
+org.apache.kafka.common.errors.SerializationException: Error deserializing JSON message for id 1
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:236)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter$JsonSchemaMessageDeserializer.deserialize(JsonSchemaMessageFormatter.java:135)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter$JsonSchemaMessageDeserializer.deserialize(JsonSchemaMessageFormatter.java:101)
+	at io.confluent.kafka.formatter.json.JsonSchemaMessageFormatter.writeTo(JsonSchemaMessageFormatter.java:92)
+	at io.confluent.kafka.formatter.SchemaMessageFormatter.writeTo(SchemaMessageFormatter.java:266)
+	at kafka.tools.ConsoleConsumer$.process(ConsoleConsumer.scala:116)
+	at kafka.tools.ConsoleConsumer$.run(ConsoleConsumer.scala:76)
+	at kafka.tools.ConsoleConsumer$.main(ConsoleConsumer.scala:53)
+	at kafka.tools.ConsoleConsumer.main(ConsoleConsumer.scala)
+Caused by: org.apache.kafka.common.errors.SerializationException: JSON {"name":"D","age":17,"email":"bad email","address":{"street":"a way too lond adress that will not fit in your database","city":""},"hobbies":["reading"],"friends":[{"name":"Tom","age":17},{"name":"Emma","age":18}]} does not match schema {"$schema":"http://json-schema.org/draft-07/schema#","type":"object","properties":{"name":{"type":"string","minLength":3,"maxLength":50,"expression":"size(name) >= 3"},"age":{"type":"integer","minimum":0,"maximum":120,"expression":"age >= 0 && age <= 120"},"email":{"type":"string","format":"email","expression":"email.contains('foo')"},"address":{"type":"object","properties":{"street":{"type":"string","minLength":5,"maxLength":15,"expression":"size(street) >= 5 && size(street) <= 15"},"city":{"type":"string","minLength":2,"maxLength":50}},"expression":"size(address.street) > 1 && address.street.contains('paris') || address.city == 'paris'"},"hobbies":{"type":"array","items":{"type":"string"},"minItems":2,"expression":"size(hobbies) >= 2"}},"metadata":{"rules":[{"name":"check hobbies size","expression":"size(message.hobbies) == 2","message":"hobbies must have 2 items"},{"name":"checkAge","expression":"message.age >= 18","message":"age must be greater than or equal to 18"},{"name":"check email","expression":"message.email.endsWith('example.com')","message":"email should end with 'example.com'"},{"name":"check street","expression":"size(message.address.street) >= 3","message":"address.street length must be greater than equal to 3"}]}}
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:183)
+	... 8 more
+Caused by: org.everit.json.schema.ValidationException: #: 5 schema violations found
+	at org.everit.json.schema.ValidationException.copy(ValidationException.java:486)
+	at org.everit.json.schema.DefaultValidator.performValidation(Validator.java:76)
+	at org.everit.json.schema.Schema.validate(Schema.java:152)
+	at io.confluent.kafka.schemaregistry.json.JsonSchema.validate(JsonSchema.java:441)
+	at io.confluent.kafka.schemaregistry.json.JsonSchema.validate(JsonSchema.java:409)
+	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaDeserializer.deserialize(AbstractKafkaJsonSchemaDeserializer.java:178)
+	... 8 more
+[2024-04-10 03:52:39,846] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
+org.apache.kafka.common.errors.TimeoutException
+[2024-04-10 03:52:39,846] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$:44)
+org.apache.kafka.common.errors.TimeoutException
+Processed a total of 1 messages

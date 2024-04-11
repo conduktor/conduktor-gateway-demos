@@ -4,17 +4,21 @@
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/ig5vu5eSCGRxheTNUBXG1kSOn.svg)](https://asciinema.org/a/ig5vu5eSCGRxheTNUBXG1kSOn)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/uzc57YiIXGRDSnFWxc8S84E4b.svg)](https://asciinema.org/a/uzc57YiIXGRDSnFWxc8S84E4b)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * cli-aws
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -27,7 +31,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -145,7 +149,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -171,7 +175,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -197,6 +201,16 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
   minio:
     image: quay.io/minio/minio
     hostname: minio
@@ -225,25 +239,6 @@ networks:
 
 </details>
 
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-cli-aws           amazon/aws-cli                           "sleep 100d"             cli-aws           28 seconds ago   Up 27 seconds             
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          28 seconds ago   Up 16 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          28 seconds ago   Up 16 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            28 seconds ago   Up 21 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            28 seconds ago   Up 21 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            28 seconds ago   Up 21 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-minio             quay.io/minio/minio                      "/usr/bin/docker-ent…"   minio             28 seconds ago   Up 27 seconds             0.0.0.0:9000->9000/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   28 seconds ago   Up 16 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         28 seconds ago   Up 27 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
-```
-
-</details>
-
 ## Starting the docker environment
 
 Start all your docker processes, wait for them to be up and ready, then run in background
@@ -251,118 +246,130 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network large-messages_default  Creating
  Network large-messages_default  Created
  Container minio  Creating
+ Container kafka-client  Creating
  Container cli-aws  Creating
  Container zookeeper  Creating
- Container cli-aws  Created
  Container minio  Created
+ Container cli-aws  Created
+ Container kafka-client  Created
  Container zookeeper  Created
- Container kafka2  Creating
  Container kafka1  Creating
  Container kafka3  Creating
- Container kafka3  Created
- Container kafka1  Created
+ Container kafka2  Creating
  Container kafka2  Created
- Container gateway1  Creating
+ Container kafka1  Created
+ Container kafka3  Created
  Container schema-registry  Creating
  Container gateway2  Creating
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- Container gateway2  Created
+ Container gateway1  Creating
  Container gateway1  Created
+ Container gateway2  Created
  Container schema-registry  Created
  Container minio  Starting
- Container zookeeper  Starting
  Container cli-aws  Starting
+ Container kafka-client  Starting
+ Container zookeeper  Starting
  Container minio  Started
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container cli-aws  Started
+ Container kafka-client  Started
  Container zookeeper  Healthy
- Container kafka3  Starting
  Container zookeeper  Healthy
  Container kafka1  Starting
- Container zookeeper  Healthy
  Container kafka2  Starting
- Container kafka2  Started
- Container kafka1  Started
+ Container zookeeper  Healthy
+ Container kafka3  Starting
  Container kafka3  Started
- Container kafka3  Waiting
- Container kafka1  Waiting
+ Container kafka1  Started
+ Container kafka2  Started
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
+ Container kafka3  Waiting
+ Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
- Container kafka2  Healthy
- Container kafka2  Healthy
- Container kafka2  Healthy
- Container kafka3  Healthy
  Container kafka1  Healthy
+ Container kafka1  Healthy
+ Container kafka1  Healthy
+ Container kafka3  Healthy
+ Container kafka3  Healthy
+ Container kafka3  Healthy
+ Container kafka2  Healthy
  Container gateway1  Starting
- Container kafka3  Healthy
- Container gateway1  Started
- Container kafka3  Healthy
- Container kafka1  Healthy
- Container schema-registry  Starting
- Container kafka1  Healthy
- Container gateway2  Starting
- Container schema-registry  Started
- Container gateway2  Started
- Container kafka1  Waiting
- Container gateway1  Waiting
- Container minio  Waiting
- Container schema-registry  Waiting
- Container zookeeper  Waiting
- Container cli-aws  Waiting
- Container kafka2  Waiting
- Container kafka3  Waiting
- Container gateway2  Waiting
- Container kafka3  Healthy
  Container kafka2  Healthy
+ Container schema-registry  Starting
+ Container kafka2  Healthy
+ Container gateway2  Starting
+ Container gateway1  Started
+ Container gateway2  Started
+ Container schema-registry  Started
+ Container kafka3  Waiting
+ Container kafka-client  Waiting
+ Container gateway2  Waiting
+ Container minio  Waiting
+ Container gateway1  Waiting
+ Container kafka2  Waiting
+ Container kafka1  Waiting
+ Container zookeeper  Waiting
+ Container schema-registry  Waiting
+ Container cli-aws  Waiting
  Container minio  Healthy
+ Container cli-aws  Healthy
+ Container kafka-client  Healthy
  Container zookeeper  Healthy
  Container kafka1  Healthy
- Container cli-aws  Healthy
- Container schema-registry  Healthy
- Container gateway1  Healthy
+ Container kafka3  Healthy
+ Container kafka2  Healthy
  Container gateway2  Healthy
+ Container gateway1  Healthy
+ Container schema-registry  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/3iZEu2e2kNbyalUBYxxGzc2Yt.svg)](https://asciinema.org/a/3iZEu2e2kNbyalUBYxxGzc2Yt)
+
+</details>
+
+## Creating virtual cluster teamA
+
+Creating virtual cluster `teamA` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `teamA`
-
-Creating virtual cluster `teamA` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster teamA with service account sa
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
     --header 'Content-Type: application/json' \
@@ -370,35 +377,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
-""" > teamA-sa.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `teamA`](images/step-05-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -406,13 +385,35 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
 """ > teamA-sa.properties
 
+# Review file
+cat teamA-sa.properties
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ3NzE4Mn0.Sqku85l5xsVk1N4BniIZpvR4JjwiDNXtdbnwZL8IfDM';
+
+
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/04ShGLEf5H83mdxhAxovv8fqI.svg)](https://asciinema.org/a/04ShGLEf5H83mdxhAxovv8fqI)
 
-### Review `credentials`
+</details>
+
+## Review credentials
 
 
 
@@ -420,8 +421,8 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 cat credentials
 ```
 
-<details on>
-  <summary>File content</summary>
+<details open>
+<summary>File content</summary>
 
 ```
 [minio]
@@ -431,8 +432,12 @@ aws_secret_access_key = minio123
 
 </details>
 
-
 ## Let's create a bucket
+
+
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -446,26 +451,13 @@ docker compose exec cli-aws \
       --bucket bucket
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's create a bucket](images/step-07-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose exec cli-aws \
-  aws \
-    --profile minio \
-    --endpoint-url=http://minio:9000 \
-    --region eu-south-1 \
-    s3api create-bucket \
-      --bucket bucket
+```
 {
     "Location": "/bucket"
 }
@@ -473,13 +465,23 @@ docker compose exec cli-aws \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/62u3FVVktd0Fd2e6xq1IaWACe.svg)](https://asciinema.org/a/62u3FVVktd0Fd2e6xq1IaWACe)
 
-## Creating topic `large-messages` on `teamA`
+</details>
 
-Creating topic `large-messages` on `teamA`
+## Creating topic large-messages on teamA
+
+Creating on `teamA`:
+
 * Topic `large-messages` with partitions:1 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-topics \
@@ -491,38 +493,28 @@ kafka-topics \
     --topic large-messages
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `large-messages` on `teamA`](images/step-08-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic large-messages
+```
 Created topic large-messages.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/chet0Hapir1YZ71iOgSuRWvb3.svg)](https://asciinema.org/a/chet0Hapir1YZ71iOgSuRWvb3)
 
-## Adding interceptor `large-messages`
+</details>
+
+## Adding interceptor large-messages
 
 Let's ask Gateway to offload large messages to S3
-
 
 Creating the interceptor named `large-messages` of the plugin `io.conduktor.gateway.interceptor.LargeMessageHandlingPlugin` using the following payload
 
@@ -545,6 +537,11 @@ Creating the interceptor named `large-messages` of the plugin `io.conduktor.gate
 
 Here's how to send it:
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 cat step-09-large-messages.json | jq
 
@@ -556,20 +553,13 @@ curl \
     --data @step-09-large-messages.json | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Adding interceptor `large-messages`](images/step-09-ADD_INTERCEPTOR.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-09-large-messages.json | jq
+```json
 {
   "pluginClass": "io.conduktor.gateway.interceptor.LargeMessageHandlingPlugin",
   "priority": 100,
@@ -584,13 +574,6 @@ cat step-09-large-messages.json | jq
     }
   }
 }
-
-curl \
-    --request POST "http://localhost:8888/admin/interceptors/v1/vcluster/teamA/interceptor/large-messages" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data @step-09-large-messages.json | jq
 {
   "message": "large-messages is created"
 }
@@ -598,45 +581,55 @@ curl \
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/Iwx7sV72ON3aL4pdEGRY7LAdL.svg)](https://asciinema.org/a/Iwx7sV72ON3aL4pdEGRY7LAdL)
+
+</details>
 
 ## Let's create a large message
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 openssl rand -hex $((20*1024*1024)) > large-message.bin 
 ls -lh large-message.bin
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's create a large message](images/step-10-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-openssl rand -hex $((20*1024*1024)) > large-message.bin 
-ls -lh large-message.bin
--rw-r--r--@ 1 framiere  staff    40M Jan 22 23:43 large-message.bin
+```
+-rw-r--r--@ 1 framiere  staff    40M 10 avr 02:19 large-message.bin
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/OUw9U37AgNGdxBK86G2BKVHtI.svg)](https://asciinema.org/a/OUw9U37AgNGdxBK86G2BKVHtI)
+
+</details>
 
 ## Sending large pdf file through kafka
 
 
 
+<details>
+<summary>Command</summary>
+
+
+
 ```sh
 requiredMemory=$(( 2 * $(cat large-message.bin | wc -c | awk '{print $1}')))
 
@@ -652,46 +645,36 @@ kafka-producer-perf-test \
     buffer.memory=$requiredMemory
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Sending large pdf file through kafka](images/step-11-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-requiredMemory=$(( 2 * $(cat large-message.bin | wc -c | awk '{print $1}')))
-cat large-message.bin | wc -c | awk '{print $1}'
-
-kafka-producer-perf-test \
-  --producer.config teamA-sa.properties \
-  --topic large-messages \
-  --throughput -1 \
-  --num-records 1 \
-  --payload-file large-message.bin \
-  --producer-props \
-    bootstrap.servers=localhost:6969 \
-    max.request.size=$requiredMemory \
-    buffer.memory=$requiredMemory
-Reading payloads from: /Users/framiere/conduktor/conduktor-gateway-functional-testing/target/2024.01.22-22:50:30/large-messages/large-message.bin
+```
+Reading payloads from: /Users/framiere/conduktor/conduktor-proxy/functional-testing/target/2024.04.10-01:54:14/large-messages/large-message.bin
 Number of messages read: 1
-1 records sent, 0,351617 records/sec (14,06 MB/sec), 2834,00 ms avg latency, 2834,00 ms max latency, 2834 ms 50th, 2834 ms 95th, 2834 ms 99th, 2834 ms 99.9th.
+1 records sent, 0,674764 records/sec (26,99 MB/sec), 1474,00 ms avg latency, 1474,00 ms max latency, 1474 ms 50th, 1474 ms 95th, 1474 ms 99th, 1474 ms 99.9th.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/W88EKtd4a8zJYD1ZJqKEJXpgd.svg)](https://asciinema.org/a/W88EKtd4a8zJYD1ZJqKEJXpgd)
+
+</details>
 
 ## Let's read the message back
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 kafka-console-consumer  \
   --bootstrap-server localhost:6969 \
@@ -701,69 +684,67 @@ kafka-console-consumer  \
   --max-messages 1 > from-kafka.bin
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's read the message back](images/step-12-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer  \
-  --bootstrap-server localhost:6969 \
-  --consumer.config teamA-sa.properties \
-  --topic large-messages \
-  --from-beginning \
-  --property print.headers=true \
-  --max-messages 1 > from-kafka.bin
+```
 Processed a total of 1 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/nAAnVQ48O3EsSKZLN2FVdt3vw.svg)](https://asciinema.org/a/nAAnVQ48O3EsSKZLN2FVdt3vw)
+
+</details>
 
 ## Let's compare the files
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 ls -lH *bin
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's compare the files](images/step-13-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-ls -lH *bin
--rw-r--r--@ 1 framiere  staff  41943052 Jan 22 23:43 from-kafka.bin
--rw-r--r--@ 1 framiere  staff  41943041 Jan 22 23:43 large-message.bin
+```
+-rw-r--r--@ 1 framiere  staff  41943041 10 avr 02:19 from-kafka.bin
+-rw-r--r--@ 1 framiere  staff  41943041 10 avr 02:19 large-message.bin
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/CctyDIDDANHyrKoRrEBOnB8Rk.svg)](https://asciinema.org/a/CctyDIDDANHyrKoRrEBOnB8Rk)
+
+</details>
 
 ## Let's look at what's inside minio
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose exec cli-aws \
     aws \
@@ -774,37 +755,33 @@ docker compose exec cli-aws \
         ls s3://bucket --recursive --human-readable
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Let's look at what's inside minio](images/step-14-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose exec cli-aws \
-    aws \
-        --profile minio \
-        --endpoint-url=http://minio:9000 \
-        --region eu-south-1 \
-        s3 \
-        ls s3://bucket --recursive --human-readable
-2024-01-22 22:43:33   40.0 MiB large-messages/eaf8c224-6a8b-4432-b388-bee3b11585e4
+```
+2024-04-09 22:19:49   40.0 MiB large-messages/84a95586-c2ea-407b-99e5-8cd921f58ae7
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/gdiPpioZ6vrTU6WCf2B6lHl87.svg)](https://asciinema.org/a/gdiPpioZ6vrTU6WCf2B6lHl87)
+
+</details>
+
+## Consuming from teamAlarge-messages
+
+Consuming from teamAlarge-messages in cluster `kafka1`
+
+<details open>
+<summary>Command</summary>
 
 
-## Consuming from `teamAlarge-messages`
-
-Consuming from `teamAlarge-messages` in cluster `kafka1`
 
 ```sh
 kafka-console-consumer \
@@ -812,38 +789,30 @@ kafka-console-consumer \
     --topic teamAlarge-messages \
     --from-beginning \
     --timeout-ms 10000 \
-    --property print.headers=true 
+    --property print.headers=true | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Consuming from `teamAlarge-messages`](images/step-15-CONSUME.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-console-consumer \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --topic teamAlarge-messages \
-    --from-beginning \
-    --timeout-ms 10000 \
-    --property print.headers=true 
-S3-REF-FILE-PATH:large-messages/eaf8c224-6a8b-4432-b388-bee3b11585e4	null
-[2024-01-22 23:43:49,491] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+```json
+jq: parse error: Invalid numeric literal at line 1, column 17
+[2024-04-10 02:20:04,392] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/YdP2vSpmWQUa7YTg7do4QaAyQ.svg)](https://asciinema.org/a/YdP2vSpmWQUa7YTg7do4QaAyQ)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -851,29 +820,28 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-16-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
+```
  Container minio  Stopping
- Container cli-aws  Stopping
+ Container kafka-client  Stopping
  Container schema-registry  Stopping
  Container gateway1  Stopping
  Container gateway2  Stopping
+ Container cli-aws  Stopping
  Container minio  Stopped
  Container minio  Removing
  Container minio  Removed
@@ -886,21 +854,24 @@ docker compose down --volumes
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
+ Container kafka3  Stopping
  Container kafka1  Stopping
  Container kafka2  Stopping
- Container kafka3  Stopping
  Container kafka2  Stopped
  Container kafka2  Removing
  Container kafka2  Removed
- Container kafka1  Stopped
- Container kafka1  Removing
- Container kafka1  Removed
- Container cli-aws  Stopped
- Container cli-aws  Removing
- Container cli-aws  Removed
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container cli-aws  Stopped
+ Container cli-aws  Removing
+ Container cli-aws  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -911,8 +882,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/l49f6YWoei8DsQld1EEZmxja2.svg)](https://asciinema.org/a/l49f6YWoei8DsQld1EEZmxja2)
+
+</details>
 
 # Conclusion
 

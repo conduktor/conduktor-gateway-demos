@@ -4,16 +4,20 @@
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/J6nnXytlKmFXsjXqDNay4T03Q.svg)](https://asciinema.org/a/J6nnXytlKmFXsjXqDNay4T03Q)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/zNbHxzHdVZ0kQaz2sWZQF1u00.svg)](https://asciinema.org/a/zNbHxzHdVZ0kQaz2sWZQF1u00)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -26,7 +30,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -144,7 +148,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -170,7 +174,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -196,8 +200,18 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
   ksqldb-server:
-    image: confluentinc/cp-ksqldb-server:7.4.3.arm64
+    image: confluentinc/cp-ksqldb-server:7.4.3
     healthcheck:
       test: curl localhost:8088/info | grep RUNNING
       interval: 5s
@@ -236,23 +250,6 @@ networks:
 
 </details>
 
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            33 seconds ago   Up 26 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            33 seconds ago   Up 26 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            33 seconds ago   Up 27 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   33 seconds ago   Up 21 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         33 seconds ago   Up 32 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
-```
-
-</details>
-
 ## Starting the docker environment
 
 Start all your docker processes, wait for them to be up and ready, then run in background
@@ -260,106 +257,118 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network ksqldb_default  Creating
  Network ksqldb_default  Created
  Container zookeeper  Creating
+ Container kafka-client  Creating
  Container zookeeper  Created
- Container kafka3  Creating
  Container kafka2  Creating
+ Container kafka3  Creating
  Container kafka1  Creating
+ Container kafka-client  Created
  Container kafka3  Created
  Container kafka2  Created
  Container kafka1  Created
- Container gateway2  Creating
- Container schema-registry  Creating
  Container gateway1  Creating
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- Container gateway1  Created
+ Container schema-registry  Creating
+ Container gateway2  Creating
  Container gateway2  Created
+ Container gateway1  Created
  Container schema-registry  Created
+ Container kafka-client  Starting
  Container zookeeper  Starting
  Container zookeeper  Started
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container zookeeper  Waiting
- Container zookeeper  Healthy
- Container kafka1  Starting
+ Container kafka-client  Started
  Container zookeeper  Healthy
  Container kafka3  Starting
  Container zookeeper  Healthy
  Container kafka2  Starting
- Container kafka2  Started
+ Container zookeeper  Healthy
+ Container kafka1  Starting
  Container kafka3  Started
+ Container kafka2  Started
  Container kafka1  Started
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
- Container kafka2  Waiting
- Container kafka3  Waiting
+ Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
- Container kafka1  Waiting
- Container kafka2  Healthy
- Container kafka2  Healthy
+ Container kafka2  Waiting
+ Container kafka3  Waiting
+ Container kafka3  Healthy
+ Container kafka3  Healthy
  Container kafka2  Healthy
  Container kafka1  Healthy
+ Container kafka3  Healthy
  Container kafka1  Healthy
- Container kafka3  Healthy
- Container gateway2  Starting
- Container kafka3  Healthy
+ Container gateway1  Starting
+ Container kafka2  Healthy
+ Container kafka2  Healthy
  Container schema-registry  Starting
  Container kafka1  Healthy
- Container kafka3  Healthy
- Container gateway1  Starting
- Container schema-registry  Started
- Container gateway2  Started
+ Container gateway2  Starting
  Container gateway1  Started
- Container gateway2  Waiting
+ Container gateway2  Started
+ Container schema-registry  Started
  Container zookeeper  Waiting
- Container kafka1  Waiting
- Container kafka2  Waiting
  Container kafka3  Waiting
  Container schema-registry  Waiting
  Container gateway1  Waiting
- Container zookeeper  Healthy
- Container kafka2  Healthy
- Container kafka1  Healthy
+ Container gateway2  Waiting
+ Container kafka1  Waiting
+ Container kafka-client  Waiting
+ Container kafka2  Waiting
  Container kafka3  Healthy
+ Container zookeeper  Healthy
+ Container kafka1  Healthy
+ Container kafka2  Healthy
+ Container kafka-client  Healthy
  Container schema-registry  Healthy
- Container gateway2  Healthy
  Container gateway1  Healthy
+ Container gateway2  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/iAV327qsncNR9jDz79FXQWwYT.svg)](https://asciinema.org/a/iAV327qsncNR9jDz79FXQWwYT)
+
+</details>
+
+## Creating virtual cluster teamA
+
+Creating virtual cluster `teamA` on gateway `gateway1` and reviewing the configuration file to access it
+
+<details>
+<summary>Command</summary>
 
 
-## Creating virtual cluster `teamA`
-
-Creating virtual cluster `teamA` on gateway `gateway1`
 
 ```sh
+# Generate virtual cluster teamA with service account sa
 token=$(curl \
     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
     --header 'Content-Type: application/json' \
@@ -367,35 +376,7 @@ token=$(curl \
     --silent \
     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
 
-echo  """
-bootstrap.servers=localhost:6969
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
-""" > teamA-sa.properties
-```
-
-<details>
-  <summary>Realtime command output</summary>
-
-  ![Creating virtual cluster `teamA`](images/step-05-CREATE_VIRTUAL_CLUSTER.gif)
-
-</details>
-
-
-<details>
-<summary>Command output</summary>
-
-```sh
-
-token=$(curl \
-    --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa" \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token")
-curl     --request POST "http://localhost:8888/admin/vclusters/v1/vcluster/teamA/username/sa"     --header 'Content-Type: application/json'     --user 'admin:conduktor'     --silent     --data-raw '{"lifeTimeSeconds": 7776000}' | jq -r ".token"
-
+# Create access file
 echo  """
 bootstrap.servers=localhost:6969
 security.protocol=SASL_PLAINTEXT
@@ -403,107 +384,194 @@ sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='$token';
 """ > teamA-sa.properties
 
+# Review file
+cat teamA-sa.properties
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+
+bootstrap.servers=localhost:6969
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ3Njc4OX0.wIf0tn_sQ2pX9SCrzhJheT0XweMLS_mufzNM8UmO_Kw';
+
+
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/exi37VyS9kPO4D0qYqFORHXJj.svg)](https://asciinema.org/a/exi37VyS9kPO4D0qYqFORHXJj)
+
+</details>
+
+## Create the topic that will hold virtual topics
+
+Creating on `kafka1`:
+
+* Topic `concentrated` with partitions:100 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
 
 
-## 
-
-Let's tell `gateway1` that topics matching the pattern `.*` need to be concentrated into the underlying `concentrated` physical topic.
-
-> [!NOTE]
-> You don’t need to create the physical topic that backs the concentrated topics, it will automatically be created when a client topic starts using the concentrated topic.
 
 ```sh
-cat step-06-mapping.json | jq
+kafka-topics \
+    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
+    --replication-factor 1 \
+    --partitions 100 \
+    --create --if-not-exists \
+    --topic concentrated
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+Created topic concentrated.
+
+```
+
+</details>
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/45jPPsfqkUDKrK3up2QQWbjbq.svg)](https://asciinema.org/a/45jPPsfqkUDKrK3up2QQWbjbq)
+
+</details>
+
+## Create the topic that will hold compacted virtual topics
+
+Creating on `kafka1`:
+
+* Topic `concentrated_compacted` with partitions:100 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
+
+
+
+```sh
+kafka-topics \
+    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
+    --replication-factor 1 \
+    --partitions 100 \
+    --create --if-not-exists \
+    --topic concentrated_compacted
+```
+
+
+
+</details>
+<details>
+<summary>Output</summary>
+
+```
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
+Created topic concentrated_compacted.
+
+```
+
+</details>
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/4Kmt6wPHrqapkd4pq8NPhUQSj.svg)](https://asciinema.org/a/4Kmt6wPHrqapkd4pq8NPhUQSj)
+
+</details>
+
+## Creating concentration rule for pattern concentrated-.* to concentrated
+
+
+
+<details open>
+<summary>Command</summary>
+
+
+
+```sh
+cat step-08-concentration-rule.json | jq
 
 curl \
-    --request POST 'http://localhost:8888/admin/vclusters/v1/vcluster/teamA/topics/.%2A' \
+    --request POST 'http://localhost:8888/admin/vclusters/v1/vcluster/teamA/concentration-rules' \
     --header 'Content-Type: application/json' \
     --user 'admin:conduktor' \
     --silent \
-    --data "@step-06-mapping.json" | jq
+    --data "@step-08-concentration-rule.json" | jq
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![](images/step-06-CREATE_CONCENTRATED_TOPIC.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-cat step-06-mapping.json | jq
+```json
 {
-  "concentrated": true,
-  "readOnly": false,
+  "clusterId": "main",
+  "physicalTopicName": "concentrated",
+  "pattern": "concentrated-.*"
+}
+{
+  "clusterId": "main",
+  "pattern": "concentrated-.*",
   "physicalTopicName": "concentrated"
 }
 
-curl \
-    --request POST 'http://localhost:8888/admin/vclusters/v1/vcluster/teamA/topics/.%2A' \
-    --header 'Content-Type: application/json' \
-    --user 'admin:conduktor' \
-    --silent \
-    --data "@step-06-mapping.json" | jq
-{
-  "logicalTopicName": ".*",
-  "physicalTopicName": "concentrated",
-  "readOnly": false,
-  "concentrated": true
-}
-
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/5VpYyRqFXWSIw6dkFWE4YeWpg.svg)](https://asciinema.org/a/5VpYyRqFXWSIw6dkFWE4YeWpg)
+
+</details>
 
 ## Start ksqlDB
 
 
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 export KSQL_BOOTSTRAP_SERVERS="localhost:6969"
 export KSQL_SECURITY_PROTOCOL="SASL_PLAINTEXT"
 export KSQL_SASL_MECHANISM="PLAIN"
-export KSQL_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxMzczODk5NX0.WHXG_DPBRBce90-s8vIy4E6fnMNHzk1ERbAVD3qpxaA';"
+export KSQL_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcyMDQ3NjcyN30.uXvT0BY3s6tYFRD6pPoSwVJXZl034ere0K9nkbIBi4Y';"
 docker compose --profile ksqldb up -d --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Start ksqlDB](images/step-07-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-export KSQL_BOOTSTRAP_SERVERS="localhost:6969"
-export KSQL_SECURITY_PROTOCOL="SASL_PLAINTEXT"
-export KSQL_SASL_MECHANISM="PLAIN"
-export KSQL_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username='sa' password='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNhIiwidmNsdXN0ZXIiOiJ0ZWFtQSIsImV4cCI6MTcxMzczODk5NX0.WHXG_DPBRBce90-s8vIy4E6fnMNHzk1ERbAVD3qpxaA';"
-docker compose --profile ksqldb up -d --wait
+```
+ Container kafka-client  Running
  Container zookeeper  Running
- Container kafka1  Running
  Container kafka2  Running
  Container kafka3  Running
+ Container kafka1  Running
  Container schema-registry  Running
- Container gateway2  Running
  Container ksqldb-server  Creating
  Container gateway1  Running
+ Container gateway2  Running
  ksqldb-server Published ports are discarded when using host network mode 
  Container ksqldb-server  Created
  Container zookeeper  Waiting
@@ -512,56 +580,67 @@ docker compose --profile ksqldb up -d --wait
  Container zookeeper  Healthy
  Container zookeeper  Healthy
  Container zookeeper  Healthy
- Container kafka1  Waiting
- Container kafka2  Waiting
- Container kafka3  Waiting
- Container kafka2  Waiting
- Container kafka1  Waiting
- Container kafka2  Waiting
- Container kafka3  Waiting
- Container kafka3  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
+ Container kafka1  Waiting
+ Container kafka2  Waiting
+ Container kafka3  Waiting
+ Container kafka3  Waiting
+ Container kafka1  Waiting
+ Container kafka2  Waiting
+ Container kafka2  Waiting
+ Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka3  Healthy
- Container kafka2  Healthy
- Container kafka2  Healthy
  Container kafka3  Healthy
+ Container kafka2  Healthy
+ Container kafka1  Healthy
  Container kafka1  Healthy
  Container kafka3  Healthy
- Container kafka2  Healthy
- Container kafka2  Healthy
  Container kafka3  Healthy
  Container kafka1  Healthy
+ Container kafka2  Healthy
+ Container kafka2  Healthy
+ Container kafka1  Healthy
+ Container kafka2  Healthy
  Container ksqldb-server  Starting
- Container kafka1  Healthy
- Container kafka1  Healthy
  Container ksqldb-server  Started
- Container kafka1  Waiting
  Container kafka2  Waiting
- Container kafka3  Waiting
+ Container kafka-client  Waiting
  Container schema-registry  Waiting
- Container gateway1  Waiting
- Container gateway2  Waiting
- Container ksqldb-server  Waiting
  Container zookeeper  Waiting
- Container zookeeper  Healthy
- Container kafka2  Healthy
+ Container gateway2  Waiting
+ Container gateway1  Waiting
+ Container ksqldb-server  Waiting
+ Container kafka1  Waiting
+ Container kafka3  Waiting
  Container kafka1  Healthy
- Container gateway1  Healthy
- Container kafka3  Healthy
+ Container kafka-client  Healthy
  Container gateway2  Healthy
+ Container kafka2  Healthy
+ Container zookeeper  Healthy
+ Container gateway1  Healthy
  Container schema-registry  Healthy
+ Container kafka3  Healthy
  Container ksqldb-server  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/6dzRPKrf4WBVRFIfQB3W3LBI2.svg)](https://asciinema.org/a/6dzRPKrf4WBVRFIfQB3W3LBI2)
+
+</details>
+
+## Listing topics in teamA
 
 
-## Listing topics in `teamA`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -572,33 +651,32 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `teamA`](images/step-08-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --list
+```
 _confluent-ksql-default__command_topic
 default_ksql_processing_log
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/brACFXpE07JgAG5Wuw6eLZvxn.svg)](https://asciinema.org/a/brACFXpE07JgAG5Wuw6eLZvxn)
+
+</details>
+
+## Listing topics in kafka1
 
 
-## Listing topics in `kafka1`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -608,44 +686,41 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `kafka1`](images/step-09-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --list
+```
 __consumer_offsets
 __transaction_state
-_acls
-_auditLogs
-_consumerGroupSubscriptionBackingTopic
-_encryptionConfig
-_interceptorConfigs
-_license
-_offsetStore
+_conduktor_gateway_acls
+_conduktor_gateway_auditlogs
+_conduktor_gateway_consumer_offsets
+_conduktor_gateway_consumer_subscriptions
+_conduktor_gateway_encryption_configs
+_conduktor_gateway_interceptor_configs
+_conduktor_gateway_license
+_conduktor_gateway_topicmappings
+_conduktor_gateway_usermappings
 _schemas
-_topicMappings
-_topicRegistry
-_userMapping
 concentrated
+concentrated_compacted
+teamA_confluent-ksql-default__command_topic
+teamAdefault_ksql_processing_log
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/5xlcVcg0NtKlNCYwksRuTWh8q.svg)](https://asciinema.org/a/5xlcVcg0NtKlNCYwksRuTWh8q)
 
-### Review `ksql.sql`
+</details>
+
+## Review ksql.sql
 
 
 
@@ -654,7 +729,7 @@ cat ksql.sql
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```sql
 SET 'processing.guarantee' = 'exactly_once_v2';
@@ -687,8 +762,12 @@ INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('4ddad000', 
 
 </details>
 
+## Execute ksql script
 
-## 
+
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -696,21 +775,14 @@ INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('4ddad000', 
 docker exec ksqldb-server ksql 'http://localhost:8088' -f /sql/ksql.sql
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![](images/step-11-SH.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker exec ksqldb-server ksql 'http://localhost:8088' -f /sql/ksql.sql
-Jan 22, 2024 10:37:55 PM org.jline.utils.Log logr
+```
+Apr 09, 2024 10:13:35 PM org.jline.utils.Log logr
 WARNING: Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
 Successfully changed local property 'processing.guarantee' to 'exactly_once_v2'. Use the UNSET command to revert your change.
 
@@ -747,10 +819,19 @@ EMIT CHANGES;
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/ECMif3vvQM1kIiXlD3b41ObDi.svg)](https://asciinema.org/a/ECMif3vvQM1kIiXlD3b41ObDi)
+
+</details>
+
+## Listing topics in teamA
 
 
-## Listing topics in `teamA`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -761,23 +842,13 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `teamA`](images/step-12-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --list
+```
 CURRENTLOCATION
 RIDERSNEARMOUNTAINVIEW
 _confluent-ksql-default__command_topic
@@ -792,10 +863,19 @@ locations
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/ep98E0hWEac2Q4zKcw0t2yMdz.svg)](https://asciinema.org/a/ep98E0hWEac2Q4zKcw0t2yMdz)
+
+</details>
+
+## Listing topics in kafka1
 
 
-## Listing topics in `kafka1`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -805,43 +885,47 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `kafka1`](images/step-13-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:19092,localhost:19093,localhost:19094 \
-    --list
+```
 __consumer_offsets
 __transaction_state
-_acls
-_auditLogs
-_consumerGroupSubscriptionBackingTopic
-_encryptionConfig
-_interceptorConfigs
-_license
-_offsetStore
+_conduktor_gateway_acls
+_conduktor_gateway_auditlogs
+_conduktor_gateway_consumer_offsets
+_conduktor_gateway_consumer_subscriptions
+_conduktor_gateway_encryption_configs
+_conduktor_gateway_interceptor_configs
+_conduktor_gateway_license
+_conduktor_gateway_topicmappings
+_conduktor_gateway_usermappings
 _schemas
-_topicMappings
-_topicRegistry
-_userMapping
 concentrated
 concentrated_compacted
+teamACURRENTLOCATION
+teamARIDERSNEARMOUNTAINVIEW
+teamA_confluent-ksql-default__command_topic
+teamA_confluent-ksql-default_query_CTAS_CURRENTLOCATION_3-Aggregate-Aggregate-Materialize-changelog
+teamA_confluent-ksql-default_query_CTAS_CURRENTLOCATION_3-Aggregate-GroupBy-repartition
+teamA_confluent-ksql-default_query_CTAS_RIDERSNEARMOUNTAINVIEW_5-Aggregate-Aggregate-Materialize-changelog
+teamA_confluent-ksql-default_query_CTAS_RIDERSNEARMOUNTAINVIEW_5-Aggregate-GroupBy-repartition
+teamA_confluent-ksql-default_query_CTAS_RIDERSNEARMOUNTAINVIEW_5-KsqlTopic-Reduce-changelog
+teamAdefault_ksql_processing_log
+teamAlocations
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/dcFLhIBJ1vehvCYfEw6xBwiYK.svg)](https://asciinema.org/a/dcFLhIBJ1vehvCYfEw6xBwiYK)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -849,48 +933,50 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-14-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
- Container gateway2  Stopping
- Container gateway1  Stopping
+```
  Container schema-registry  Stopping
+ Container kafka-client  Stopping
+ Container gateway1  Stopping
+ Container gateway2  Stopping
  Container gateway2  Stopped
  Container gateway2  Removing
- Container gateway1  Stopped
- Container gateway1  Removing
  Container gateway2  Removed
- Container gateway1  Removed
  Container schema-registry  Stopped
  Container schema-registry  Removing
+ Container gateway1  Stopped
+ Container gateway1  Removing
  Container schema-registry  Removed
- Container kafka3  Stopping
+ Container gateway1  Removed
  Container kafka1  Stopping
+ Container kafka3  Stopping
  Container kafka2  Stopping
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
- Container kafka1  Stopped
- Container kafka1  Removing
- Container kafka1  Removed
  Container kafka2  Stopped
  Container kafka2  Removing
  Container kafka2  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -901,8 +987,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/cXb4SboG73Rk7ZB6sU11MQp81.svg)](https://asciinema.org/a/cXb4SboG73Rk7ZB6sU11MQp81)
+
+</details>
 
 # Conclusion
 

@@ -1,3 +1,4 @@
+#!/bin/bash
 curl \
   --request GET 'http://localhost:8200/v1/transit/keys/?list=true' \
   --silent \

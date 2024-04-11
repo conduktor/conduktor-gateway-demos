@@ -113,14 +113,14 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093,kafka3:9094
       GATEWAY_ADVERTISED_HOST: localhost
-      GATEWAY_MODE: VCLUSTER
-      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_MODE: KAFKA_SECURITY
+      GATEWAY_SECURITY_PROTOCOL: PLAINTEXT
       GATEWAY_FEATURE_FLAGS_ANALYTICS: false
     depends_on:
       kafka1:
@@ -139,14 +139,14 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093,kafka3:9094
       GATEWAY_ADVERTISED_HOST: localhost
-      GATEWAY_MODE: VCLUSTER
-      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_MODE: KAFKA_SECURITY
+      GATEWAY_SECURITY_PROTOCOL: PLAINTEXT
       GATEWAY_FEATURE_FLAGS_ANALYTICS: false
       GATEWAY_START_PORT: 7969
     depends_on:
@@ -165,5 +165,15 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
 networks:
   demo: null

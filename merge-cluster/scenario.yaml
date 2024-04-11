@@ -1,4 +1,7 @@
 title: Merge Cluster
+tag: ops
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     environment:
@@ -175,10 +178,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     title: Create the topic 'cars' in main cluster
     kafka: kafka1
@@ -201,22 +200,12 @@ actions:
     script: |
       curl \
         --silent \
-        --user admin:conduktor \
-        --request POST localhost:8888/topicMappings/teamA/eu_cars \
+        --request POST localhost:8888/internal/alias-topic/teamA/eu_cars \
+        --user 'admin:conduktor' \
         --header 'Content-Type: application/json' \
         --data-raw '{
             "clusterId": "main",
-            "topicName": "cars",
-            "concentrated": false
-          }' | jq
-      
-      curl \
-        --silent \
-        --user admin:conduktor \
-        --request POST localhost:8888/topics/teamA \
-        --header 'Content-Type: application/json' \
-        --data-raw '{
-            "name": "eu_cars"
+            "physicalTopicName": "cars"
           }' | jq
 
   - type: SH
@@ -225,22 +214,12 @@ actions:
     script: |
       curl \
         --silent \
-        --user admin:conduktor \
-        --request POST localhost:8888/topicMappings/teamA/us_cars \
+        --request POST localhost:8888/internal/alias-topic/teamA/us_cars \
+        --user 'admin:conduktor' \
         --header 'Content-Type: application/json' \
         --data-raw '{
             "clusterId": "cluster1",
-            "topicName": "cars",
-            "concentrated": false
-          }' | jq
-
-      curl \
-        --silent \
-        --user admin:conduktor \
-        --request POST localhost:8888/topics/teamA \
-        --header 'Content-Type: application/json' \
-        --data-raw '{
-            "name": "us_cars"
+            "physicalTopicName": "cars"
           }' | jq
 
   - type: PRODUCE
@@ -282,7 +261,7 @@ actions:
           expected: 'us_cars_record'
 
   - type: CONSUME
-    title: Verify `eu_cars_record` is not in main kafka
+    title: Verify eu_cars_record is not in main kafka
     kafka: kafka1
     topic: cars
     assertSize: 1
@@ -293,7 +272,7 @@ actions:
           expected: 'eu_cars_record'
 
   - type: CONSUME
-    title: Verify `us_cars_record` is not in cluster1 kafka
+    title: Verify us_cars_record is not in cluster1 kafka
     kafka: s1_kafka1
     topic: cars
     assertSize: 1

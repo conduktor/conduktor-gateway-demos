@@ -1,4 +1,8 @@
 title: Schema Id validation
+tag: safeguard
+ciTags:
+  - PULL_REQUEST
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -86,6 +90,7 @@ actions:
 
   - type: SH
     kafka: teamA
+    title: Send avro message
     kafkaConfig: teamA-sa.properties
     showOutput: true
     script: |
@@ -115,6 +120,7 @@ actions:
               }'
      
   - type: SH
+    title: Get subjects
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     showOutput: true

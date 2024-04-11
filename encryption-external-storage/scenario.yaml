@@ -1,4 +1,7 @@
-title: Full payload encryption with external storage
+title: Encryption with external storage
+tag: encryption
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -20,7 +23,7 @@ services:
 
 actions:
   - type: INTRODUCTION
-    title: Full payload Field level encryption with external storage
+    title: Field level encryption with external storage
     markdown: |
       Let's demonstrate field level encryption 
 
@@ -35,10 +38,6 @@ actions:
   - type: CREATE_VIRTUAL_CLUSTER
     gateway: gateway1
     name: teamA
-
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
 
   - type: CREATE_TOPICS
     kafka: teamA
@@ -62,17 +61,11 @@ actions:
         "fields": [ {
           "fieldName": "password",
           "keySecretId": "password-secret",
-          "algorithm": {
-            "type": "AES_GCM",
-            "kms": "IN_MEMORY"
-          }
+          "algorithm": "AES_GCM"
         },{
           "fieldName": "visa",
           "keySecretId": "visa-secret",
-          "algorithm": {
-            "type": "AES_GCM",
-            "kms": "IN_MEMORY"
-          }
+          "algorithm": "AES_GCM"
         } ]
       }
     }
@@ -85,9 +78,9 @@ actions:
       - encrypt
 
   - type: CONSUME
-    title: Let's verify there's a single entry in `_encryptionConfig`
+    title: Let's verify there's a single entry in _conduktor_gateway_encryption_configs
     kafka: kafka1
-    topic: _encryptionConfig
+    topic: _conduktor_gateway_encryption_configs
     assertSize: 1
 
   - type: PRODUCE
@@ -97,30 +90,30 @@ actions:
     topic: customers
     messages:
       - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
-      - value: '{"name":"florent","username":"florent@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
     markdown: |
       We are using regular kafka tools
 
   - type: CONSUME
-    title: Let's consume the message, and confirm `tom` and `florent` data is encrypted
+    title: Let's consume the message, and confirm tom and laura data is encrypted
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
     assertions:
-      - description: Confirm password is encrypted for `tom`
+      - description: Confirm password is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: 'motorhead'
-      - description: Confirm visa is encrypted for `tom`
+      - description: Confirm visa is encrypted for tom
         value:
           operator: doesNotContainIgnoringCase
           expected: '#abc123'
-      - description: Confirm password is encrypted for `florent`
+      - description: Confirm password is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: 'kitesurf'
-      - description: Confirm visa is encrypted for `florent`
+      - description: Confirm visa is encrypted for laura
         value:
           operator: doesNotContainIgnoringCase
           expected: '#888999XZ'
@@ -155,26 +148,25 @@ actions:
       - decrypt
 
   - type: CONSUME
-    title: Confirm message from `tom` and `florent` are decrypted
+    title: Confirm message from tom and laura are decrypted
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: customers
     assertSize: 2
-    showHeaders: true
     assertions:
-      - description: Confirm password is decrypted for `tom`
+      - description: Confirm password is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: 'motorhead'
-      - description: Confirm visa is decrypted for `tom`
+      - description: Confirm visa is decrypted for tom
         value:
           operator: containsIgnoreCase
           expected: '#abc123'
-      - description: Confirm password is decrypted for `florent`
+      - description: Confirm password is decrypted for laura
         value:
           operator: containsIgnoreCase
           expected: 'kitesurf'
-      - description: Confirm visa is decrypted for `florent`
+      - description: Confirm visa is decrypted for laura
         value:
           operator: containsIgnoreCase
           expected: '#888999XZ'

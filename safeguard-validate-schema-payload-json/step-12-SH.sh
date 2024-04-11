@@ -1,12 +1,8 @@
-MAGIC_BYTE="\x00"
-SCHEMA_ID="\x00\x00\x00\x01"
-JSON_PAYLOAD=$(cat invalid-payload.json | jq -c)
-printf "${MAGIC_BYTE}${SCHEMA_ID}${JSON_PAYLOAD}" | \
-  kcat \
-    -b  localhost:6969 \
-    -X security.protocol=SASL_PLAINTEXT \
-    -X sasl.mechanism=PLAIN \
-    -X sasl.username=sa \
-    -X sasl.password=$(cat teamA-sa.properties | awk -F"'" '/password=/{print $4}') \
-    -P \
-    -t topic-json-schema
+#!/bin/bash
+kafka-json-schema-console-consumer \
+    --bootstrap-server localhost:6969 \
+    --consumer.config teamA-sa.properties \
+    --topic topic-json-schema \
+    --from-beginning \
+    --skip-message-on-error \
+    --timeout-ms 3000

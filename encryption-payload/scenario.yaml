@@ -1,0 +1,151 @@
+title: Encryption full payload
+tag: encryption
+ciTags:
+  - PULL_REQUEST
+  - NON_REGRESSION
+services:
+  kafka1:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka2:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  kafka3:
+    properties:
+      bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
+  gateway1:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8888
+  gateway2:
+    properties:
+      bootstrap.servers: localhost:6969
+      gateway.host: http://localhost:8889
+
+actions:
+  - type: INTRODUCTION
+    title: Field level encryption
+    markdown: |
+      Let's demonstrate full payload encryption 
+
+  - type: ASCIINEMA
+
+  - type: FILE
+    filename: docker-compose.yaml
+
+  - type: DOCKER
+    command: docker compose up --detach --wait
+
+  - type: CREATE_VIRTUAL_CLUSTER
+    gateway: gateway1
+    name: teamA
+
+  - type: CREATE_TOPICS
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topics:
+      - name: customers
+        replicationFactor: 1
+        partitions: 1
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      We want to encrypt the full payload with an in memory KMS.
+    gateway: gateway1
+    vcluster: teamA
+    name: encrypt-full-payload
+    interceptor:
+      "pluginClass": "io.conduktor.gateway.interceptor.EncryptPlugin"
+      "priority": "100"
+      "config": {
+        "payload": {
+          "keySecretId": "full-payload-secret",
+          "algorithm": "AES_GCM"
+        }
+      }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 1
+    assertNames:
+      - encrypt-full-payload
+
+  - type: PRODUCE
+    title: Let's send unencrypted json
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    messages:
+      - value: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - value: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+    markdown: |
+      We are using regular kafka tools
+
+  - type: CONSUME
+    title: Let's consume the message, and confirm tom and laura data is encrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm tom message is encrypted
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - description: Confirm laura message is encrypted
+        value:
+          operator: doesNotContainIgnoringCase
+          expected: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+
+  - type: ADD_INTERCEPTOR
+    markdown: |
+      Let's add the decrypt interceptor to decipher messages
+    gateway: gateway1
+    vcluster: teamA
+    name: decrypt-full-payload
+    interceptor: {
+      "pluginClass": "io.conduktor.gateway.interceptor.DecryptPlugin",
+      "priority": 100,
+      "config": {
+        "topic": "customers",
+        "kmsConfig": {
+          "vault": {
+            "uri": "http://vault:8200",
+            "token": "vault-plaintext-root-token",
+            "version": 1
+          }
+        }
+      }
+    }
+
+  - type: LIST_INTERCEPTORS
+    gateway: gateway1
+    vcluster: teamA
+    assertSize: 2
+    assertNames:
+      - encrypt-full-payload
+      - decrypt-full-payload
+
+  - type: CONSUME
+    title: Confirm message from tom and laura are decrypted
+    kafka: teamA
+    kafkaConfig: teamA-sa.properties
+    topic: customers
+    assertSize: 2
+    assertions:
+      - description: Confirm we have a decrypted tom message
+        value:
+          operator: contains
+          expected: '{"name":"tom","username":"tom@conduktor.io","password":"motorhead","visa":"#abc123","address":"Chancery lane, London"}'
+      - description: Confirm we have a decrypted laura message
+        value:
+          operator: contains
+          expected: '{"name":"laura","username":"laura@conduktor.io","password":"kitesurf","visa":"#888999XZ;","address":"Dubai, UAE"}'
+
+  - type: DOCKER
+    command: docker compose down --volumes
+
+  - type: CONCLUSION
+    markdown: |
+      Yes, encryption in the Kafka world can be simple!

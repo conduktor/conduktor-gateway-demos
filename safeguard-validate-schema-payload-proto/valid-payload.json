@@ -1,10 +1,10 @@
 {
   "name": "Doe",
-  "age": 17,
-  "email": "john.doe@example.com",
+  "age": 18,
+  "email": "foo.doe@example.com",
   "address": {
-    "street": "123 Main St",
-    "city": "Anytown"
+    "street": "123 paris",
+    "city": "Any paris"
   },
   "hobbies": [
     "reading",

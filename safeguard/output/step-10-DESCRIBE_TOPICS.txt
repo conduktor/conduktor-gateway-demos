@@ -1,7 +1,0 @@
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config teamA-sa.properties \
-    --describe \
-    --topic cars
-Topic: cars	TopicId: itGe3ZQXTwWqZTq1RdfxZw	PartitionCount: 1	ReplicationFactor: 1	Configs: 
-	Topic: cars	Partition: 0	Leader: 3	Replicas: 3	Isr: 3

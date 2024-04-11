@@ -1,4 +1,7 @@
 title: Multi tenancy
+tag: ops
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -13,10 +16,14 @@ services:
     properties:
       bootstrap.servers: localhost:6969
       gateway.host: http://localhost:8888
+    environment:
+      GATEWAY_MODE: VCLUSTER
   gateway2:
     properties:
       bootstrap.servers: localhost:6969
       gateway.host: http://localhost:8888
+    environment:
+      GATEWAY_MODE: VCLUSTER
 
 actions:
 
@@ -34,15 +41,14 @@ actions:
   - type: LIST_TOPICS
     kafka: kafka1
     assertExists:
-      - _auditLogs
-      - _acls
-      - _license
-      - _topicRegistry
-      - _interceptorConfigs
+      - _conduktor_gateway_auditlogs
+      - _conduktor_gateway_acls
+      - _conduktor_gateway_license
+      - _conduktor_gateway_interceptor_configs
+      - _conduktor_gateway_consumer_subscriptions
+      - _conduktor_gateway_consumer_offsets
+      - _conduktor_gateway_topicmappings
       - _schemas
-      - _consumerGroupSubscriptionBackingTopic
-      - _offsetStore
-      - _topicMappings
 
   - type: CREATE_VIRTUAL_CLUSTER
     gateway: gateway1
@@ -120,26 +126,27 @@ actions:
       - value: '{"message: "Hello from London"}'
 
   - type: SH
+    title: Map the existing topic to the virtual cluster
     kafka: kafka1
     showOutput: true
     script: |
       curl \
         --silent \
-        --user admin:conduktor \
         --request POST localhost:8888/admin/vclusters/v1/vcluster/london/topics/existingLondonTopic \
+        --user 'admin:conduktor' \
         --header 'Content-Type: application/json' \
         --data-raw '{
             "physicalTopicName": "existingLondonTopic",
             "readOnly": false,
-            "concentrated": false
+            "type": "alias"
           }' | jq
 
   - type: LIST_TOPICS
     kafka: london
     kafkaConfig: london-sa.properties
     assertExists:
-     - londonTopic
-     - existingLondonTopic
+      - londonTopic
+      - existingLondonTopic
 
   - type: CREATE_TOPICS
     kafka: kafka1
@@ -155,18 +162,19 @@ actions:
       - value: '{"message": "Existing shared message"}'
 
   - type: SH
+    title: Map the existing topic to the virtual cluster
     showOutput: true
     kafka: kafka1
     script: |
       curl \
         --silent \
         --request POST localhost:8888/admin/vclusters/v1/vcluster/london/topics/existingSharedTopic \
-        --user admin:conduktor \
+        --user 'admin:conduktor' \
         --header 'Content-Type: application/json' \
         --data-raw '{
           "physicalTopicName": "existingSharedTopic",
           "readOnly": false,
-          "concentrated": false
+          "type": "alias"
         }' | jq
 
   - type: LIST_TOPICS
@@ -200,18 +208,19 @@ actions:
           expected: '{"message": "Existing shared message"}'
 
   - type: SH
+    title: Map the existing topic to the virtual cluster
     showOutput: true
     kafka: kafka1
     script: |
       curl \
         --silent \
-        --user admin:conduktor \
         --request POST localhost:8888/admin/vclusters/v1/vcluster/paris/topics/existingSharedTopic \
+        --user 'admin:conduktor' \
         --header 'Content-Type: application/json' \
         --data-raw '{
           "physicalTopicName": "existingSharedTopic",
           "readOnly": false,
-          "concentrated": false
+          "type": "alias"
         }' | jq
 
   - type: LIST_TOPICS

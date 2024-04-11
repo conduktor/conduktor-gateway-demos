@@ -1,4 +1,8 @@
 title: SQL topics
+tag: sql
+ciTags:
+  - PULL_REQUEST
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -10,10 +14,18 @@ services:
     properties:
       bootstrap.servers: localhost:19092,localhost:19093,localhost:19094
   gateway1:
+    docker:
+      environment:
+        GATEWAY_MODE: KAFKA_SECURITY
+        GATEWAY_SECURITY_PROTOCOL: PLAINTEXT
     properties:
       bootstrap.servers: localhost:6969
       gateway.host: http://localhost:8888
   gateway2:
+    docker:
+      environment:
+        GATEWAY_MODE: KAFKA_SECURITY
+        GATEWAY_SECURITY_PROTOCOL: PLAINTEXT
     properties:
       bootstrap.servers: localhost:6969
       gateway.host: http://localhost:8889
@@ -32,25 +44,15 @@ actions:
   - type: DOCKER
     command: docker compose up --detach --wait
 
-  - type: CREATE_VIRTUAL_CLUSTER
-    gateway: gateway1
-    name: teamA
-
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
-    kafka: teamA
-    kafkaConfig: teamA-sa.properties
+    kafka: gateway1
     topics:
       - name: cars
         replicationFactor: 1
         partitions: 1
 
   - type: PRODUCE
-    kafka: teamA
-    kafkaConfig: teamA-sa.properties
+    kafka: gateway1
     topic: cars
     messages:
       - value: '{"type":"Sports","price":75,"color":"blue"}'
@@ -62,8 +64,7 @@ actions:
       * A red car
 
   - type: CONSUME
-    kafka: teamA
-    kafkaConfig: teamA-sa.properties
+    kafka: gateway1
     topic: cars
     maxMessages: 2
     assertSize: 2
@@ -77,13 +78,12 @@ actions:
           operator: containsIgnoreCase
           expected: 'SUV'
     markdown: |
-      Let's confirm the 2 records are there by consuming from the `cars` topic.
+      Let's confirm the 2 records are there by consuming from the cars topic.
 
   - type: ADD_INTERCEPTOR
     markdown: |
-      Let's create the interceptor to filter out the red cars from the `cars` topic.
+      Let's create the interceptor to filter out the red cars from the cars topic.
     gateway: gateway1
-    vcluster: teamA
     name: red-cars
     interceptor:
       "pluginClass": "io.conduktor.gateway.interceptor.VirtualSqlTopicPlugin"
@@ -95,15 +95,13 @@ actions:
 
   - type: LIST_INTERCEPTORS
     gateway: gateway1
-    vcluster: teamA
     assertSize: 1
     assertNames:
       - red-cars
 
   - type: CONSUME
-    title: Consume from the virtual topic `red-cars`
-    kafka: teamA
-    kafkaConfig: teamA-sa.properties
+    title: Consume from the virtual topic red-cars
+    kafka: gateway1
     topic: red-cars
     assertSize: 1
     assertions:
@@ -116,7 +114,7 @@ actions:
           operator: containsIgnoreCase
           expected: 'SUV'
     markdown: |
-      Let's consume from our virtual topic `red-cars`.
+      Let's consume from our virtual topic red-cars.
 
       You now see only one car, the red one, please note that its format changed according to our SQL statement's projection.
 

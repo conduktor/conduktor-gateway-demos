@@ -1,11 +1,4 @@
-kafka-console-consumer \
-    --bootstrap-server localhost:6969 \
-    --consumer.config paris-sa.properties \
-    --topic existingSharedTopic \
-    --from-beginning \
-    --timeout-ms 10000 \
- | jq
-[2024-01-23 00:08:22,012] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
+[2024-04-10 02:43:15,440] ERROR Error processing message, terminating consumer process:  (kafka.tools.ConsoleConsumer$)
 org.apache.kafka.common.errors.TimeoutException
 Processed a total of 1 messages
 {

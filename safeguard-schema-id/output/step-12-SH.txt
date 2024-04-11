@@ -1,28 +1,4 @@
-echo '{
-    "name": "conduktor",
-    "username": "test@conduktor.io",
-    "password": "password1",
-    "visa": "visa123456",
-    "address": "Conduktor Towers, London"
-}' | \
-  jq -c | \
-      kafka-json-schema-console-producer  \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic users \
-        --property schema.registry.url=http://localhost:8081 \
-        --property value.schema='{
-            "title": "User",
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "username": { "type": "string" },
-                "password": { "type": "string" },
-                "visa": { "type": "string" },
-                "address": { "type": "string" }
-            }
-        }'
-[2024-01-23 00:41:35,563] INFO KafkaJsonSchemaSerializerConfig values: 
+[2024-04-10 03:17:12,375] INFO KafkaJsonSchemaSerializerConfig values: 
 	auto.register.schemas = true
 	basic.auth.credentials.source = URL
 	basic.auth.user.info = [hidden]

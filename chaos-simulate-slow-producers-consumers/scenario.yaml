@@ -1,4 +1,7 @@
 title: Chaos Simulate Slow Producers & Consumers
+tag: chaos
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -39,10 +42,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -65,7 +64,7 @@ actions:
         "maxLatencyMs": 3001
       }
     markdown: |
-      Let's create the interceptor against the virtual cluster `teamA`, instructing Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all traffic.
+      Let's create the interceptor against the virtual cluster teamA, instructing Conduktor Gateway to simulate slow responses from brokers, but only on a set of topics rather than all traffic.
 
   - type: LIST_INTERCEPTORS
     gateway: gateway1
@@ -86,7 +85,7 @@ actions:
         --throughput 1 \
         --num-records 10 \
         --topic slow-topic
-    assertOutputMatches: "\\d{4},\\d{1,2} ms avg latency"
+    assertOutputMatches: "\\d{4}[,.]\\d{1,2} ms avg latency"
     markdown: |
       9 records sent, 1,6 records/sec (0,00 MB/sec), 3168,2 ms avg latency, 4840,0 ms max latency.
       71 records sent, 11,1 records/sec (0,00 MB/sec), 3287,0 ms avg latency, 4749,0 ms max latency.

@@ -1,3 +1,4 @@
+#!/bin/bash
 cat step-09-large-messages.json | jq
 
 curl \

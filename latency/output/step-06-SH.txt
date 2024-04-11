@@ -1,16 +1,13 @@
-kafka-run-class kafka.tools.EndToEndLatency \
-    localhost:19092,localhost:19093,localhost:19094 \
-    physical-kafka 10000 all 255
 WARNING: The 'kafka.tools' package is deprecated and will change to 'org.apache.kafka.tools' in the next major release.
-0	46.866875
-1000	1.941292
-2000	1.2305
-3000	1.301917
-4000	1.11525
-5000	1.141208
-6000	2.510167
-7000	0.9730829999999999
-8000	0.916584
-9000	1.052875
-Avg latency: 1,5754 ms
-Percentiles: 50th = 1, 99th = 7, 99.9th = 23
+0	47.436082999999996
+1000	3.0687919999999997
+2000	1.7105409999999999
+3000	1.9645
+4000	1.258417
+5000	1.179958
+6000	1.061375
+7000	0.779625
+8000	3.82475
+9000	0.947708
+Avg latency: 1,8176 ms
+Percentiles: 50th = 1, 99th = 8, 99.9th = 24

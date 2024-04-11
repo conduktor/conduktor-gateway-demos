@@ -1,12 +1,8 @@
-echo '{"name":"Hi","age":7,"email":"john.doecom","address":{"street":"123 Main St","city":"a"},"hobbies":["reading","cycling"]}' | \
-    kafka-json-schema-console-producer \
-        --bootstrap-server localhost:6969 \
-        --producer.config teamA-sa.properties \
-        --topic topic-json \
-        --property schema.registry.url=http://localhost:8081 \
-        --property value.schema.id=1
-[2024-01-23 00:47:29,170] INFO KafkaJsonSchemaSerializerConfig values: 
+[2024-04-10 03:23:04,236] INFO KafkaAvroSerializerConfig values: 
 	auto.register.schemas = true
+	avro.reflection.allow.null = false
+	avro.remove.java.properties = false
+	avro.use.logical.type.converters = false
 	basic.auth.credentials.source = URL
 	basic.auth.user.info = [hidden]
 	bearer.auth.cache.expiry.buffer.seconds = 300
@@ -25,12 +21,6 @@ echo '{"name":"Hi","age":7,"email":"john.doecom","address":{"street":"123 Main S
 	http.connect.timeout.ms = 60000
 	http.read.timeout.ms = 60000
 	id.compatibility.strict = true
-	json.fail.invalid.schema = true
-	json.fail.unknown.properties = true
-	json.indent.output = false
-	json.oneof.for.nullables = true
-	json.schema.spec.version = draft_7
-	json.write.dates.iso8601 = false
 	key.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
 	latest.cache.size = 1000
 	latest.cache.ttl.sec = -1
@@ -69,72 +59,8 @@ echo '{"name":"Hi","age":7,"email":"john.doecom","address":{"street":"123 Main S
 	use.latest.with.metadata = null
 	use.schema.id = -1
 	value.subject.name.strategy = class io.confluent.kafka.serializers.subject.TopicNameStrategy
- (io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializerConfig:376)
-org.apache.kafka.common.errors.SerializationException: Error serializing JSON message
-	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.serializeImpl(AbstractKafkaJsonSchemaSerializer.java:166)
-	at io.confluent.kafka.formatter.json.JsonSchemaMessageReader$JsonSchemaMessageSerializer.serialize(JsonSchemaMessageReader.java:167)
-	at io.confluent.kafka.formatter.json.JsonSchemaMessageReader$JsonSchemaMessageSerializer.serialize(JsonSchemaMessageReader.java:130)
-	at io.confluent.kafka.formatter.SchemaMessageReader.readMessage(SchemaMessageReader.java:406)
-	at kafka.tools.ConsoleProducer$.main(ConsoleProducer.scala:50)
-	at kafka.tools.ConsoleProducer.main(ConsoleProducer.scala)
-Caused by: org.apache.kafka.common.errors.SerializationException: Validation error in JSON {"name":"Hi","age":7,"email":"john.doecom","address":{"street":"123 Main St","city":"a"},"hobbies":["reading","cycling"]}, Error report:
-{
-  "schemaLocation": "#",
-  "pointerToViolation": "#",
-  "causingExceptions": [
-    {
-      "schemaLocation": "#/properties/address",
-      "pointerToViolation": "#/address",
-      "causingExceptions": [
-        {
-          "schemaLocation": "#/properties/address/properties/city",
-          "pointerToViolation": "#/address/city",
-          "causingExceptions": [],
-          "keyword": "minLength",
-          "message": "expected minLength: 2, actual: 1"
-        },
-        {
-          "schemaLocation": "#/properties/address/properties/street",
-          "pointerToViolation": "#/address/street",
-          "causingExceptions": [],
-          "keyword": "maxLength",
-          "message": "expected maxLength: 10, actual: 11"
-        }
-      ],
-      "message": "2 schema violations found"
-    },
-    {
-      "schemaLocation": "#/properties/hobbies",
-      "pointerToViolation": "#/hobbies",
-      "causingExceptions": [],
-      "keyword": "minItems",
-      "message": "expected minimum item count: 3, found: 2"
-    },
-    {
-      "schemaLocation": "#/properties/name",
-      "pointerToViolation": "#/name",
-      "causingExceptions": [],
-      "keyword": "minLength",
-      "message": "expected minLength: 3, actual: 2"
-    },
-    {
-      "schemaLocation": "#/properties/email",
-      "pointerToViolation": "#/email",
-      "causingExceptions": [],
-      "keyword": "format",
-      "message": "[john.doecom] is not a valid email address"
-    }
-  ],
-  "message": "5 schema violations found"
-}
-	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.validateJson(AbstractKafkaJsonSchemaSerializer.java:189)
-	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.serializeImpl(AbstractKafkaJsonSchemaSerializer.java:154)
-	... 5 more
-Caused by: org.everit.json.schema.ValidationException: #: 5 schema violations found
-	at org.everit.json.schema.ValidationException.copy(ValidationException.java:486)
-	at org.everit.json.schema.DefaultValidator.performValidation(Validator.java:76)
-	at org.everit.json.schema.Schema.validate(Schema.java:152)
-	at io.confluent.kafka.schemaregistry.json.JsonSchema.validate(JsonSchema.java:441)
-	at io.confluent.kafka.schemaregistry.json.JsonSchema.validate(JsonSchema.java:409)
-	at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.validateJson(AbstractKafkaJsonSchemaSerializer.java:179)
-	... 6 more
+ (io.confluent.kafka.serializers.KafkaAvroSerializerConfig:376)
+[2024-04-10 03:23:05,334] ERROR Error when sending message to topic topic-avro with key: null, value: 88 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback:52)
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: hobbies must have 3 items, age must be greater than or equal to 18, email should end with 'yahoo.com', name is too short (2 < 3), name does not match expression 'size(name) >= 3 && size(name) <= 50', email does not match expression 'email.contains('foo')', street is too long (11 > 10), street does not match expression 'size(street) >= 5 && size(street) <= 10', address does not match expression 'size(address.street) >= 5 && address.street.contains('paris') || address.city == 'paris'', hobbies has too few items (2 < 3), hobbies does not match expression 'size(hobbies) >= 3', name does not match expression 'size(name) < 3', age is greater than 10, name does not match expression 'size(name) < 3', age is greater than 10
+[2024-04-10 03:23:05,334] ERROR Error when sending message to topic topic-avro with key: null, value: 88 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback:52)
+org.apache.kafka.common.errors.PolicyViolationException: Request parameters do not satisfy the configured policy. Topic 'topic-avro' has invalid avro schema payload: hobbies must have 3 items, age must be greater than or equal to 18, email should end with 'yahoo.com', name is too short (2 < 3), name does not match expression 'size(name) >= 3 && size(name) <= 50', email does not match expression 'email.contains('foo')', street is too long (11 > 10), street does not match expression 'size(street) >= 5 && size(street) <= 10', address does not match expression 'size(address.street) >= 5 && address.street.contains('paris') || address.city == 'paris'', hobbies has too few items (2 < 3), hobbies does not match expression 'size(hobbies) >= 3', name does not match expression 'size(name) < 3', age is greater than 10, name does not match expression 'size(name) < 3', age is greater than 10

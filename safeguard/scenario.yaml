@@ -1,4 +1,7 @@
 title: Safeguard
+tag: safeguard
+ciTags:
+  - NON_REGRESSION
 services:
   kafka1:
     properties:
@@ -40,10 +43,6 @@ actions:
     gateway: gateway1
     name: teamA
 
-  - type: FILE
-    title: Review the kafka properties to connect to `teamA`
-    filename: teamA-sa.properties
-
   - type: CREATE_TOPICS
     kafka: teamA
     kafkaConfig: teamA-sa.properties
@@ -64,14 +63,14 @@ actions:
       Produce 3 records to the cars topic.
 
   - type: CONSUME
-    title: Consume the `cars` topic
+    title: Consume the cars topic
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: cars
     maxMessages: 3
     assertSize: 3
     markdown: |
-      Let's confirm the 3 cars are there by consuming from the `cars` topic.
+      Let's confirm the 3 cars are there by consuming from the cars topic.
 
   - type: DESCRIBE_TOPICS
     kafka: teamA
@@ -206,7 +205,7 @@ actions:
       }
 
   - type: PRODUCE
-    title: Produce sample data to our `cars` topic without the right policies
+    title: Produce sample data to our cars topic without the right policies
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: cars
@@ -219,7 +218,7 @@ actions:
       Produce 1 record ... that do not match our policy
 
   - type: PRODUCE
-    title: Produce sample data to our `cars` topic that complies with our policy
+    title: Produce sample data to our cars topic that complies with our policy
     kafka: teamA
     kafkaConfig: teamA-sa.properties
     topic: cars
@@ -258,7 +257,7 @@ actions:
   - type: AUDITLOG
     title: Check in the audit log that produce was throttled
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ProducerRateLimitingPolicyPlugin")'
     assertions:
       - description: Confirm ProducerRateLimitingPolicyPlugin audit has throttled produce
         value:
@@ -297,7 +296,7 @@ actions:
   - type: AUDITLOG
     title: Check in the audit log that fetch was denied
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.ConsumerGroupPolicyPlugin")'
     assertions:
       - description: Confirm ConsumerGroupPolicyPlugin audit has blocked consume
         value:
@@ -340,7 +339,7 @@ actions:
   - type: AUDITLOG
     title: Check in the audit log that connection was denied
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitConnectionPolicyPlugin")'
     assertions:
       - description: Confirm LimitConnectionPolicyPlugin audit has blocked connection
         value:
@@ -378,7 +377,7 @@ actions:
   - type: AUDITLOG
     title: Check in the audit log that connection was denied
     kafka: kafka1
-    jqCommand: 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin")'
+    pipeCommand: \| jq 'select(.type=="SAFEGUARD" and .eventData.plugin=="io.conduktor.gateway.interceptor.safeguard.LimitCommitOffsetPolicyPlugin")'
     assertions:
       - description: Confirm LimitCommitOffsetPolicyPlugin audit has blocked commit
         value:

@@ -1,3 +1,4 @@
+#!/bin/bash
 cat step-06-user-mapping.json | jq
 
 curl \

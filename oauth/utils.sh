@@ -22,14 +22,14 @@ function type() {
   else
       cat $file | pv -qL 400
   fi
-  echo "${NC}"
+  printf "${NC}\n"
 }
 
 function banner() {
     if [ -z "${NO_PAUSE}" ] && [ -z "${SPEED}" ]; then
-      printf "$1# $2$NC\n" | pv -qL 20
+      echo -e "$1# $2$NC\n" | pv -qL 20
     else
-      echo "$1# $2$NC"
+      echo -e "$1# $2$NC\n"
     fi
 }
 
@@ -44,7 +44,7 @@ function step() {
 function pause() {
     if [ -z "${NO_PAUSE}" ] && [ -z "${SPEED}" ]; then
         read -p "continue?"
-        printf "\033[1A\033[K"
+        echo -e "\033[1A\033[K"
         echo
     else
         if  [ -z "${SPEED}" ]; then
@@ -58,9 +58,8 @@ function execute() {
     local title=$2
 
     step "$title"
-    sleep 3
+    sleep 2
     type "$script"
     sh $script
     echo
-    sleep 1
 }

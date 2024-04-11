@@ -1,9 +1,5 @@
-kafka-producer-perf-test \
-    --topic physical-kafka \
-    --throughput -1 \
-    --num-records 2500000 \
-    --record-size 255 \
-    --producer-props bootstrap.servers=localhost:19092,localhost:19093,localhost:19094
-1520125 records sent, 304025,0 records/sec (73,93 MB/sec), 90,6 ms avg latency, 672,0 ms max latency.
-801114 records sent, 160222,8 records/sec (38,96 MB/sec), 46,5 ms avg latency, 569,0 ms max latency.
-2500000 records sent, 222955,498083 records/sec (54,22 MB/sec), 73,80 ms avg latency, 672,00 ms max latency, 10 ms 50th, 424 ms 95th, 600 ms 99th, 664 ms 99.9th.
+692839 records sent, 138457,0 records/sec (33,67 MB/sec), 323,6 ms avg latency, 852,0 ms max latency.
+553186 records sent, 110615,1 records/sec (26,90 MB/sec), 315,8 ms avg latency, 942,0 ms max latency.
+348127 records sent, 69625,4 records/sec (16,93 MB/sec), 1306,7 ms avg latency, 2634,0 ms max latency.
+431209 records sent, 86069,7 records/sec (20,93 MB/sec), 1263,7 ms avg latency, 2899,0 ms max latency.
+2500000 records sent, 103284,445363 records/sec (25,12 MB/sec), 638,35 ms avg latency, 2899,00 ms max latency, 387 ms 50th, 2051 ms 95th, 2663 ms 99th, 2788 ms 99.9th.

@@ -1,3 +1,4 @@
+#!/bin/bash
 echo '{"message: "Hello from London"}' | \
     kafka-console-producer \
         --bootstrap-server localhost:6969 \

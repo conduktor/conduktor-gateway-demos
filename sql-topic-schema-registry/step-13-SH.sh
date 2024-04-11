@@ -1,3 +1,4 @@
+#!/bin/bash
 kafka-avro-console-consumer  \
     --bootstrap-server localhost:6969 \
     --consumer.config teamA-sa.properties \

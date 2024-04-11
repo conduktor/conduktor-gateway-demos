@@ -1,9 +1,9 @@
-docker compose down --volumes
  Container minio  Stopping
- Container cli-aws  Stopping
+ Container kafka-client  Stopping
  Container schema-registry  Stopping
  Container gateway1  Stopping
  Container gateway2  Stopping
+ Container cli-aws  Stopping
  Container minio  Stopped
  Container minio  Removing
  Container minio  Removed
@@ -16,21 +16,24 @@ docker compose down --volumes
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
+ Container kafka3  Stopping
  Container kafka1  Stopping
  Container kafka2  Stopping
- Container kafka3  Stopping
  Container kafka2  Stopped
  Container kafka2  Removing
  Container kafka2  Removed
- Container kafka1  Stopped
- Container kafka1  Removing
- Container kafka1  Removed
- Container cli-aws  Stopped
- Container cli-aws  Removing
- Container cli-aws  Removed
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container cli-aws  Stopped
+ Container cli-aws  Removing
+ Container cli-aws  Removed
+ Container kafka1  Stopped
+ Container kafka1  Removing
+ Container kafka1  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing

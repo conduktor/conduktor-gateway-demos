@@ -4,16 +4,20 @@ You can be using OAuth instead of SASL_SSL
 
 ## View the full demo in realtime
 
-You can either follow all the steps manually, or just enjoy the recording
 
-[![asciicast](https://asciinema.org/a/wb4EiFQxYAZm7CwRhTsOXs5m9.svg)](https://asciinema.org/a/wb4EiFQxYAZm7CwRhTsOXs5m9)
 
-### Review the docker compose environment
+
+You can either follow all the steps manually, or watch the recording
+
+[![asciicast](https://asciinema.org/a/Qrn2HgTI93mqlLEAcm5Anuyvv.svg)](https://asciinema.org/a/Qrn2HgTI93mqlLEAcm5Anuyvv)
+
+## Review the docker compose environment
 
 As can be seen from `docker-compose.yaml` the demo environment consists of the following services:
 
 * gateway1
 * gateway2
+* kafka-client
 * kafka1
 * kafka2
 * kafka3
@@ -26,7 +30,7 @@ cat docker-compose.yaml
 ```
 
 <details>
-  <summary>File content</summary>
+<summary>File content</summary>
 
 ```yaml
 version: '3.7'
@@ -144,7 +148,7 @@ services:
       interval: 5s
       retries: 25
   gateway1:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway1
     container_name: gateway1
     environment:
@@ -172,7 +176,7 @@ services:
       interval: 5s
       retries: 25
   gateway2:
-    image: conduktor/conduktor-gateway:2.5.0
+    image: conduktor/conduktor-gateway:3.0.0
     hostname: gateway2
     container_name: gateway2
     environment:
@@ -200,6 +204,16 @@ services:
       test: curl localhost:8888/health
       interval: 5s
       retries: 25
+  kafka-client:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    volumes:
+    - type: bind
+      source: .
+      target: /clientConfig
+      read_only: true
   keycloack:
     image: quay.io/keycloak/keycloak:22.0
     hostname: keycloak
@@ -227,24 +241,6 @@ networks:
 
 </details>
 
- <details>
-  <summary>docker compose ps</summary>
-
-```
-NAME              IMAGE                                    COMMAND                  SERVICE           CREATED          STATUS                    PORTS
-gateway1          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway1          38 seconds ago   Up 21 seconds (healthy)   0.0.0.0:6969-6971->6969-6971/tcp, 0.0.0.0:8888->8888/tcp
-gateway2          conduktor/conduktor-gateway:2.5.0        "java -cp @/app/jib-…"   gateway2          38 seconds ago   Up 21 seconds (healthy)   0.0.0.0:7969-7971->7969-7971/tcp, 0.0.0.0:8889->8888/tcp
-kafka1            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka1            38 seconds ago   Up 32 seconds (healthy)   9092/tcp, 0.0.0.0:19092->19092/tcp
-kafka2            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka2            38 seconds ago   Up 32 seconds (healthy)   9092/tcp, 0.0.0.0:19093->19093/tcp
-kafka3            confluentinc/cp-kafka:latest             "/etc/confluent/dock…"   kafka3            38 seconds ago   Up 32 seconds (healthy)   9092/tcp, 0.0.0.0:19094->19094/tcp
-keycloak          quay.io/keycloak/keycloak:22.0           "/opt/keycloak/bin/k…"   keycloack         38 seconds ago   Up 38 seconds             8080/tcp, 8443/tcp, 0.0.0.0:18080->18080/tcp
-schema-registry   confluentinc/cp-schema-registry:latest   "/etc/confluent/dock…"   schema-registry   38 seconds ago   Up 21 seconds (healthy)   0.0.0.0:8081->8081/tcp
-zookeeper         confluentinc/cp-zookeeper:latest         "/etc/confluent/dock…"   zookeeper         38 seconds ago   Up 38 seconds (healthy)   2181/tcp, 2888/tcp, 3888/tcp
-
-```
-
-</details>
-
 ## Starting the docker environment
 
 Start all your docker processes, wait for them to be up and ready, then run in background
@@ -252,44 +248,43 @@ Start all your docker processes, wait for them to be up and ready, then run in b
 * `--wait`: Wait for services to be `running|healthy`. Implies detached mode.
 * `--detach`: Detached mode: Run containers in the background
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose up --detach --wait
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Starting the docker environment](images/step-04-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose up --detach --wait
+```
  Network oauth_default  Creating
  Network oauth_default  Created
  Container zookeeper  Creating
  Container keycloak  Creating
+ Container kafka-client  Creating
  Container keycloak  Created
+ Container kafka-client  Created
  Container zookeeper  Created
+ Container kafka1  Creating
  Container kafka3  Creating
  Container kafka2  Creating
- Container kafka1  Creating
  Container kafka1  Created
- Container kafka2  Created
  Container kafka3  Created
- Container schema-registry  Creating
+ Container kafka2  Created
  Container gateway2  Creating
  Container gateway1  Creating
- gateway1 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- gateway2 The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
- Container gateway1  Created
+ Container schema-registry  Creating
  Container gateway2  Created
+ Container gateway1  Created
  Container schema-registry  Created
+ Container kafka-client  Starting
  Container zookeeper  Starting
  Container keycloak  Starting
  Container zookeeper  Started
@@ -297,63 +292,70 @@ docker compose up --detach --wait
  Container zookeeper  Waiting
  Container zookeeper  Waiting
  Container keycloak  Started
+ Container kafka-client  Started
  Container zookeeper  Healthy
  Container kafka2  Starting
  Container zookeeper  Healthy
+ Container kafka1  Starting
  Container zookeeper  Healthy
  Container kafka3  Starting
- Container kafka1  Starting
  Container kafka1  Started
- Container kafka3  Started
  Container kafka2  Started
+ Container kafka3  Started
  Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
  Container kafka3  Waiting
  Container kafka1  Waiting
  Container kafka2  Waiting
+ Container kafka1  Waiting
  Container kafka2  Waiting
  Container kafka3  Waiting
- Container kafka1  Waiting
  Container kafka2  Healthy
  Container kafka2  Healthy
  Container kafka3  Healthy
+ Container kafka3  Healthy
+ Container kafka3  Healthy
+ Container kafka1  Healthy
+ Container schema-registry  Starting
+ Container kafka2  Healthy
  Container kafka1  Healthy
  Container gateway2  Starting
  Container kafka1  Healthy
- Container kafka1  Healthy
- Container kafka3  Healthy
  Container gateway1  Starting
- Container kafka3  Healthy
- Container kafka2  Healthy
- Container schema-registry  Starting
  Container gateway2  Started
- Container schema-registry  Started
  Container gateway1  Started
- Container keycloak  Waiting
- Container zookeeper  Waiting
- Container kafka1  Waiting
+ Container schema-registry  Started
  Container kafka2  Waiting
- Container kafka3  Waiting
+ Container kafka1  Waiting
+ Container kafka-client  Waiting
+ Container gateway2  Waiting
  Container schema-registry  Waiting
  Container gateway1  Waiting
- Container gateway2  Waiting
+ Container keycloak  Waiting
+ Container kafka3  Waiting
+ Container zookeeper  Waiting
+ Container kafka-client  Healthy
+ Container kafka3  Healthy
  Container kafka2  Healthy
  Container keycloak  Healthy
- Container kafka3  Healthy
  Container kafka1  Healthy
  Container zookeeper  Healthy
- Container schema-registry  Healthy
- Container gateway1  Healthy
  Container gateway2  Healthy
+ Container gateway1  Healthy
+ Container schema-registry  Healthy
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/hAO8eIuMShUwPR9JfS4ozOpzg.svg)](https://asciinema.org/a/hAO8eIuMShUwPR9JfS4ozOpzg)
 
-### Review the kafka properties to connect using OAuth
+</details>
+
+## Review the kafka properties to connect using OAuth
 
 Review the kafka properties to connect using OAuth
 
@@ -361,8 +363,8 @@ Review the kafka properties to connect using OAuth
 cat user-1.properties
 ```
 
-<details on>
-  <summary>File content</summary>
+<details open>
+<summary>File content</summary>
 
 ```properties
 sasl.mechanism=OAUTHBEARER
@@ -374,11 +376,16 @@ security.protocol=SASL_PLAINTEXT
 
 </details>
 
+## Creating topic cars on gateway1
 
-## Creating topic `cars` on `gateway1`
+Creating on `gateway1`:
 
-Creating topic `cars` on `gateway1`
 * Topic `cars` with partitions:1 and replication-factor:1
+
+<details open>
+<summary>Command</summary>
+
+
 
 ```sh
 kafka-topics \
@@ -390,36 +397,32 @@ kafka-topics \
     --topic cars
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Creating topic `cars` on `gateway1`](images/step-06-CREATE_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config user-1.properties \
-    --replication-factor 1 \
-    --partitions 1 \
-    --create --if-not-exists \
-    --topic cars
-[2024-01-23 00:17:29,823] WARN [Principal=:f3e0ecec-42d0-455e-88aa-5db45560c160]: Expiring credential expires at Tue Jan 23 00:18:29 CET 2024, so buffer times of 60 and 300 seconds at the front and back, respectively, cannot be accommodated.  We will refresh at Tue Jan 23 00:18:20 CET 2024. (org.apache.kafka.common.security.oauthbearer.internals.expiring.ExpiringCredentialRefreshingLogin)
+```
+[2024-04-10 02:52:37,066] WARN [Principal=:f3e0ecec-42d0-455e-88aa-5db45560c160]: Expiring credential expires at Wed Apr 10 02:53:36 GST 2024, so buffer times of 60 and 300 seconds at the front and back, respectively, cannot be accommodated.  We will refresh at Wed Apr 10 02:53:25 GST 2024. (org.apache.kafka.common.security.oauthbearer.internals.expiring.ExpiringCredentialRefreshingLogin)
 Created topic cars.
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
+
+[![asciicast](https://asciinema.org/a/ZVBQmwoAHFhou41Ufp8db2y60.svg)](https://asciinema.org/a/ZVBQmwoAHFhou41Ufp8db2y60)
+
+</details>
+
+## Listing topics in gateway1
 
 
-## Listing topics in `gateway1`
+
+<details open>
+<summary>Command</summary>
 
 
 
@@ -430,43 +433,25 @@ kafka-topics \
     --list
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Listing topics in `gateway1`](images/step-07-LIST_TOPICS.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-kafka-topics \
-    --bootstrap-server localhost:6969 \
-    --command-config user-1.properties \
-    --list
-[2024-01-23 00:17:32,589] WARN [Principal=:f3e0ecec-42d0-455e-88aa-5db45560c160]: Expiring credential expires at Tue Jan 23 00:18:32 CET 2024, so buffer times of 60 and 300 seconds at the front and back, respectively, cannot be accommodated.  We will refresh at Tue Jan 23 00:18:21 CET 2024. (org.apache.kafka.common.security.oauthbearer.internals.expiring.ExpiringCredentialRefreshingLogin)
-__consumer_offsets
-_acls
-_auditLogs
-_consumerGroupSubscriptionBackingTopic
-_encryptionConfig
-_interceptorConfigs
-_license
-_offsetStore
-_schemas
-_topicMappings
-_topicRegistry
-_userMapping
+```
+[2024-04-10 02:52:38,664] WARN [Principal=:f3e0ecec-42d0-455e-88aa-5db45560c160]: Expiring credential expires at Wed Apr 10 02:53:38 GST 2024, so buffer times of 60 and 300 seconds at the front and back, respectively, cannot be accommodated.  We will refresh at Wed Apr 10 02:53:27 GST 2024. (org.apache.kafka.common.security.oauthbearer.internals.expiring.ExpiringCredentialRefreshingLogin)
 cars
 
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/546lbZA7mwaLQ7PJuMocLqTtS.svg)](https://asciinema.org/a/546lbZA7mwaLQ7PJuMocLqTtS)
+
+</details>
 
 ## Tearing down the docker environment
 
@@ -474,52 +459,54 @@ Remove all your docker processes and associated volumes
 
 * `--volumes`: Remove named volumes declared in the "volumes" section of the Compose file and anonymous volumes attached to containers.
 
+<details open>
+<summary>Command</summary>
+
+
+
 ```sh
 docker compose down --volumes
 ```
 
-<details>
-  <summary>Realtime command output</summary>
 
-  ![Tearing down the docker environment](images/step-08-DOCKER.gif)
 
 </details>
-
-
 <details>
-<summary>Command output</summary>
+<summary>Output</summary>
 
-```sh
-
-docker compose down --volumes
- Container keycloak  Stopping
- Container gateway1  Stopping
- Container gateway2  Stopping
+```
+ Container kafka-client  Stopping
  Container schema-registry  Stopping
+ Container gateway1  Stopping
+ Container keycloak  Stopping
+ Container gateway2  Stopping
  Container keycloak  Stopped
  Container keycloak  Removing
  Container keycloak  Removed
- Container gateway2  Stopped
- Container gateway2  Removing
- Container gateway2  Removed
  Container gateway1  Stopped
  Container gateway1  Removing
  Container gateway1  Removed
+ Container gateway2  Stopped
+ Container gateway2  Removing
+ Container gateway2  Removed
  Container schema-registry  Stopped
  Container schema-registry  Removing
  Container schema-registry  Removed
- Container kafka3  Stopping
  Container kafka2  Stopping
  Container kafka1  Stopping
+ Container kafka3  Stopping
  Container kafka3  Stopped
  Container kafka3  Removing
  Container kafka3  Removed
- Container kafka2  Stopped
- Container kafka2  Removing
- Container kafka2  Removed
  Container kafka1  Stopped
  Container kafka1  Removing
  Container kafka1  Removed
+ Container kafka-client  Stopped
+ Container kafka-client  Removing
+ Container kafka-client  Removed
+ Container kafka2  Stopped
+ Container kafka2  Removing
+ Container kafka2  Removed
  Container zookeeper  Stopping
  Container zookeeper  Stopped
  Container zookeeper  Removing
@@ -530,8 +517,12 @@ docker compose down --volumes
 ```
 
 </details>
-      
+<details>
+<summary>Recording</summary>
 
+[![asciicast](https://asciinema.org/a/pJq42slg2ufIkkSyoa4PMszwC.svg)](https://asciinema.org/a/pJq42slg2ufIkkSyoa4PMszwC)
+
+</details>
 
 # Conclusion
 

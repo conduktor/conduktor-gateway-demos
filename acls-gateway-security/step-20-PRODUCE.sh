@@ -1,3 +1,4 @@
+#!/bin/bash
 echo '{"msg":"I would be surprised if it would work!"}' | \
     kafka-console-producer \
         --bootstrap-server localhost:6969 \

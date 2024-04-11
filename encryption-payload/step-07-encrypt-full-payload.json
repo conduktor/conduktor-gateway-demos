@@ -1,0 +1,10 @@
+{
+  "pluginClass" : "io.conduktor.gateway.interceptor.EncryptPlugin",
+  "priority" : 100,
+  "config" : {
+    "payload" : {
+      "keySecretId" : "full-payload-secret",
+      "algorithm" : "AES_GCM"
+    }
+  }
+}
