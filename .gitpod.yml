@@ -1,0 +1,14 @@
+tasks:
+    - init: |
+            find . -name "docker-compose.yaml" -exec docker compose pull -f {} \;
+            cargo install --git https://github.com/asciinema/agg
+            sudo apt install asciinema
+            npm install -g svg-term-cli
+
+            cd /workspace
+            curl -O https://packages.confluent.io/archive/7.5/confluent-community-7.5.3.zip
+            unzip confluent-community-7.5.3.zip 
+
+            PATH=$PATH:/workspaceconfluent-7.5.3/bin/
+            gp env PATH=$PATH:/workspaceconfluent-7.5.3/bin/
+
